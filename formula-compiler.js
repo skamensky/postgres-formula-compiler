@@ -983,7 +983,107 @@ class Compiler {
 
       case 'UPPER':
       case 'LOWER':
+      case 'TRIM':
         return this.compileStringFunction(node, funcName);
+
+      case 'LEN':
+        if (node.args.length !== 1) {
+          this.error('LEN() takes exactly one argument', node.position);
+        }
+        
+        const lenArg = this.compile(node.args[0]);
+        if (lenArg.returnType !== 'string') {
+          this.error('LEN() requires string argument, got ' + lenArg.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'LEN', [lenArg.semanticId]),
+          dependentJoins: lenArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'LEN' },
+          children: [lenArg]
+        };
+
+      case 'LEFT':
+        if (node.args.length !== 2) {
+          this.error('LEFT() takes exactly two arguments: LEFT(text, num)', node.position);
+        }
+        
+        const leftArg1 = this.compile(node.args[0]);
+        const leftArg2 = this.compile(node.args[1]);
+        
+        if (leftArg1.returnType !== 'string') {
+          this.error('LEFT() first argument must be string, got ' + leftArg1.returnType, node.position);
+        }
+        if (leftArg2.returnType !== 'number') {
+          this.error('LEFT() second argument must be number, got ' + leftArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'LEFT', [leftArg1.semanticId, leftArg2.semanticId]),
+          dependentJoins: [...leftArg1.dependentJoins, ...leftArg2.dependentJoins],
+          returnType: 'string',
+          compilationContext: this.compilationContext,
+          value: { name: 'LEFT' },
+          children: [leftArg1, leftArg2]
+        };
+
+      case 'RIGHT':
+        if (node.args.length !== 2) {
+          this.error('RIGHT() takes exactly two arguments: RIGHT(text, num)', node.position);
+        }
+        
+        const rightArg1 = this.compile(node.args[0]);
+        const rightArg2 = this.compile(node.args[1]);
+        
+        if (rightArg1.returnType !== 'string') {
+          this.error('RIGHT() first argument must be string, got ' + rightArg1.returnType, node.position);
+        }
+        if (rightArg2.returnType !== 'number') {
+          this.error('RIGHT() second argument must be number, got ' + rightArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'RIGHT', [rightArg1.semanticId, rightArg2.semanticId]),
+          dependentJoins: [...rightArg1.dependentJoins, ...rightArg2.dependentJoins],
+          returnType: 'string',
+          compilationContext: this.compilationContext,
+          value: { name: 'RIGHT' },
+          children: [rightArg1, rightArg2]
+        };
+
+      case 'MID':
+        if (node.args.length !== 3) {
+          this.error('MID() takes exactly three arguments: MID(text, start, length)', node.position);
+        }
+        
+        const midArg1 = this.compile(node.args[0]);
+        const midArg2 = this.compile(node.args[1]);
+        const midArg3 = this.compile(node.args[2]);
+        
+        if (midArg1.returnType !== 'string') {
+          this.error('MID() first argument must be string, got ' + midArg1.returnType, node.position);
+        }
+        if (midArg2.returnType !== 'number') {
+          this.error('MID() second argument must be number, got ' + midArg2.returnType, node.position);
+        }
+        if (midArg3.returnType !== 'number') {
+          this.error('MID() third argument must be number, got ' + midArg3.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'MID', [midArg1.semanticId, midArg2.semanticId, midArg3.semanticId]),
+          dependentJoins: [...midArg1.dependentJoins, ...midArg2.dependentJoins, ...midArg3.dependentJoins],
+          returnType: 'string',
+          compilationContext: this.compilationContext,
+          value: { name: 'MID' },
+          children: [midArg1, midArg2, midArg3]
+        };
 
       case 'ISNULL':
         if (node.args.length !== 1) {
@@ -1124,14 +1224,17 @@ class Compiler {
 
       case 'CONTAINS':
         if (node.args.length !== 2) {
-          this.error('CONTAINS() takes exactly two arguments', node.position);
+          this.error('CONTAINS() takes exactly two arguments: CONTAINS(text, search)', node.position);
         }
         
         const containsArg1 = this.compile(node.args[0]);
         const containsArg2 = this.compile(node.args[1]);
         
-        if (containsArg1.returnType !== 'string' || containsArg2.returnType !== 'string') {
-          this.error('CONTAINS() requires string arguments', node.position);
+        if (containsArg1.returnType !== 'string') {
+          this.error('CONTAINS() first argument must be string, got ' + containsArg1.returnType, node.position);
+        }
+        if (containsArg2.returnType !== 'string') {
+          this.error('CONTAINS() second argument must be string, got ' + containsArg2.returnType, node.position);
         }
         
         return {
@@ -1146,15 +1249,21 @@ class Compiler {
 
       case 'SUBSTITUTE':
         if (node.args.length !== 3) {
-          this.error('SUBSTITUTE() takes exactly three arguments', node.position);
+          this.error('SUBSTITUTE() takes exactly three arguments: SUBSTITUTE(text, old_text, new_text)', node.position);
         }
         
         const subArg1 = this.compile(node.args[0]);
         const subArg2 = this.compile(node.args[1]);
         const subArg3 = this.compile(node.args[2]);
         
-        if (subArg1.returnType !== 'string' || subArg2.returnType !== 'string' || subArg3.returnType !== 'string') {
-          this.error('SUBSTITUTE() requires string arguments', node.position);
+        if (subArg1.returnType !== 'string') {
+          this.error('SUBSTITUTE() first argument must be string, got ' + subArg1.returnType, node.position);
+        }
+        if (subArg2.returnType !== 'string') {
+          this.error('SUBSTITUTE() second argument must be string, got ' + subArg2.returnType, node.position);
+        }
+        if (subArg3.returnType !== 'string') {
+          this.error('SUBSTITUTE() third argument must be string, got ' + subArg3.returnType, node.position);
         }
         
         return {
@@ -1174,7 +1283,7 @@ class Compiler {
         
         const absArg = this.compile(node.args[0]);
         if (absArg.returnType !== 'number') {
-          this.error('ABS() requires numeric argument', node.position);
+          this.error('ABS() requires number argument, got ' + absArg.returnType, node.position);
         }
         
         return {
@@ -1185,6 +1294,146 @@ class Compiler {
           compilationContext: this.compilationContext,
           value: { name: 'ABS' },
           children: [absArg]
+        };
+
+      case 'ROUND':
+        if (node.args.length !== 2) {
+          this.error('ROUND() takes exactly two arguments: ROUND(number, decimals)', node.position);
+        }
+        
+        const roundArg1 = this.compile(node.args[0]);
+        const roundArg2 = this.compile(node.args[1]);
+        
+        if (roundArg1.returnType !== 'number') {
+          this.error('ROUND() first argument must be number, got ' + roundArg1.returnType, node.position);
+        }
+        if (roundArg2.returnType !== 'number') {
+          this.error('ROUND() second argument must be number, got ' + roundArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'ROUND', [roundArg1.semanticId, roundArg2.semanticId]),
+          dependentJoins: [...roundArg1.dependentJoins, ...roundArg2.dependentJoins],
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'ROUND' },
+          children: [roundArg1, roundArg2]
+        };
+
+      case 'MIN':
+        if (node.args.length !== 2) {
+          this.error('MIN() takes exactly two arguments: MIN(num1, num2)', node.position);
+        }
+        
+        const minArg1 = this.compile(node.args[0]);
+        const minArg2 = this.compile(node.args[1]);
+        
+        if (minArg1.returnType !== 'number') {
+          this.error('MIN() first argument must be number, got ' + minArg1.returnType, node.position);
+        }
+        if (minArg2.returnType !== 'number') {
+          this.error('MIN() second argument must be number, got ' + minArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'MIN', [minArg1.semanticId, minArg2.semanticId]),
+          dependentJoins: [...minArg1.dependentJoins, ...minArg2.dependentJoins],
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'MIN' },
+          children: [minArg1, minArg2]
+        };
+
+      case 'MAX':
+        if (node.args.length !== 2) {
+          this.error('MAX() takes exactly two arguments: MAX(num1, num2)', node.position);
+        }
+        
+        const maxArg1 = this.compile(node.args[0]);
+        const maxArg2 = this.compile(node.args[1]);
+        
+        if (maxArg1.returnType !== 'number') {
+          this.error('MAX() first argument must be number, got ' + maxArg1.returnType, node.position);
+        }
+        if (maxArg2.returnType !== 'number') {
+          this.error('MAX() second argument must be number, got ' + maxArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'MAX', [maxArg1.semanticId, maxArg2.semanticId]),
+          dependentJoins: [...maxArg1.dependentJoins, ...maxArg2.dependentJoins],
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'MAX' },
+          children: [maxArg1, maxArg2]
+        };
+
+      case 'MOD':
+        if (node.args.length !== 2) {
+          this.error('MOD() takes exactly two arguments: MOD(dividend, divisor)', node.position);
+        }
+        
+        const modArg1 = this.compile(node.args[0]);
+        const modArg2 = this.compile(node.args[1]);
+        
+        if (modArg1.returnType !== 'number') {
+          this.error('MOD() first argument must be number, got ' + modArg1.returnType, node.position);
+        }
+        if (modArg2.returnType !== 'number') {
+          this.error('MOD() second argument must be number, got ' + modArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'MOD', [modArg1.semanticId, modArg2.semanticId]),
+          dependentJoins: [...modArg1.dependentJoins, ...modArg2.dependentJoins],
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'MOD' },
+          children: [modArg1, modArg2]
+        };
+
+      case 'CEILING':
+        if (node.args.length !== 1) {
+          this.error('CEILING() takes exactly one argument', node.position);
+        }
+        
+        const ceilingArg = this.compile(node.args[0]);
+        if (ceilingArg.returnType !== 'number') {
+          this.error('CEILING() requires number argument, got ' + ceilingArg.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'CEILING', [ceilingArg.semanticId]),
+          dependentJoins: ceilingArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'CEILING' },
+          children: [ceilingArg]
+        };
+
+      case 'FLOOR':
+        if (node.args.length !== 1) {
+          this.error('FLOOR() takes exactly one argument', node.position);
+        }
+        
+        const floorArg = this.compile(node.args[0]);
+        if (floorArg.returnType !== 'number') {
+          this.error('FLOOR() requires number argument, got ' + floorArg.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'FLOOR', [floorArg.semanticId]),
+          dependentJoins: floorArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'FLOOR' },
+          children: [floorArg]
         };
 
       case 'YEAR':
@@ -1861,6 +2110,30 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
       const lowerArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `LOWER(${lowerArgSQL})`;
       
+    case 'TRIM':
+      const trimArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `TRIM(${trimArgSQL})`;
+      
+    case 'LEN':
+      const lenArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `LENGTH(${lenArgSQL})`;
+      
+    case 'LEFT':
+      const leftTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const leftNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `LEFT(${leftTextSQL}, ${leftNumSQL})`;
+      
+    case 'RIGHT':
+      const rightTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const rightNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `RIGHT(${rightTextSQL}, ${rightNumSQL})`;
+      
+    case 'MID':
+      const midTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const midStartSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      const midLengthSQL = generateExpressionSQL(expr.children[2], joinAliases, aggregateColumnMappings, baseTableName);
+      return `SUBSTRING(${midTextSQL}, ${midStartSQL}, ${midLengthSQL})`;
+      
     case 'IF':
       const conditionSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const trueSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
@@ -1915,6 +2188,34 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
     case 'ABS':
       const absArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `ABS(${absArgSQL})`;
+      
+    case 'ROUND':
+      const roundNumSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const roundDecSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `ROUND(${roundNumSQL}, ${roundDecSQL})`;
+      
+    case 'MIN':
+      const minArg1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const minArg2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `LEAST(${minArg1SQL}, ${minArg2SQL})`;
+      
+    case 'MAX':
+      const maxArg1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const maxArg2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `GREATEST(${maxArg1SQL}, ${maxArg2SQL})`;
+      
+    case 'MOD':
+      const modArg1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const modArg2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `MOD(${modArg1SQL}, ${modArg2SQL})`;
+      
+    case 'CEILING':
+      const ceilingArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `CEILING(${ceilingArgSQL})`;
+      
+    case 'FLOOR':
+      const floorArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `FLOOR(${floorArgSQL})`;
       
     case 'YEAR':
       const yearArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
