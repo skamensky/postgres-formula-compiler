@@ -10,10 +10,21 @@ import { readFileSync } from 'fs';
 import { evaluateFormula, generateSQL, mapPostgresType } from './formula-compiler.js';
 import { basename, dirname } from 'path';
 import pkg from 'pg';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
 const { Client } = pkg;
 
-// Database connection string
-const connectionString = "***REMOVED***";
+// Database connection string from environment
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ Error: DATABASE_URL environment variable is not set');
+  console.error('   Please create a .env file with: DATABASE_URL=your_connection_string');
+  process.exit(1);
+}
 
 // Extract table name from formula file path
 function extractTableName(filePath) {
