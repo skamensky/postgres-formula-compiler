@@ -1,0 +1,238 @@
+{
+  "metadata": {
+    "tableName": "submission",
+    "formulaCount": 21,
+    "formulas": [
+      {
+        "fieldName": "advanced_math",
+        "content": "ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, \"days\")) * 0.5, 2)",
+        "path": "examples/table/submission/advanced_math.formula"
+      },
+      {
+        "fieldName": "approval_status",
+        "content": "IF(status = \"approved\", \"✅ APPROVED on \" & STRING(MONTH(updated_at)) & \"/\" & STRING(DAY(updated_at)), IF(status = \"rejected\", \"❌ REJECTED\", IF(DATEDIF(created_at, TODAY(), \"days\") > 30, \"⚠️ OVERDUE\", \"📋 IN PROGRESS\")))",
+        "path": "examples/table/submission/approval_status.formula"
+      },
+      {
+        "fieldName": "business_summary",
+        "content": "merchant_rel.business_name & \" - $\" & STRING(ROUND(amount, 2)) & \" - Commission: \" & STRING_AGG(rep_links_submission, STRING(commission_percentage) & \"%\", \", \")",
+        "path": "examples/table/submission/business_summary.formula"
+      },
+      {
+        "fieldName": "commission_breakdown",
+        "content": "STRING_AGG_DISTINCT(rep_links_submission, rep_rel.name & \":\" & STRING(commission_percentage) & \"%\", \" | \")",
+        "path": "examples/table/submission/commission_breakdown.formula"
+      },
+      {
+        "fieldName": "compliance_check",
+        "content": "IF(AND(amount <= 250000, DATEDIF(created_at, TODAY(), \"days\") <= 60), \"✅ COMPLIANT\", \"⚠️ REVIEW NEEDED\") & \" | Age: \" & STRING(DATEDIF(created_at, TODAY(), \"days\")) & \" days\"",
+        "path": "examples/table/submission/compliance_check.formula"
+      },
+      {
+        "fieldName": "comprehensive_dashboard",
+        "content": "merchant_rel.business_name & \" | $\" & STRING(ROUND(amount, 0)) & \" | \" & STRING(COUNT_AGG(rep_links_submission, rep)) & \" reps | \" & STRING(DATEDIF(created_at, TODAY(), \"days\")) & \"d old | \" & UPPER(status) & \" | Q\" & STRING(CEILING(MONTH(created_at) / 3)) & \"/\" & STRING(YEAR(created_at))",
+        "path": "examples/table/submission/comprehensive_dashboard.formula"
+      },
+      {
+        "fieldName": "contact_info",
+        "content": "merchant_rel.first_name & \" \" & merchant_rel.last_name & \" (\" & merchant_rel.email & \") | \" & SUBSTITUTE(merchant_rel.phone, \"-\", \".\") & \" | Business: \" & merchant_rel.business_name",
+        "path": "examples/table/submission/contact_info.formula"
+      },
+      {
+        "fieldName": "document_summary",
+        "content": "\"Status: \" & UPPER(status) & \" | Amount: $\" & STRING(ROUND(amount, 0)) & \" | Merchant: \" & merchant_rel.business_name",
+        "path": "examples/table/submission/document_summary.formula"
+      },
+      {
+        "fieldName": "financial_metrics",
+        "content": "ROUND(amount * SUM_AGG(rep_links_submission, commission_percentage) / 100, 2)",
+        "path": "examples/table/submission/financial_metrics.formula"
+      },
+      {
+        "fieldName": "funding_analysis",
+        "content": "IF(amount > 500000, \"JUMBO: $\" & STRING(ROUND(amount/1000, 0)) & \"K\", IF(amount > 100000, \"LARGE: $\" & STRING(ROUND(amount/1000, 0)) & \"K\", \"STANDARD: $\" & STRING(amount))) & \" - \" & merchant_rel.industry",
+        "path": "examples/table/submission/funding_analysis.formula"
+      },
+      {
+        "fieldName": "merchant_profile",
+        "content": "UPPER(LEFT(merchant_rel.business_name, 3)) & \"-\" & STRING(merchant_rel.id) & \" | \" & SUBSTITUTE(merchant_rel.city, \" \", \"_\") & \" | Industry: \" & merchant_rel.industry",
+        "path": "examples/table/submission/merchant_profile.formula"
+      },
+      {
+        "fieldName": "null_safety_check",
+        "content": "IF(ISNULL(merchant_rel.business_name), \"NO MERCHANT\", merchant_rel.business_name) & \" | Amount: \" & IF(ISNULL(amount), \"N/A\", STRING(amount)) & \" | Reps: \" & STRING(IF(ISNULL(COUNT_AGG(rep_links_submission, id)), 0, COUNT_AGG(rep_links_submission, id)))",
+        "path": "examples/table/submission/null_safety_check.formula"
+      },
+      {
+        "fieldName": "performance_score",
+        "content": "ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), \"days\") * 0.1)), 1)",
+        "path": "examples/table/submission/performance_score.formula"
+      },
+      {
+        "fieldName": "quarterly_report",
+        "content": "\"Q\" & STRING(CEILING(MONTH(created_at) / 3)) & \" \" & STRING(YEAR(created_at)) & \" | \" & merchant_rel.business_name & \" | $\" & STRING(amount)",
+        "path": "examples/table/submission/quarterly_report.formula"
+      },
+      {
+        "fieldName": "rep_analysis",
+        "content": "IF(AND_AGG(rep_links_submission, commission_percentage > 0), \"All reps have commission\", \"Some reps without commission\") & \" | High performers: \" & STRING_AGG(rep_links_submission, IF(commission_percentage > 5, rep_rel.name, \"\"), \", \")",
+        "path": "examples/table/submission/rep_analysis.formula"
+      },
+      {
+        "fieldName": "risk_assessment",
+        "content": "IF(amount > 100000, \"HIGH RISK\", IF(amount > 50000, \"MEDIUM RISK\", \"LOW RISK\")) & \" | \" & merchant_rel.business_name & \" | Reps: \" & STRING(COUNT_AGG(rep_links_submission, rep))",
+        "path": "examples/table/submission/risk_assessment.formula"
+      },
+      {
+        "fieldName": "seasonal_analysis",
+        "content": "IF(AND(MONTH(created_at) >= 3, MONTH(created_at) <= 5), \"🌸 SPRING\", IF(AND(MONTH(created_at) >= 6, MONTH(created_at) <= 8), \"☀️ SUMMER\", IF(AND(MONTH(created_at) >= 9, MONTH(created_at) <= 11), \"🍂 FALL\", \"❄️ WINTER\"))) & \" \" & STRING(YEAR(created_at)) & \" | \" & merchant_rel.business_name",
+        "path": "examples/table/submission/seasonal_analysis.formula"
+      },
+      {
+        "fieldName": "status_report",
+        "content": "IF(status = \"approved\", \"✅ APPROVED\", IF(status = \"pending\", \"⏳ PENDING\", \"❌ \" & UPPER(status))) & \" | Days since creation: \" & STRING(ROUND(DATEDIF(created_at, TODAY(), \"days\"),0))",
+        "path": "examples/table/submission/status_report.formula"
+      },
+      {
+        "fieldName": "text_processing",
+        "content": "UPPER(LEFT(TRIM(merchant_rel.business_name), 10)) & \"...\" & \" (\" & STRING(LEN(merchant_rel.business_name)) & \" chars) | \" & IF(CONTAINS(merchant_rel.business_name, \"LLC\"), \"CORPORATION\", \"OTHER\")",
+        "path": "examples/table/submission/text_processing.formula"
+      },
+      {
+        "fieldName": "timeline_tracker",
+        "content": "\"Created: \" & STRING(MONTH(created_at)) & \"/\" & STRING(DAY(created_at)) & \"/\" & STRING(YEAR(created_at)) & \" | Age: \" & STRING(DATEDIF(created_at, TODAY(), \"days\")) & \" days\"",
+        "path": "examples/table/submission/timeline_tracker.formula"
+      },
+      {
+        "fieldName": "weekend_detector",
+        "content": "IF(OR(WEEKDAY(created_at) = 1, WEEKDAY(created_at) = 7), \"📅 WEEKEND SUBMISSION\", \"🏢 WEEKDAY SUBMISSION\") & \" | \" & STRING(WEEKDAY(created_at)) & \"/7\"",
+        "path": "examples/table/submission/weekend_detector.formula"
+      }
+    ]
+  },
+  "results": [
+    {
+      "advanced_math": null,
+      "approval_status": "⚠️ OVERDUE",
+      "business_summary": null,
+      "commission_breakdown": "",
+      "compliance_check": "⚠️ REVIEW NEEDED | Age: 828.3952662037037037 days",
+      "comprehensive_dashboard": null,
+      "contact_info": "Chris Zowarka (phoenixpoolsinc@yahoo.com) | 18137742304 | Business: Phoenix Pools, Inc.",
+      "document_summary": null,
+      "financial_metrics": null,
+      "funding_analysis": null,
+      "merchant_profile": null,
+      "null_safety_check": "Phoenix Pools, Inc. | Amount: N/A | Reps: 0",
+      "performance_score": "0.0",
+      "quarterly_report": null,
+      "rep_analysis": "Some reps without commission | High performers: ",
+      "risk_assessment": "LOW RISK | Phoenix Pools, Inc. | Reps: 0",
+      "seasonal_analysis": "🌸 SPRING 2023 | Phoenix Pools, Inc.",
+      "status_report": "❌ SUBMITTED | Days since creation: 828",
+      "text_processing": "PHOENIX PO... (19 chars) | OTHER",
+      "timeline_tracker": "Created: 3/15/2023 | Age: 828.3952662037037037 days",
+      "weekend_detector": "🏢 WEEKDAY SUBMISSION | 4/7"
+    },
+    {
+      "advanced_math": null,
+      "approval_status": "⚠️ OVERDUE",
+      "business_summary": null,
+      "commission_breakdown": "",
+      "compliance_check": "⚠️ REVIEW NEEDED | Age: 828.3951388888888889 days",
+      "comprehensive_dashboard": null,
+      "contact_info": "DANIEL BORGES (inportrade@inportrade.com) | 13476981768 | Business: INPORTRADE LLC",
+      "document_summary": null,
+      "financial_metrics": null,
+      "funding_analysis": null,
+      "merchant_profile": "INP-106 | HOLLYWOOD | Industry: ELECTRONICS",
+      "null_safety_check": "INPORTRADE LLC | Amount: N/A | Reps: 0",
+      "performance_score": "0.0",
+      "quarterly_report": null,
+      "rep_analysis": "Some reps without commission | High performers: ",
+      "risk_assessment": "LOW RISK | INPORTRADE LLC | Reps: 0",
+      "seasonal_analysis": "🌸 SPRING 2023 | INPORTRADE LLC",
+      "status_report": "❌ NO RESPONSE | Days since creation: 828",
+      "text_processing": "INPORTRADE... (14 chars) | CORPORATION",
+      "timeline_tracker": "Created: 3/15/2023 | Age: 828.3951388888888889 days",
+      "weekend_detector": "🏢 WEEKDAY SUBMISSION | 4/7"
+    },
+    {
+      "advanced_math": null,
+      "approval_status": "⚠️ OVERDUE",
+      "business_summary": null,
+      "commission_breakdown": "",
+      "compliance_check": "⚠️ REVIEW NEEDED | Age: 275.4252430555555556 days",
+      "comprehensive_dashboard": null,
+      "contact_info": "JOHN MIYARES (jmiyares@hotmail.com) | 17739310662 | Business: TUSCANY BUILDERS CHICAGO INC",
+      "document_summary": null,
+      "financial_metrics": null,
+      "funding_analysis": null,
+      "merchant_profile": null,
+      "null_safety_check": "TUSCANY BUILDERS CHICAGO INC | Amount: N/A | Reps: 0",
+      "performance_score": "0.0",
+      "quarterly_report": null,
+      "rep_analysis": "Some reps without commission | High performers: ",
+      "risk_assessment": "LOW RISK | TUSCANY BUILDERS CHICAGO INC | Reps: 0",
+      "seasonal_analysis": "🍂 FALL 2024 | TUSCANY BUILDERS CHICAGO INC",
+      "status_report": "❌ SUBMITTED | Days since creation: 275",
+      "text_processing": "TUSCANY BU... (28 chars) | OTHER",
+      "timeline_tracker": "Created: 9/18/2024 | Age: 275.4252430555555556 days",
+      "weekend_detector": "🏢 WEEKDAY SUBMISSION | 4/7"
+    },
+    {
+      "advanced_math": null,
+      "approval_status": "⚠️ OVERDUE",
+      "business_summary": null,
+      "commission_breakdown": "",
+      "compliance_check": "⚠️ REVIEW NEEDED | Age: 275.3818402777777778 days",
+      "comprehensive_dashboard": null,
+      "contact_info": "MEHDI SAFFARI (sisinsurance77@yahoo.com) | 15123692548 | Business: SIS FINANCIAL LLC",
+      "document_summary": null,
+      "financial_metrics": null,
+      "funding_analysis": null,
+      "merchant_profile": null,
+      "null_safety_check": "SIS FINANCIAL LLC | Amount: N/A | Reps: 0",
+      "performance_score": "0.0",
+      "quarterly_report": null,
+      "rep_analysis": "Some reps without commission | High performers: ",
+      "risk_assessment": "LOW RISK | SIS FINANCIAL LLC | Reps: 0",
+      "seasonal_analysis": "🍂 FALL 2024 | SIS FINANCIAL LLC",
+      "status_report": "❌ SUBMITTED | Days since creation: 275",
+      "text_processing": "SIS FINANC... (17 chars) | CORPORATION",
+      "timeline_tracker": "Created: 9/18/2024 | Age: 275.3818402777777778 days",
+      "weekend_detector": "🏢 WEEKDAY SUBMISSION | 4/7"
+    },
+    {
+      "advanced_math": null,
+      "approval_status": "⚠️ OVERDUE",
+      "business_summary": null,
+      "commission_breakdown": "",
+      "compliance_check": "⚠️ REVIEW NEEDED | Age: 828.3952777777777778 days",
+      "comprehensive_dashboard": null,
+      "contact_info": "Judith Colon (judithcolon@npointsconsulting.com) | 18136382648 | Business: N POINTS CONSULTING LLC ",
+      "document_summary": null,
+      "financial_metrics": null,
+      "funding_analysis": null,
+      "merchant_profile": null,
+      "null_safety_check": "N POINTS CONSULTING LLC  | Amount: N/A | Reps: 0",
+      "performance_score": "0.0",
+      "quarterly_report": null,
+      "rep_analysis": "Some reps without commission | High performers: ",
+      "risk_assessment": "LOW RISK | N POINTS CONSULTING LLC  | Reps: 0",
+      "seasonal_analysis": "🌸 SPRING 2023 | N POINTS CONSULTING LLC ",
+      "status_report": "❌ SUBMITTED | Days since creation: 828",
+      "text_processing": "N POINTS C... (24 chars) | CORPORATION",
+      "timeline_tracker": "Created: 3/15/2023 | Age: 828.3952777777777778 days",
+      "weekend_detector": "🏢 WEEKDAY SUBMISSION | 4/7"
+    }
+  ],
+  "sql": "SELECT\n  ROUND(((CEILING((\"s\".\"amount\" / 1000)) * FLOOR(COALESCE(sr1.avg_value, 0))) + (ABS(EXTRACT(EPOCH FROM (\"s\".\"updated_at\" - \"s\".\"created_at\")) / 86400) * 0.5)), 2) AS advanced_math,\n  CASE WHEN (\"s\".\"status\" = 'approved') THEN ((('✅ APPROVED on ' || CAST(EXTRACT(MONTH FROM \"s\".\"updated_at\") AS TEXT)) || '/') || CAST(EXTRACT(DAY FROM \"s\".\"updated_at\") AS TEXT)) ELSE CASE WHEN (\"s\".\"status\" = 'rejected') THEN '❌ REJECTED' ELSE CASE WHEN (EXTRACT(EPOCH FROM (current_date - \"s\".\"created_at\")) / 86400 > 30) THEN '⚠️ OVERDUE' ELSE '📋 IN PROGRESS' END END END AS approval_status,\n  ((((\"rel_merchant\".\"business_name\" || ' - $') || CAST(ROUND(\"s\".\"amount\", 2) AS TEXT)) || ' - Commission: ') || COALESCE(sr1.rep_names, '')) AS business_summary,\n  COALESCE(sr1.rep_names_1, '') AS commission_breakdown,\n  (((CASE WHEN ((\"s\".\"amount\" <= 250000) AND (EXTRACT(EPOCH FROM (current_date - \"s\".\"created_at\")) / 86400 <= 60)) THEN '✅ COMPLIANT' ELSE '⚠️ REVIEW NEEDED' END || ' | Age: ') || CAST(EXTRACT(EPOCH FROM (current_date - \"s\".\"created_at\")) / 86400 AS TEXT)) || ' days') AS compliance_check,\n  ((((((((((((\"rel_merchant\".\"business_name\" || ' | $') || CAST(ROUND(\"s\".\"amount\", 0) AS TEXT)) || ' | ') || CAST(COALESCE(sr1.rep_count, 0) AS TEXT)) || ' reps | ') || CAST(EXTRACT(EPOCH FROM (current_date - \"s\".\"created_at\")) / 86400 AS TEXT)) || 'd old | ') || UPPER(\"s\".\"status\")) || ' | Q') || CAST(CEILING((EXTRACT(MONTH FROM \"s\".\"created_at\") / 3)) AS TEXT)) || '/') || CAST(EXTRACT(YEAR FROM \"s\".\"created_at\") AS TEXT)) AS comprehensive_dashboard,\n  ((((((((\"rel_merchant\".\"first_name\" || ' ') || \"rel_merchant\".\"last_name\") || ' (') || \"rel_merchant\".\"email\") || ') | ') || REPLACE(\"rel_merchant\".\"phone\", '-', '.')) || ' | Business: ') || \"rel_merchant\".\"business_name\") AS contact_info,\n  ((((('Status: ' || UPPER(\"s\".\"status\")) || ' | Amount: $') || CAST(ROUND(\"s\".\"amount\", 0) AS TEXT)) || ' | Merchant: ') || \"rel_merchant\".\"business_name\") AS document_summary,\n  ROUND(((\"s\".\"amount\" * COALESCE(sr1.sum_value, 0)) / 100), 2) AS financial_metrics,\n  ((CASE WHEN (\"s\".\"amount\" > 500000) THEN (('JUMBO: $' || CAST(ROUND((\"s\".\"amount\" / 1000), 0) AS TEXT)) || 'K') ELSE CASE WHEN (\"s\".\"amount\" > 100000) THEN (('LARGE: $' || CAST(ROUND((\"s\".\"amount\" / 1000), 0) AS TEXT)) || 'K') ELSE ('STANDARD: $' || CAST(\"s\".\"amount\" AS TEXT)) END END || ' - ') || \"rel_merchant\".\"industry\") AS funding_analysis,\n  ((((((UPPER(LEFT(\"rel_merchant\".\"business_name\", 3)) || '-') || CAST(\"rel_merchant\".\"id\" AS TEXT)) || ' | ') || REPLACE(\"rel_merchant\".\"city\", ' ', '_')) || ' | Industry: ') || \"rel_merchant\".\"industry\") AS merchant_profile,\n  ((((CASE WHEN (\"rel_merchant\".\"business_name\" IS NULL) THEN 'NO MERCHANT' ELSE \"rel_merchant\".\"business_name\" END || ' | Amount: ') || CASE WHEN (\"s\".\"amount\" IS NULL) THEN 'N/A' ELSE CAST(\"s\".\"amount\" AS TEXT) END) || ' | Reps: ') || CAST(CASE WHEN (COALESCE(sr1.rep_count_2, 0) IS NULL) THEN 0 ELSE COALESCE(sr1.rep_count_2, 0) END AS TEXT)) AS null_safety_check,\n  ROUND(LEAST(100, GREATEST(0, ((((\"s\".\"amount\" / 1000) * 10) + COALESCE(sr1.avg_value, 0)) - (EXTRACT(EPOCH FROM (current_date - \"s\".\"created_at\")) / 86400 * 0.1)))), 1) AS performance_score,\n  ((((((('Q' || CAST(CEILING((EXTRACT(MONTH FROM \"s\".\"created_at\") / 3)) AS TEXT)) || ' ') || CAST(EXTRACT(YEAR FROM \"s\".\"created_at\") AS TEXT)) || ' | ') || \"rel_merchant\".\"business_name\") || ' | $') || CAST(\"s\".\"amount\" AS TEXT)) AS quarterly_report,\n  ((CASE WHEN COALESCE(sr1.and_value, FALSE) THEN 'All reps have commission' ELSE 'Some reps without commission' END || ' | High performers: ') || COALESCE(sr1.rep_names_3, '')) AS rep_analysis,\n  ((((CASE WHEN (\"s\".\"amount\" > 100000) THEN 'HIGH RISK' ELSE CASE WHEN (\"s\".\"amount\" > 50000) THEN 'MEDIUM RISK' ELSE 'LOW RISK' END END || ' | ') || \"rel_merchant\".\"business_name\") || ' | Reps: ') || CAST(COALESCE(sr1.rep_count, 0) AS TEXT)) AS risk_assessment,\n  ((((CASE WHEN ((EXTRACT(MONTH FROM \"s\".\"created_at\") >= 3) AND (EXTRACT(MONTH FROM \"s\".\"created_at\") <= 5)) THEN '🌸 SPRING' ELSE CASE WHEN ((EXTRACT(MONTH FROM \"s\".\"created_at\") >= 6) AND (EXTRACT(MONTH FROM \"s\".\"created_at\") <= 8)) THEN '☀️ SUMMER' ELSE CASE WHEN ((EXTRACT(MONTH FROM \"s\".\"created_at\") >= 9) AND (EXTRACT(MONTH FROM \"s\".\"created_at\") <= 11)) THEN '🍂 FALL' ELSE '❄️ WINTER' END END END || ' ') || CAST(EXTRACT(YEAR FROM \"s\".\"created_at\") AS TEXT)) || ' | ') || \"rel_merchant\".\"business_name\") AS seasonal_analysis,\n  ((CASE WHEN (\"s\".\"status\" = 'approved') THEN '✅ APPROVED' ELSE CASE WHEN (\"s\".\"status\" = 'pending') THEN '⏳ PENDING' ELSE ('❌ ' || UPPER(\"s\".\"status\")) END END || ' | Days since creation: ') || CAST(ROUND(EXTRACT(EPOCH FROM (current_date - \"s\".\"created_at\")) / 86400, 0) AS TEXT)) AS status_report,\n  (((((UPPER(LEFT(TRIM(\"rel_merchant\".\"business_name\"), 10)) || '...') || ' (') || CAST(LENGTH(\"rel_merchant\".\"business_name\") AS TEXT)) || ' chars) | ') || CASE WHEN (POSITION('LLC' IN \"rel_merchant\".\"business_name\") > 0) THEN 'CORPORATION' ELSE 'OTHER' END) AS text_processing,\n  (((((((('Created: ' || CAST(EXTRACT(MONTH FROM \"s\".\"created_at\") AS TEXT)) || '/') || CAST(EXTRACT(DAY FROM \"s\".\"created_at\") AS TEXT)) || '/') || CAST(EXTRACT(YEAR FROM \"s\".\"created_at\") AS TEXT)) || ' | Age: ') || CAST(EXTRACT(EPOCH FROM (current_date - \"s\".\"created_at\")) / 86400 AS TEXT)) || ' days') AS timeline_tracker,\n  (((CASE WHEN ((EXTRACT(DOW FROM \"s\".\"created_at\") + 1 = 1) OR (EXTRACT(DOW FROM \"s\".\"created_at\") + 1 = 7)) THEN '📅 WEEKEND SUBMISSION' ELSE '🏢 WEEKDAY SUBMISSION' END || ' | ') || CAST(EXTRACT(DOW FROM \"s\".\"created_at\") + 1 AS TEXT)) || '/7') AS weekend_detector\nFROM submission s\n  LEFT JOIN merchant rel_merchant ON s.merchant = rel_merchant.id\n  LEFT JOIN (\n    SELECT\n      rep_link.submission AS submission,\n      AVG(\"rep_link\".\"commission_percentage\") AS avg_value,\n      STRING_AGG((CAST(\"rep_link\".\"commission_percentage\" AS TEXT) || '%'), ', ') AS rep_names,\n      STRING_AGG(DISTINCT (((\"agg_t1\".\"name\" || ':') || CAST(\"rep_link\".\"commission_percentage\" AS TEXT)) || '%'), ' | ') AS rep_names_1,\n      COUNT(*) AS rep_count,\n      SUM(\"rep_link\".\"commission_percentage\") AS sum_value,\n      COUNT(*) AS rep_count_2,\n      BOOL_AND((\"rep_link\".\"commission_percentage\" > 0)) AS and_value,\n      STRING_AGG(CASE WHEN (\"rep_link\".\"commission_percentage\" > 5) THEN \"agg_t1\".\"name\" ELSE '' END, ', ') AS rep_names_3\n    FROM rep_link\n    JOIN rep agg_t1 ON rep_link.rep = agg_t1.id\n    GROUP BY rep_link.submission\n  ) sr1 ON sr1.submission = s.id",
+  "analysis": {
+    "totalJoinIntents": 2,
+    "totalAggregateIntents": 8,
+    "actualJoins": 2,
+    "subqueries": 0,
+    "selectExpressions": 21
+  }
+}
