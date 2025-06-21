@@ -985,6 +985,228 @@ class Compiler {
       case 'LOWER':
         return this.compileStringFunction(node, funcName);
 
+      case 'ISNULL':
+        if (node.args.length !== 1) {
+          this.error('ISNULL() takes exactly one argument', node.position);
+        }
+        
+        const isnullArg = this.compile(node.args[0]);
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'ISNULL', [isnullArg.semanticId]),
+          dependentJoins: isnullArg.dependentJoins,
+          returnType: 'boolean',
+          compilationContext: this.compilationContext,
+          value: { name: 'ISNULL' },
+          children: [isnullArg]
+        };
+
+      case 'NULLVALUE':
+        if (node.args.length !== 2) {
+          this.error('NULLVALUE() takes exactly two arguments', node.position);
+        }
+        
+        const nullvalueArg1 = this.compile(node.args[0]);
+        const nullvalueArg2 = this.compile(node.args[1]);
+        
+        // Type checking - both arguments should be the same type (unless one is null)
+        if (nullvalueArg1.returnType !== nullvalueArg2.returnType && 
+            nullvalueArg1.returnType !== 'null' && nullvalueArg2.returnType !== 'null') {
+          this.error(`NULLVALUE() value and default must be the same type, got ${nullvalueArg1.returnType} and ${nullvalueArg2.returnType}`, node.position);
+        }
+        
+        // Return type is the non-null type, or the first type if both are non-null
+        const nullvalueReturnType = nullvalueArg1.returnType !== 'null' ? nullvalueArg1.returnType : nullvalueArg2.returnType;
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'NULLVALUE', [nullvalueArg1.semanticId, nullvalueArg2.semanticId]),
+          dependentJoins: [...nullvalueArg1.dependentJoins, ...nullvalueArg2.dependentJoins],
+          returnType: nullvalueReturnType,
+          compilationContext: this.compilationContext,
+          value: { name: 'NULLVALUE' },
+          children: [nullvalueArg1, nullvalueArg2]
+        };
+
+      case 'ISBLANK':
+        if (node.args.length !== 1) {
+          this.error('ISBLANK() takes exactly one argument', node.position);
+        }
+        
+        const isblankArg = this.compile(node.args[0]);
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'ISBLANK', [isblankArg.semanticId]),
+          dependentJoins: isblankArg.dependentJoins,
+          returnType: 'boolean',
+          compilationContext: this.compilationContext,
+          value: { name: 'ISBLANK' },
+          children: [isblankArg]
+        };
+
+      case 'AND':
+        if (node.args.length < 2) {
+          this.error('AND() takes at least two arguments', node.position);
+        }
+        
+        const andArgs = [];
+        const andDependentJoins = [];
+        const andChildIds = [];
+        
+        for (let i = 0; i < node.args.length; i++) {
+          const arg = this.compile(node.args[i]);
+          if (arg.returnType !== 'boolean') {
+            this.error(`AND() argument ${i + 1} must be boolean, got ${arg.returnType}`, node.position);
+          }
+          andArgs.push(arg);
+          andDependentJoins.push(...arg.dependentJoins);
+          andChildIds.push(arg.semanticId);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'AND', andChildIds),
+          dependentJoins: andDependentJoins,
+          returnType: 'boolean',
+          compilationContext: this.compilationContext,
+          value: { name: 'AND' },
+          children: andArgs
+        };
+
+      case 'OR':
+        if (node.args.length < 2) {
+          this.error('OR() takes at least two arguments', node.position);
+        }
+        
+        const orArgs = [];
+        const orDependentJoins = [];
+        const orChildIds = [];
+        
+        for (let i = 0; i < node.args.length; i++) {
+          const arg = this.compile(node.args[i]);
+          if (arg.returnType !== 'boolean') {
+            this.error(`OR() argument ${i + 1} must be boolean, got ${arg.returnType}`, node.position);
+          }
+          orArgs.push(arg);
+          orDependentJoins.push(...arg.dependentJoins);
+          orChildIds.push(arg.semanticId);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'OR', orChildIds),
+          dependentJoins: orDependentJoins,
+          returnType: 'boolean',
+          compilationContext: this.compilationContext,
+          value: { name: 'OR' },
+          children: orArgs
+        };
+
+      case 'NOT':
+        if (node.args.length !== 1) {
+          this.error('NOT() takes exactly one argument', node.position);
+        }
+        
+        const notArg = this.compile(node.args[0]);
+        if (notArg.returnType !== 'boolean') {
+          this.error('NOT() requires boolean argument, got ' + notArg.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'NOT', [notArg.semanticId]),
+          dependentJoins: notArg.dependentJoins,
+          returnType: 'boolean',
+          compilationContext: this.compilationContext,
+          value: { name: 'NOT' },
+          children: [notArg]
+        };
+
+      case 'CONTAINS':
+        if (node.args.length !== 2) {
+          this.error('CONTAINS() takes exactly two arguments', node.position);
+        }
+        
+        const containsArg1 = this.compile(node.args[0]);
+        const containsArg2 = this.compile(node.args[1]);
+        
+        if (containsArg1.returnType !== 'string' || containsArg2.returnType !== 'string') {
+          this.error('CONTAINS() requires string arguments', node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'CONTAINS', [containsArg1.semanticId, containsArg2.semanticId]),
+          dependentJoins: [...containsArg1.dependentJoins, ...containsArg2.dependentJoins],
+          returnType: 'boolean',
+          compilationContext: this.compilationContext,
+          value: { name: 'CONTAINS' },
+          children: [containsArg1, containsArg2]
+        };
+
+      case 'SUBSTITUTE':
+        if (node.args.length !== 3) {
+          this.error('SUBSTITUTE() takes exactly three arguments', node.position);
+        }
+        
+        const subArg1 = this.compile(node.args[0]);
+        const subArg2 = this.compile(node.args[1]);
+        const subArg3 = this.compile(node.args[2]);
+        
+        if (subArg1.returnType !== 'string' || subArg2.returnType !== 'string' || subArg3.returnType !== 'string') {
+          this.error('SUBSTITUTE() requires string arguments', node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'SUBSTITUTE', [subArg1.semanticId, subArg2.semanticId, subArg3.semanticId]),
+          dependentJoins: [...subArg1.dependentJoins, ...subArg2.dependentJoins, ...subArg3.dependentJoins],
+          returnType: 'string',
+          compilationContext: this.compilationContext,
+          value: { name: 'SUBSTITUTE' },
+          children: [subArg1, subArg2, subArg3]
+        };
+
+      case 'ABS':
+        if (node.args.length !== 1) {
+          this.error('ABS() takes exactly one argument', node.position);
+        }
+        
+        const absArg = this.compile(node.args[0]);
+        if (absArg.returnType !== 'number') {
+          this.error('ABS() requires numeric argument', node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'ABS', [absArg.semanticId]),
+          dependentJoins: absArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'ABS' },
+          children: [absArg]
+        };
+
+      case 'YEAR':
+        if (node.args.length !== 1) {
+          this.error('YEAR() takes exactly one argument', node.position);
+        }
+        
+        const yearArg = this.compile(node.args[0]);
+        if (yearArg.returnType !== 'date') {
+          this.error('YEAR() requires date argument', node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'YEAR', [yearArg.semanticId]),
+          dependentJoins: yearArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'YEAR' },
+          children: [yearArg]
+        };
+
       // Add other function cases...
       default:
         this.error(`Unknown function: ${funcName}`, node.position);
@@ -1248,7 +1470,12 @@ function generateSQL(namedResults, baseTableName) {
     const context = contextMatch ? contextMatch[1] : 'main';
     
     if (context === 'main') {
-      joinAliases.set(semanticId, `t${aliasCounter++}`);
+      // For main context, use descriptive aliases based on relationship name
+      if (joinIntent.relationshipType === 'direct_relationship') {
+        joinAliases.set(semanticId, `rel_${joinIntent.targetTable}`);
+      } else {
+        joinAliases.set(semanticId, `t${aliasCounter++}`);
+      }
     } else {
       // For aggregate contexts, use descriptive aliases
       joinAliases.set(semanticId, `agg_t${aliasCounter++}`);
@@ -1510,7 +1737,7 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
       return `'${expr.value.replace(/'/g, "''")}'`; // Escape single quotes
       
     case 'BOOLEAN_LITERAL':
-      return expr.value ? 'TRUE' : 'FALSE';
+      return expr.value === 'TRUE' ? 'TRUE' : 'FALSE';
       
     case 'NULL_LITERAL':
       return 'NULL';
@@ -1545,7 +1772,7 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
       } else if (expr.value.op === '=') {
         return `(${leftSQL} = ${rightSQL})`;
       } else if (expr.value.op === '!=' || expr.value.op === '<>') {
-        return `(${leftSQL} != ${rightSQL})`;
+        return `(${leftSQL} <> ${rightSQL})`;
       } else if (expr.value.op === '+') {
         // Handle date arithmetic for addition
         if (leftType === 'date' && rightType === 'number') {
@@ -1642,8 +1869,56 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
         const falseSQL = generateExpressionSQL(expr.children[2], joinAliases, aggregateColumnMappings, baseTableName);
         return `CASE WHEN ${conditionSQL} THEN ${trueSQL} ELSE ${falseSQL} END`;
       } else {
-        return `CASE WHEN ${conditionSQL} THEN ${trueSQL} END`;
+        return `CASE WHEN ${conditionSQL} THEN ${trueSQL} ELSE NULL END`;
       }
+      
+    case 'ISNULL':
+      const isnullArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `(${isnullArgSQL} IS NULL)`;
+      
+    case 'NULLVALUE':
+      const nullvalue1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const nullvalue2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `COALESCE(${nullvalue1SQL}, ${nullvalue2SQL})`;
+      
+    case 'ISBLANK':
+      const isblankArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `(${isblankArgSQL} IS NULL OR ${isblankArgSQL} = '')`;
+      
+    case 'AND':
+      const andArgSQLs = expr.children.map(child => 
+        generateExpressionSQL(child, joinAliases, aggregateColumnMappings, baseTableName)
+      );
+      return `(${andArgSQLs.join(' AND ')})`;
+
+    case 'OR':
+      const orArgSQLs = expr.children.map(child => 
+        generateExpressionSQL(child, joinAliases, aggregateColumnMappings, baseTableName)
+      );
+      return `(${orArgSQLs.join(' OR ')})`;
+
+    case 'NOT':
+      const notArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `NOT (${notArgSQL})`;
+      
+    case 'CONTAINS':
+      const containsTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const containsSubstringSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `(POSITION(${containsSubstringSQL} IN ${containsTextSQL}) > 0)`;
+      
+    case 'SUBSTITUTE':
+      const subTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const subOldSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      const subNewSQL = generateExpressionSQL(expr.children[2], joinAliases, aggregateColumnMappings, baseTableName);
+      return `REPLACE(${subTextSQL}, ${subOldSQL}, ${subNewSQL})`;
+      
+    case 'ABS':
+      const absArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `ABS(${absArgSQL})`;
+      
+    case 'YEAR':
+      const yearArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXTRACT(YEAR FROM ${yearArgSQL})`;
       
     default:
       throw new Error(`Unknown function: ${funcName}`);
