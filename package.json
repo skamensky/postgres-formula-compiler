@@ -5,12 +5,11 @@
   "type": "module",
   "main": "formula-compiler.js",
   "scripts": {
-    "test": "node test-formula-compiler.js",
-    "demo": "node demo.js",
-    "exec": "node exec-formula"
+    "test": "node tests/run-all-tests.js"
   },
   "dependencies": {
-    "pg": "^8.11.0"
+    "pg": "^8.11.0",
+    "dotenv": "^16.4.7"
   },
   "keywords": ["formula", "compiler", "sql", "postgresql", "excel", "lexer", "parser"],
   "author": "",
