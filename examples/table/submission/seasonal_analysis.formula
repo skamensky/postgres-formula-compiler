@@ -1,0 +1,1 @@
+IF(MONTH(created_date) >= 3 AND MONTH(created_date) <= 5, "🌸 SPRING", IF(MONTH(created_date) >= 6 AND MONTH(created_date) <= 8, "☀️ SUMMER", IF(MONTH(created_date) >= 9 AND MONTH(created_date) <= 11, "🍂 FALL", "❄️ WINTER"))) & " " & STRING(YEAR(created_date)) & " | " & merchant_rel.business_name

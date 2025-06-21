@@ -1,0 +1,1 @@
+IF(OR(WEEKDAY(created_date) = 1, WEEKDAY(created_date) = 7), "📅 WEEKEND SUBMISSION", "🏢 WEEKDAY SUBMISSION") & " | " & STRING(WEEKDAY(created_date)) & "/7"

@@ -1,0 +1,1 @@
+"Q" & STRING(CEILING(MONTH(created_date) / 3)) & " " & STRING(YEAR(created_date)) & " | " & merchant_rel.business_name & " | $" & STRING(amount)

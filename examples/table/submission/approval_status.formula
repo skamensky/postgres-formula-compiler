@@ -1,0 +1,1 @@
+IF(status = "approved", "✅ APPROVED on " & STRING(MONTH(updated_date)) & "/" & STRING(DAY(updated_date)), IF(status = "rejected", "❌ REJECTED", IF(DATEDIF(created_date, TODAY(), "days") > 30, "⚠️ OVERDUE", "📋 IN PROGRESS")))

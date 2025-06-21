@@ -1,0 +1,1 @@
+IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " & UPPER(status))) & " | Days since creation: " & STRING(DATEDIF(created_date, TODAY(), "days"))

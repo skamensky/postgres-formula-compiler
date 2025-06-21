@@ -1,0 +1,1 @@
+ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_date, updated_date, "days")) * 0.5, 2)

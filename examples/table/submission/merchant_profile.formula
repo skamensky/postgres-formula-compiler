@@ -1,0 +1,1 @@
+UPPER(LEFT(merchant_rel.business_name, 3)) & "-" & STRING(merchant_rel.id) & " | " & SUBSTITUTE(merchant_rel.city, " ", "_") & " | Est: " & STRING(YEAR(merchant_rel.established_date))

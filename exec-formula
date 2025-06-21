@@ -2,16 +2,40 @@
 
 /**
  * Formula Executor - Reads multiple formula files and executes them with deduplication
- * Demonstrates hierarchical semantic IDs and cross-formula optimization
+ * Usage: ./exec-formula path/to/formula1.formula path/to/formula2.formula ...
+ * All formulas must be from the same table (determined by directory structure)
  */
 
 import { readFileSync } from 'fs';
 import { evaluateFormula, generateSQL, mapPostgresType } from './formula-compiler.js';
+import { basename, dirname } from 'path';
 import pkg from 'pg';
 const { Client } = pkg;
 
 // Database connection string
 const connectionString = "***REMOVED***";
+
+// Extract table name from formula file path
+function extractTableName(filePath) {
+  // Expected structure: examples/table/{table_name}/formula.formula
+  const pathParts = filePath.split('/');
+  const tableIndex = pathParts.indexOf('table');
+  
+  if (tableIndex >= 0 && tableIndex + 1 < pathParts.length) {
+    return pathParts[tableIndex + 1];
+  }
+  
+  // Fallback: use directory name if not in expected structure
+  const dir = dirname(filePath);
+  const dirName = basename(dir);
+  return dirName === '.' ? 'submission' : dirName; // Default to submission
+}
+
+// Generate field name from formula file path
+function generateFieldName(filePath) {
+  const fileName = basename(filePath, '.formula');
+  return fileName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+}
 
 // Build column list for any table using metadata system
 async function getColumnListForTable(tableName, client) {
@@ -51,7 +75,7 @@ async function getRelationshipsForTable(tableName, client) {
   for (const row of result.rows) {
     const targetColumnList = await getColumnListForTable(row.target_table_name, client);
     
-    // Use the base name (without _rel suffix) as the key
+    // Use the base name (without _id suffix) as the key
     const relationshipKey = row.col_name.replace(/_id$/, '');
     
     relationships[relationshipKey] = {
@@ -94,33 +118,67 @@ async function getInverseRelationshipsForTable(tableName, client) {
 
 async function main() {
   try {
-    console.log('🚀 Multi-Formula Executor with Deduplication\n');
+    // Get formula file paths from command line arguments
+    const formulaPaths = process.argv.slice(2);
     
-    // Read formulas from files
+    if (formulaPaths.length === 0) {
+      console.error('❌ Usage: ./exec-formula path/to/formula1.formula [path/to/formula2.formula ...]');
+      console.error('   Example: ./exec-formula examples/table/submission/business_summary.formula examples/table/submission/risk_assessment.formula');
+      process.exit(1);
+    }
+    
+    console.log(`🚀 Formula Executor - Processing ${formulaPaths.length} formula(s)\n`);
+    
+    // Extract table names and validate they're all the same
+    const tableNames = formulaPaths.map(extractTableName);
+    const uniqueTableNames = [...new Set(tableNames)];
+    
+    if (uniqueTableNames.length > 1) {
+      console.error('❌ Error: All formulas must be from the same table');
+      console.error(`   Found formulas from tables: ${uniqueTableNames.join(', ')}`);
+      console.error('   Please ensure all formula files are from the same table directory');
+      process.exit(1);
+    }
+    
+    const tableName = uniqueTableNames[0];
+    console.log(`📋 Target table: ${tableName}`);
+    
+    // Read and parse formulas
     console.log('📄 Reading formulas from files...');
-    const formula1 = readFileSync('example-1.formula', 'utf8').trim();
-    const formula2 = readFileSync('example-2.formula', 'utf8').trim();
+    const formulas = [];
+    const formulaData = {};
     
-    console.log(`Formula 1: ${formula1}`);
-    console.log(`Formula 2: ${formula2}\n`);
+    for (let i = 0; i < formulaPaths.length; i++) {
+      const filePath = formulaPaths[i];
+      const fieldName = generateFieldName(filePath);
+      const formulaContent = readFileSync(filePath, 'utf8').trim();
+      
+      formulas.push({
+        path: filePath,
+        fieldName: fieldName,
+        content: formulaContent
+      });
+      
+      console.log(`  ${i + 1}. ${fieldName}: ${formulaContent}`);
+    }
     
-    // Connect to database first (needed for metadata lookup)
-    console.log('🔌 Connecting to PostgreSQL database...');
+    // Connect to database for metadata lookup
+    console.log('\n🔌 Connecting to PostgreSQL database...');
     const client = new Client({ connectionString });
     await client.connect();
     
-    // Build context for submission table using metadata system
+    // Build context for the table using metadata system
     console.log('📋 Loading table metadata...');
-    const columnList = await getColumnListForTable('submission', client);
+    const columnList = await getColumnListForTable(tableName, client);
     
     console.log('🔗 Loading relationship metadata...');
-    const relationshipInfo = await getRelationshipsForTable('submission', client);
+    const relationshipInfo = await getRelationshipsForTable(tableName, client);
     
     console.log('🔗 Loading inverse relationship metadata...');
-    const inverseRelationshipInfo = await getInverseRelationshipsForTable('submission', client);
+    const inverseRelationshipInfo = await getInverseRelationshipsForTable(tableName, client);
     
     const context = {
-      tableName: 'submission',
+      tableName: tableName,
       columnList: columnList,
       relationshipInfo: relationshipInfo,
       inverseRelationshipInfo: inverseRelationshipInfo
@@ -129,68 +187,67 @@ async function main() {
     console.log('\n🔄 Compiling formulas to intents...');
     
     // Compile each formula to intents
-    const result1 = evaluateFormula(formula1, context);
-    const result2 = evaluateFormula(formula2, context);
+    const results = {};
+    const compilationResults = [];
     
-    console.log('\n📊 Analysis of Individual Compilations:');
+    for (const formula of formulas) {
+      try {
+        const result = evaluateFormula(formula.content, context);
+        results[formula.fieldName] = result;
+        compilationResults.push({
+          ...formula,
+          result: result,
+          success: true
+        });
+        console.log(`  ✅ ${formula.fieldName}: Compiled successfully`);
+      } catch (error) {
+        console.log(`  ❌ ${formula.fieldName}: ${error.message}`);
+        compilationResults.push({
+          ...formula,
+          error: error,
+          success: false
+        });
+      }
+    }
+    
+    // Check if any formulas failed
+    const failedFormulas = compilationResults.filter(r => !r.success);
+    if (failedFormulas.length > 0) {
+      console.error(`\n❌ ${failedFormulas.length} formula(s) failed to compile. Aborting.`);
+      process.exit(1);
+    }
+    
+    console.log('\n📊 Compilation Analysis:');
     console.log('='.repeat(60));
     
-    console.log('\nFormula 1 Analysis:');
-    console.log(`  Expression Semantic ID: ${result1.expression.semanticId}`);
-    console.log(`  Join Intents: ${result1.joinIntents.length}`);
-    result1.joinIntents.forEach((join, i) => {
-      console.log(`    ${i+1}. ${join.semanticId}`);
-    });
-    console.log(`  Aggregate Intents: ${result1.aggregateIntents.length}`);
-    result1.aggregateIntents.forEach((agg, i) => {
-      console.log(`    ${i+1}. ${agg.semanticId}`);
-      console.log(`       Internal Joins: ${agg.internalJoins.length}`);
-      agg.internalJoins.forEach((join, j) => {
-        console.log(`         ${j+1}. ${join.semanticId}`);
-      });
-    });
+    let totalJoinIntents = new Set();
+    let totalAggregateIntents = new Set();
     
-    console.log('\nFormula 2 Analysis:');
-    console.log(`  Expression Semantic ID: ${result2.expression.semanticId}`);
-    console.log(`  Join Intents: ${result2.joinIntents.length}`);
-    result2.joinIntents.forEach((join, i) => {
-      console.log(`    ${i+1}. ${join.semanticId}`);
+    compilationResults.forEach((formula, index) => {
+      if (formula.success) {
+        console.log(`\n${index + 1}. ${formula.fieldName}:`);
+        console.log(`   Expression ID: ${formula.result.expression.semanticId}`);
+        console.log(`   Join Intents: ${formula.result.joinIntents.length}`);
+        formula.result.joinIntents.forEach((join, i) => {
+          console.log(`     ${i+1}. ${join.semanticId}`);
+          totalJoinIntents.add(join.semanticId);
+        });
+        console.log(`   Aggregate Intents: ${formula.result.aggregateIntents.length}`);
+        formula.result.aggregateIntents.forEach((agg, i) => {
+          console.log(`     ${i+1}. ${agg.semanticId}`);
+          totalAggregateIntents.add(agg.semanticId);
+          agg.internalJoins.forEach(join => totalJoinIntents.add(join.semanticId));
+        });
+      }
     });
-    console.log(`  Aggregate Intents: ${result2.aggregateIntents.length}`);
-    result2.aggregateIntents.forEach((agg, i) => {
-      console.log(`    ${i+1}. ${agg.semanticId}`);
-      console.log(`       Internal Joins: ${agg.internalJoins.length}`);
-      agg.internalJoins.forEach((join, j) => {
-        console.log(`         ${j+1}. ${join.semanticId}`);
-      });
-    });
-    
-    // Prepare named results for SQL generation
-    const namedResults = {
-      formula1_result: result1,
-      formula2_result: result2
-    };
     
     console.log('\n🔧 Generating optimized SQL with deduplication...');
-    const sqlResult = generateSQL(namedResults, 'submission');
+    const sqlResult = generateSQL(results, tableName);
     
     console.log('\n📈 Deduplication Analysis:');
     console.log('='.repeat(60));
-    
-    // Count unique intents across both formulas
-    const allJoinIntents = new Set();
-    const allAggregateIntents = new Set();
-    
-    [result1, result2].forEach(result => {
-      result.joinIntents.forEach(join => allJoinIntents.add(join.semanticId));
-      result.aggregateIntents.forEach(agg => {
-        allAggregateIntents.add(agg.semanticId);
-        agg.internalJoins.forEach(join => allJoinIntents.add(join.semanticId));
-      });
-    });
-    
-    console.log(`Total Join Intents Across Both Formulas: ${allJoinIntents.size}`);
-    console.log(`Total Aggregate Intents Across Both Formulas: ${allAggregateIntents.size}`);
+    console.log(`Total Unique Join Intents: ${totalJoinIntents.size}`);
+    console.log(`Total Unique Aggregate Intents: ${totalAggregateIntents.size}`);
     console.log(`Actual JOINs in Generated SQL: ${(sqlResult.fromClause.match(/LEFT JOIN/g) || []).length}`);
     console.log(`Actual Aggregate Subqueries: ${sqlResult.aggregateSubqueries.length}`);
     console.log(`SELECT Expressions: ${sqlResult.selectExpressions.length}`);
@@ -211,19 +268,24 @@ async function main() {
       console.log(`Found ${queryResult.rows.length} rows:\n`);
       queryResult.rows.forEach((row, index) => {
         console.log(`Row ${index + 1}:`);
-        console.log(`  Formula 1 Result: ${row.formula1_result || 'NULL'}`);
-        console.log(`  Formula 2 Result: ${row.formula2_result || 'NULL'}`);
+        Object.keys(results).forEach(fieldName => {
+          console.log(`  ${fieldName}: ${row[fieldName] || 'NULL'}`);
+        });
         console.log('');
       });
     }
     
     console.log('='.repeat(60));
     console.log(`\n✅ Multi-formula execution completed successfully!`);
-    console.log('\n🎯 Deduplication Benefits Demonstrated:');
+    console.log(`\n🎯 Processed ${formulaPaths.length} formula(s) from table '${tableName}':`);
+    formulas.forEach((formula, index) => {
+      console.log(`  ${index + 1}. ${formula.fieldName} (${basename(formula.path)})`);
+    });
+    console.log('\n🎯 Deduplication Benefits:');
     console.log('  ✓ Shared joins between formulas are deduplicated');
     console.log('  ✓ Shared expressions within same joins are reused');
-    console.log('  ✓ Aggregate subqueries are optimized');
-    console.log('  ✓ Hierarchical semantic IDs enable precise deduplication');
+    console.log('  ✓ Aggregate subqueries are optimized across all formulas');
+    console.log('  ✓ Single query execution for multiple formula results');
     
     await client.end();
     
@@ -231,6 +293,9 @@ async function main() {
     console.error('❌ Error:', error.message);
     if (error.position !== undefined) {
       console.error(`   Position: ${error.position}`);
+    }
+    if (error.stack) {
+      console.error('Stack trace:', error.stack);
     }
     process.exit(1);
   }

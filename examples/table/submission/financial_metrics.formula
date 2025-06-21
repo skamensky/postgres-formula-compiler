@@ -1,0 +1,1 @@
+ROUND(amount * SUM_AGG(rep_links_submission, commission_percentage) / 100, 2)

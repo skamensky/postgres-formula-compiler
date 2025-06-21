@@ -1,0 +1,1 @@
+merchant_rel.contact_name & " (" & merchant_rel.contact_email & ") | " & SUBSTITUTE(merchant_rel.phone, "-", ".") & " | Created by: " & created_by_rel.full_name
