@@ -3,11 +3,11 @@
  * Contains test helper functions and test context
  */
 
-// Import the formula compiler function
-import { evaluateFormula } from '../formula-compiler.js';
+// Import the formula compiler functions
+import { evaluateFormula, generateSQL } from '../formula-compiler.js';
 
-// Export the formula compiler function for convenience
-export { evaluateFormula };
+// Export the formula compiler functions for convenience
+export { evaluateFormula, generateSQL };
 
 // Test utilities
 export let testCount = 0;
@@ -28,8 +28,29 @@ export function test(description, testFn) {
 }
 
 export function assertEqual(actual, expected, message = '') {
-  // Handle result from evaluateFormula which returns {expression, joins}
-  const actualValue = (typeof actual === 'object' && actual.expression !== undefined) ? actual.expression : actual;
+  // Handle result from evaluateFormula which now returns compilation results
+  let actualValue = actual;
+  
+  if (typeof actual === 'object' && actual.expression !== undefined) {
+    // This is a compilation result - we need to generate SQL for single expressions
+    try {
+      // For single expression tests, generate SQL using a dummy field name
+      const namedResults = { test_field: actual };
+      const sqlResult = generateSQL(namedResults, 's');
+      
+      // Extract just the expression part from the SELECT clause
+      const selectMatch = sqlResult.sql.match(/SELECT\s+(.+)\s+AS\s+test_field/s);
+      if (selectMatch) {
+        actualValue = selectMatch[1].trim();
+      } else {
+        actualValue = sqlResult.sql;
+      }
+    } catch (error) {
+      // If SQL generation fails, fall back to showing the compilation result
+      actualValue = `[Compilation Result: ${JSON.stringify(actual, null, 2)}]`;
+    }
+  }
+  
   if (actualValue !== expected) {
     throw new Error(`Expected ${expected}, got ${actualValue}. ${message}`);
   }

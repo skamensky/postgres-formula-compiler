@@ -787,10 +787,41 @@ class Compiler {
     // Type checking and result type determination
     let resultType;
     if (['+', '-', '*', '/'].includes(node.op)) {
-      if (left.returnType !== 'number' || right.returnType !== 'number') {
-        this.error(`Arithmetic operator ${node.op} requires numeric operands, got ${left.returnType} and ${right.returnType}`, node.position);
+      // Handle date arithmetic
+      if (node.op === '+') {
+        if (left.returnType === 'date' && right.returnType === 'number') {
+          resultType = 'date'; // date + number = date (allow for both direct dates and date expressions)
+        } else if (left.returnType === 'number' && right.returnType === 'date') {
+          // Only allow number + date if the number is a direct operand (not an expression result)
+          if (left.type === 'NUMBER' || left.type === 'IDENTIFIER') {
+            resultType = 'date'; // number + date = date
+          } else {
+            this.error(`Invalid operand types for +: ${left.returnType} and ${right.returnType}`, node.position);
+          }
+        } else if (left.returnType === 'date' && right.returnType === 'date') {
+          this.error('Invalid operand types for +: date and date', node.position);
+        } else if (left.returnType !== 'number' || right.returnType !== 'number') {
+          this.error(`Invalid operand types for +: ${left.returnType} and ${right.returnType}`, node.position);
+        } else {
+          resultType = 'number'; // number + number = number
+        }
+      } else if (node.op === '-') {
+        if (left.returnType === 'date' && right.returnType === 'number') {
+          resultType = 'date'; // date - number = date (allow for both direct dates and date expressions)
+        } else if (left.returnType === 'date' && right.returnType === 'date') {
+          resultType = 'number'; // date - date = interval (treated as number)
+        } else if (left.returnType !== 'number' || right.returnType !== 'number') {
+          this.error(`Invalid operand types for -: ${left.returnType} and ${right.returnType}`, node.position);
+        } else {
+          resultType = 'number'; // number - number = number
+        }
+      } else if (['*', '/'].includes(node.op)) {
+        // Multiplication and division only work with numbers
+        if (left.returnType !== 'number' || right.returnType !== 'number') {
+          this.error(`Invalid operand types for ${node.op}: ${left.returnType} and ${right.returnType}`, node.position);
+        }
+        resultType = 'number';
       }
-      resultType = 'number';
     } else if (node.op === '&') {
       if (left.returnType !== 'string' || right.returnType !== 'string') {
         this.error(`String concatenation operator & requires both operands to be strings, got ${left.returnType} and ${right.returnType}. Use STRING() function to cast values to strings.`, node.position);
@@ -896,6 +927,39 @@ class Compiler {
           returnType: 'date',
           compilationContext: this.compilationContext,
           value: { name: 'TODAY', args: [] }
+        };
+
+      case 'ME':
+        if (node.args.length !== 0) {
+          this.error('ME() takes no arguments', node.position);
+        }
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'ME'),
+          dependentJoins: [],
+          returnType: 'string',
+          compilationContext: this.compilationContext,
+          value: { name: 'ME', args: [] }
+        };
+
+      case 'DATE':
+        if (node.args.length !== 1) {
+          this.error('DATE() takes exactly one argument', node.position);
+        }
+        
+        const dateArg = this.compile(node.args[0]);
+        if (dateArg.type !== 'STRING_LITERAL') {
+          this.error('DATE() function requires a string literal', node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'DATE', [dateArg.semanticId]),
+          dependentJoins: [],
+          returnType: 'date',
+          compilationContext: this.compilationContext,
+          value: { name: 'DATE', stringValue: dateArg.value },
+          children: [dateArg]
         };
 
       case 'STRING':
@@ -1473,6 +1537,8 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
     case 'BINARY_OP':
       const leftSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const rightSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      const leftType = expr.children[0].returnType;
+      const rightType = expr.children[1].returnType;
       
       if (expr.value.op === '&') {
         return `(${leftSQL} || ${rightSQL})`;
@@ -1480,8 +1546,22 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
         return `(${leftSQL} = ${rightSQL})`;
       } else if (expr.value.op === '!=' || expr.value.op === '<>') {
         return `(${leftSQL} != ${rightSQL})`;
-      } else if (expr.value.op === '*') {
-        return `(${leftSQL} * ${rightSQL})`;
+      } else if (expr.value.op === '+') {
+        // Handle date arithmetic for addition
+        if (leftType === 'date' && rightType === 'number') {
+          return `(${leftSQL} + INTERVAL '${rightSQL} days')`;
+        } else if (leftType === 'number' && rightType === 'date') {
+          return `(${rightSQL} + INTERVAL '${leftSQL} days')`;
+        } else {
+          return `(${leftSQL} + ${rightSQL})`;
+        }
+      } else if (expr.value.op === '-') {
+        // Handle date arithmetic for subtraction
+        if (leftType === 'date' && rightType === 'number') {
+          return `(${leftSQL} - INTERVAL '${rightSQL} days')`;
+        } else {
+          return `(${leftSQL} - ${rightSQL})`;
+        }
       } else {
         return `(${leftSQL} ${expr.value.op} ${rightSQL})`;
       }
@@ -1533,7 +1613,14 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
   
   switch (funcName) {
     case 'TODAY':
-      return 'CURRENT_DATE';
+      return 'current_date';
+      
+    case 'ME':
+      return "(select auth().uid())";
+      
+    case 'DATE':
+      // Use the string value stored during compilation
+      return `DATE('${expr.value.stringValue}')`;
       
     case 'STRING':
       const argSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
