@@ -1443,7 +1443,7 @@ class Compiler {
         
         const yearArg = this.compile(node.args[0]);
         if (yearArg.returnType !== 'date') {
-          this.error('YEAR() requires date argument', node.position);
+          this.error('YEAR() requires date argument, got ' + yearArg.returnType, node.position);
         }
         
         return {
@@ -1454,6 +1454,151 @@ class Compiler {
           compilationContext: this.compilationContext,
           value: { name: 'YEAR' },
           children: [yearArg]
+        };
+
+      case 'MONTH':
+        if (node.args.length !== 1) {
+          this.error('MONTH() takes exactly one argument', node.position);
+        }
+        
+        const monthArg = this.compile(node.args[0]);
+        if (monthArg.returnType !== 'date') {
+          this.error('MONTH() requires date argument, got ' + monthArg.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'MONTH', [monthArg.semanticId]),
+          dependentJoins: monthArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'MONTH' },
+          children: [monthArg]
+        };
+
+      case 'DAY':
+        if (node.args.length !== 1) {
+          this.error('DAY() takes exactly one argument', node.position);
+        }
+        
+        const dayArg = this.compile(node.args[0]);
+        if (dayArg.returnType !== 'date') {
+          this.error('DAY() requires date argument, got ' + dayArg.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'DAY', [dayArg.semanticId]),
+          dependentJoins: dayArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'DAY' },
+          children: [dayArg]
+        };
+
+      case 'WEEKDAY':
+        if (node.args.length !== 1) {
+          this.error('WEEKDAY() takes exactly one argument', node.position);
+        }
+        
+        const weekdayArg = this.compile(node.args[0]);
+        if (weekdayArg.returnType !== 'date') {
+          this.error('WEEKDAY() requires date argument, got ' + weekdayArg.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'WEEKDAY', [weekdayArg.semanticId]),
+          dependentJoins: weekdayArg.dependentJoins,
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'WEEKDAY' },
+          children: [weekdayArg]
+        };
+
+      case 'ADDMONTHS':
+        if (node.args.length !== 2) {
+          this.error('ADDMONTHS() takes exactly two arguments: ADDMONTHS(date, months)', node.position);
+        }
+        
+        const addMonthsArg1 = this.compile(node.args[0]);
+        const addMonthsArg2 = this.compile(node.args[1]);
+        
+        if (addMonthsArg1.returnType !== 'date') {
+          this.error('ADDMONTHS() first argument must be date, got ' + addMonthsArg1.returnType, node.position);
+        }
+        if (addMonthsArg2.returnType !== 'number') {
+          this.error('ADDMONTHS() second argument must be number, got ' + addMonthsArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'ADDMONTHS', [addMonthsArg1.semanticId, addMonthsArg2.semanticId]),
+          dependentJoins: [...addMonthsArg1.dependentJoins, ...addMonthsArg2.dependentJoins],
+          returnType: 'date',
+          compilationContext: this.compilationContext,
+          value: { name: 'ADDMONTHS' },
+          children: [addMonthsArg1, addMonthsArg2]
+        };
+
+      case 'ADDDAYS':
+        if (node.args.length !== 2) {
+          this.error('ADDDAYS() takes exactly two arguments: ADDDAYS(date, days)', node.position);
+        }
+        
+        const addDaysArg1 = this.compile(node.args[0]);
+        const addDaysArg2 = this.compile(node.args[1]);
+        
+        if (addDaysArg1.returnType !== 'date') {
+          this.error('ADDDAYS() first argument must be date, got ' + addDaysArg1.returnType, node.position);
+        }
+        if (addDaysArg2.returnType !== 'number') {
+          this.error('ADDDAYS() second argument must be number, got ' + addDaysArg2.returnType, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'ADDDAYS', [addDaysArg1.semanticId, addDaysArg2.semanticId]),
+          dependentJoins: [...addDaysArg1.dependentJoins, ...addDaysArg2.dependentJoins],
+          returnType: 'date',
+          compilationContext: this.compilationContext,
+          value: { name: 'ADDDAYS' },
+          children: [addDaysArg1, addDaysArg2]
+        };
+
+      case 'DATEDIF':
+        if (node.args.length !== 3) {
+          this.error('DATEDIF() takes exactly three arguments: DATEDIF(date1, date2, unit)', node.position);
+        }
+        
+        const datedifArg1 = this.compile(node.args[0]);
+        const datedifArg2 = this.compile(node.args[1]);
+        
+        if (datedifArg1.returnType !== 'date') {
+          this.error('DATEDIF() first argument must be date, got ' + datedifArg1.returnType, node.position);
+        }
+        if (datedifArg2.returnType !== 'date') {
+          this.error('DATEDIF() second argument must be date, got ' + datedifArg2.returnType, node.position);
+        }
+        
+        // Third argument must be a string literal
+        if (node.args[2].type !== 'STRING_LITERAL') {
+          this.error('DATEDIF() third argument must be a string literal: "days", "months", or "years"', node.position);
+        }
+        
+        const unit = node.args[2].value;
+        if (!['days', 'months', 'years'].includes(unit)) {
+          this.error(`DATEDIF() unit must be "days", "months", or "years", got "${unit}"`, node.position);
+        }
+        
+        return {
+          type: 'FUNCTION_CALL',
+          semanticId: this.generateSemanticId('function', 'DATEDIF', [datedifArg1.semanticId, datedifArg2.semanticId, unit]),
+          dependentJoins: [...datedifArg1.dependentJoins, ...datedifArg2.dependentJoins],
+          returnType: 'number',
+          compilationContext: this.compilationContext,
+          value: { name: 'DATEDIF', unit: unit },
+          children: [datedifArg1, datedifArg2]
         };
 
       // Add other function cases...
@@ -2220,6 +2365,44 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
     case 'YEAR':
       const yearArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `EXTRACT(YEAR FROM ${yearArgSQL})`;
+      
+    case 'MONTH':
+      const monthArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXTRACT(MONTH FROM ${monthArgSQL})`;
+      
+    case 'DAY':
+      const dayArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXTRACT(DAY FROM ${dayArgSQL})`;
+      
+    case 'WEEKDAY':
+      const weekdayArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXTRACT(DOW FROM ${weekdayArgSQL}) + 1`;
+      
+    case 'ADDMONTHS':
+      const addMonthsDateSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const addMonthsNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `(${addMonthsDateSQL} + INTERVAL '${addMonthsNumSQL} months')`;
+      
+    case 'ADDDAYS':
+      const addDaysDateSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const addDaysNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `(${addDaysDateSQL} + INTERVAL '${addDaysNumSQL} days')`;
+      
+    case 'DATEDIF':
+      const datedifDate1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const datedifDate2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      const unit = expr.value.unit;
+      
+      switch (unit) {
+        case 'days':
+          return `(${datedifDate2SQL} - ${datedifDate1SQL})`;
+        case 'months':
+          return `((EXTRACT(YEAR FROM ${datedifDate2SQL}) - EXTRACT(YEAR FROM ${datedifDate1SQL})) * 12 + (EXTRACT(MONTH FROM ${datedifDate2SQL}) - EXTRACT(MONTH FROM ${datedifDate1SQL})))`;
+        case 'years':
+          return `(EXTRACT(YEAR FROM ${datedifDate2SQL}) - EXTRACT(YEAR FROM ${datedifDate1SQL}))`;
+        default:
+          throw new Error(`Unknown DATEDIF unit: ${unit}`);
+      }
       
     default:
       throw new Error(`Unknown function: ${funcName}`);
