@@ -88,7 +88,7 @@ test('ADDDAYS function with TODAY() and negative number', () => {
 // Test 237: DATEDIF function with days unit
 test('DATEDIF function with days unit', () => {
   const result = evaluateFormula('DATEDIF(created_date, updated_date, "days")', testContext);
-  assertEqual(result, '("s"."updated_date" - "s"."created_date")');
+  assertEqual(result, 'EXTRACT(EPOCH FROM ("s"."updated_date" - "s"."created_date")) / 86400');
 });
 
 // Test 238: DATEDIF function with months unit
@@ -118,7 +118,7 @@ test('Date functions in string concatenation', () => {
 // Test 243: Complex date function expression
 test('Complex date function expression', () => {
   const result = evaluateFormula('ADDDAYS(ADDMONTHS(created_date, 6), DATEDIF(created_date, updated_date, "days"))', testContext);
-  assertEqual(result, '(("s"."created_date" + INTERVAL \'6 months\') + INTERVAL \'("s"."updated_date" - "s"."created_date") days\')');
+  assertEqual(result, '(("s"."created_date" + INTERVAL \'6 months\') + INTERVAL \'EXTRACT(EPOCH FROM ("s"."updated_date" - "s"."created_date")) / 86400 days\')');
 });
 
 // Error Tests

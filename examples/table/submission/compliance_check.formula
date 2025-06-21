@@ -1,1 +1,1 @@
-IF(AND(COUNT_AGG(documents_submission, id) >= 3, amount <= 250000, DATEDIF(created_date, TODAY(), "days") <= 60), "✅ COMPLIANT", "⚠️ REVIEW NEEDED") & " | Docs: " & STRING(COUNT_AGG(documents_submission, id))
+IF(AND(amount <= 250000, DATEDIF(created_at, TODAY(), "days") <= 60), "✅ COMPLIANT", "⚠️ REVIEW NEEDED") & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"

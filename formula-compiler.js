@@ -1793,11 +1793,8 @@ function evaluateFormula(formula, context) {
       returnType: result.returnType
     };
     
-    // Check if this is an aggregate function result and needs legacy format conversion
-    if (compilationResult.aggregateIntents && compilationResult.aggregateIntents.length > 0) {
-      return convertToLegacyAggregateFormat(compilationResult);
-    }
-    
+    // Return the modern intent-based format directly
+    // Legacy conversion is no longer automatic - it's only used when explicitly needed
     return compilationResult;
   } catch (error) {
     // Re-throw with consistent error format
@@ -1808,92 +1805,7 @@ function evaluateFormula(formula, context) {
   }
 }
 
-/**
- * Convert modern compilation result to legacy aggregate format for backward compatibility
- * @param {Object} result - Modern compilation result
- * @returns {Object} Legacy format with expression string and aggregateJoins array
- */
-function convertToLegacyAggregateFormat(result) {
-  // Group aggregates by relationship for legacy format
-  const aggregateGroups = new Map();
-  let aliasCounter = 1;
-  
-  for (const aggIntent of result.aggregateIntents) {
-    const relationshipKey = aggIntent.sourceRelation;
-    
-    if (!aggregateGroups.has(relationshipKey)) {
-      aggregateGroups.set(relationshipKey, {
-        alias: `agg${aliasCounter++}`,
-        functions: new Set(),
-        requiredJoins: aggIntent.internalJoins || []
-      });
-    }
-    
-    const group = aggregateGroups.get(relationshipKey);
-    
-    // Add function to the set
-    let functionName;
-    switch (aggIntent.aggregateFunction) {
-      case 'STRING_AGG':
-        functionName = 'string_agg_result_1';
-        break;
-      case 'STRING_AGG_DISTINCT':
-        functionName = 'string_agg_distinct_result_1';
-        break;
-      case 'SUM_AGG':
-        functionName = 'sum_result_1';
-        break;
-      case 'COUNT_AGG':
-        functionName = 'count_result_1';
-        break;
-      case 'AVG_AGG':
-        functionName = 'avg_result_1';
-        break;
-      case 'MIN_AGG':
-        functionName = 'min_result_1';
-        break;
-      case 'MAX_AGG':
-        functionName = 'max_result_1';
-        break;
-      case 'AND_AGG':
-        functionName = 'bool_and_result_1';
-        break;
-      case 'OR_AGG':
-        functionName = 'bool_or_result_1';
-        break;
-      default:
-        functionName = 'agg_result_1';
-    }
-    
-    group.functions.add(functionName);
-  }
-  
-  // Create aggregateJoins array and convert Set to Array for JSON serialization
-  const aggregateJoins = Array.from(aggregateGroups.values()).map(group => ({
-    ...group,
-    functions: group.functions // Keep as Set for test compatibility
-  }));
-  
-  // Create expression string for single aggregate functions
-  let expressionString;
-  if (result.expression.type === 'AGGREGATE_FUNCTION') {
-    // Single aggregate function
-    const firstGroup = aggregateJoins[0];
-    const functionName = Array.from(firstGroup.functions)[0];
-    expressionString = `${firstGroup.alias}.${functionName}`;
-  } else {
-    // Complex expression with aggregates - keep the original structure
-    expressionString = result.expression;
-  }
-  
-  return {
-    expression: expressionString,
-    aggregateJoins: aggregateJoins,
-    joinIntents: result.joinIntents,
-    aggregateIntents: result.aggregateIntents,
-    returnType: result.returnType
-  };
-}
+
 
 /**
  * @typedef {Object} SQLResult
@@ -1980,19 +1892,41 @@ function generateSQL(namedResults, baseTableName) {
     aggregateJoinAliases.set(relationshipKey, groupAlias);
     
     // Map each aggregate to its column in the consolidated subquery
+    const usedAliases = new Set();
+    let aliasCounter = 1;
+    
     aggIntents.forEach((aggIntent, index) => {
       let columnAlias;
       if (aggIntent.aggregateFunction.startsWith('STRING_AGG')) {
         columnAlias = `rep_names`;
       } else if (aggIntent.aggregateFunction === 'COUNT_AGG') {
         columnAlias = `rep_count`;
+      } else if (aggIntent.aggregateFunction === 'SUM_AGG') {
+        columnAlias = `sum_value`;
+      } else if (aggIntent.aggregateFunction === 'AVG_AGG') {
+        columnAlias = `avg_value`;
+      } else if (aggIntent.aggregateFunction === 'MIN_AGG') {
+        columnAlias = `min_value`;
+      } else if (aggIntent.aggregateFunction === 'MAX_AGG') {
+        columnAlias = `max_value`;
+      } else if (aggIntent.aggregateFunction === 'AND_AGG') {
+        columnAlias = `and_value`;
+      } else if (aggIntent.aggregateFunction === 'OR_AGG') {
+        columnAlias = `or_value`;
       } else {
         columnAlias = `agg_col_${index + 1}`;
       }
       
+      // Make column alias unique if it's already used
+      let finalColumnAlias = columnAlias;
+      if (usedAliases.has(columnAlias)) {
+        finalColumnAlias = `${columnAlias}_${aliasCounter++}`;
+      }
+      usedAliases.add(finalColumnAlias);
+      
       aggregateColumnMappings.set(aggIntent.semanticId, {
         alias: groupAlias,
-        column: columnAlias
+        column: finalColumnAlias
       });
     });
   }
@@ -2013,7 +1947,7 @@ function generateSQL(namedResults, baseTableName) {
   // Add consolidated aggregate JOINs
   for (const [relationshipKey, aggIntents] of aggregateGroups) {
     const groupAlias = aggregateJoinAliases.get(relationshipKey);
-    const consolidatedSubquery = generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTableName);
+    const consolidatedSubquery = generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTableName, aggregateColumnMappings);
     fromClause += `\n  LEFT JOIN (\n${consolidatedSubquery}\n  ) ${groupAlias} ON ${groupAlias}.submission = s.id`;
   }
   
@@ -2044,9 +1978,10 @@ function generateSQL(namedResults, baseTableName) {
  * @param {Array<AggregateIntent>} aggIntents - Array of aggregate intents to consolidate
  * @param {Map<string, string>} joinAliases - Join semantic ID to SQL alias mapping
  * @param {string} baseTableName - Base table name
+ * @param {Map<string, Object>} aggregateColumnMappings - Aggregate semantic ID to {alias, column} mapping
  * @returns {string} SQL subquery
  */
-function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTableName) {
+function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTableName, aggregateColumnMappings) {
   if (aggIntents.length === 0) {
     throw new Error('Cannot generate consolidated subquery for empty aggregate intents');
   }
@@ -2055,7 +1990,8 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   const firstIntent = aggIntents[0];
   
   // Build subquery FROM clause with internal joins
-  let subFromClause = firstIntent.expression.compilationContext.match(/agg:.*?→(.*?)\[/)[1];
+  const baseTableName_sub = firstIntent.expression.compilationContext.match(/agg:.*?→(.*?)\[/)[1];
+  let subFromClause = baseTableName_sub;
   
   // Collect all unique internal joins from all intents
   const allInternalJoins = new Map();
@@ -2069,7 +2005,7 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   for (const joinIntent of allInternalJoins.values()) {
     const alias = joinAliases.get(joinIntent.semanticId);
     if (alias && joinIntent.relationshipType === 'direct_relationship') {
-      subFromClause += `\n    JOIN ${joinIntent.targetTable} ${alias} ON ${subFromClause.split(' ')[0]}.${joinIntent.joinField} = ${alias}.id`;
+      subFromClause += `\n    JOIN ${joinIntent.targetTable} ${alias} ON ${baseTableName_sub}.${joinIntent.joinField} = ${alias}.id`;
     }
   }
   
@@ -2078,50 +2014,47 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   
   for (const aggIntent of aggIntents) {
     // Generate expression SQL for the aggregate
-    const exprSQL = generateExpressionSQL(aggIntent.expression, joinAliases, new Map(), subFromClause.split(' ')[0]);
+    const exprSQL = generateExpressionSQL(aggIntent.expression, joinAliases, new Map(), baseTableName_sub);
+    
+    // Get the pre-assigned column alias from the mappings
+    const columnMapping = aggregateColumnMappings.get(aggIntent.semanticId);
+    if (!columnMapping) {
+      throw new Error(`No column mapping found for aggregate: ${aggIntent.semanticId}`);
+    }
+    const columnAlias = columnMapping.column;
     
     // Build aggregate function SQL
     let aggSQL;
-    let columnAlias;
     
     switch (aggIntent.aggregateFunction) {
       case 'STRING_AGG':
         const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
         aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
-        columnAlias = 'rep_names';
         break;
       case 'STRING_AGG_DISTINCT':
         const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
         aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
-        columnAlias = 'rep_names';
         break;
       case 'COUNT_AGG':
         aggSQL = `COUNT(*)`;
-        columnAlias = 'rep_count';
         break;
       case 'SUM_AGG':
         aggSQL = `SUM(${exprSQL})`;
-        columnAlias = 'sum_value';
         break;
       case 'AVG_AGG':
         aggSQL = `AVG(${exprSQL})`;
-        columnAlias = 'avg_value';
         break;
       case 'MIN_AGG':
         aggSQL = `MIN(${exprSQL})`;
-        columnAlias = 'min_value';
         break;
       case 'MAX_AGG':
         aggSQL = `MAX(${exprSQL})`;
-        columnAlias = 'max_value';
         break;
       case 'AND_AGG':
         aggSQL = `BOOL_AND(${exprSQL})`;
-        columnAlias = 'and_value';
         break;
       case 'OR_AGG':
         aggSQL = `BOOL_OR(${exprSQL})`;
-        columnAlias = 'or_value';
         break;
       default:
         throw new Error(`Unknown aggregate function: ${aggIntent.aggregateFunction}`);
@@ -2135,9 +2068,9 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   const joinColumn = joinColumnMatch ? joinColumnMatch[1] : 'id';
   
   // Add the grouping column to the SELECT clause
-  selectExpressions.unshift(`${subFromClause.split(' ')[0]}.${joinColumn} AS submission`);
+  selectExpressions.unshift(`${baseTableName_sub}.${joinColumn} AS submission`);
   
-  return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY ${subFromClause.split(' ')[0]}.${joinColumn}`;
+  return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY ${baseTableName_sub}.${joinColumn}`;
 }
 
 /**
@@ -2488,8 +2421,8 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
       const unit = expr.value.unit;
       
       switch (unit) {
-        case 'days':
-          return `(${datedifDate2SQL} - ${datedifDate1SQL})`;
+              case 'days':
+        return `EXTRACT(EPOCH FROM (${datedifDate2SQL} - ${datedifDate1SQL})) / 86400`;
         case 'months':
           return `((EXTRACT(YEAR FROM ${datedifDate2SQL}) - EXTRACT(YEAR FROM ${datedifDate1SQL})) * 12 + (EXTRACT(MONTH FROM ${datedifDate2SQL}) - EXTRACT(MONTH FROM ${datedifDate1SQL})))`;
         case 'years':

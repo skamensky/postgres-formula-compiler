@@ -1,1 +1,1 @@
-"Docs: " & STRING(COUNT_AGG(documents_submission, id)) & " | Total Size: " & STRING(ROUND(SUM_AGG(documents_submission, size) / 1024 / 1024, 2)) & "MB"
+"Status: " & UPPER(status) & " | Amount: $" & STRING(ROUND(amount, 0)) & " | Merchant: " & merchant_rel.business_name

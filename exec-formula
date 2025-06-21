@@ -129,12 +129,16 @@ async function getInverseRelationshipsForTable(tableName, client) {
 
 async function main() {
   try {
-    // Get formula file paths from command line arguments
-    const formulaPaths = process.argv.slice(2);
+    // Get formula file paths from command line arguments and filter only .formula files
+    const allPaths = process.argv.slice(2);
+    const formulaPaths = allPaths.filter(path => path.endsWith('.formula'));
     
     if (formulaPaths.length === 0) {
       console.error('❌ Usage: ./exec-formula path/to/formula1.formula [path/to/formula2.formula ...]');
       console.error('   Example: ./exec-formula examples/table/submission/business_summary.formula examples/table/submission/risk_assessment.formula');
+      if (allPaths.length > 0) {
+        console.error(`   Note: ${allPaths.length - formulaPaths.length} non-formula files were filtered out`);
+      }
       process.exit(1);
     }
     

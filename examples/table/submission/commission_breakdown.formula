@@ -1,1 +1,1 @@
-STRING_AGG_DISTINCT(rep_links_submission, rep_rel.name & ":" & STRING(ROUND(amount * commission_percentage / 100, 2)), " | ")
+STRING_AGG_DISTINCT(rep_links_submission, rep_rel.name & ":" & STRING(commission_percentage) & "%", " | ")
