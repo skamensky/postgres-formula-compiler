@@ -9,7 +9,7 @@ For each feature below, follow these steps:
 
 ---
 
-## 5. ✅ Null Handling Functions (COMPLETE)
+## 1. ✅ Null Handling Functions (COMPLETE)
 **Status:** ✅ **COMPLETED**
 **Priority:** High - Essential for real data
 
@@ -34,7 +34,7 @@ For each feature below, follow these steps:
 
 ---
 
-## 6. Test Organization & Structure (✅ COMPLETE)
+## 2. Test Organization & Structure (✅ COMPLETE)
 **Status:** ✅ **COMPLETED - PERFECT MIGRATION**
 **Priority:** Medium - Code organization and maintainability
 
@@ -136,7 +136,7 @@ For each feature below, follow these steps:
 
 ---
 
-## 7. Aggregate Functions  (✅ COMPLETE)
+## 3. Aggregate Functions  (✅ COMPLETE)
 **Status:** ✅ **COMPLETED**
 **Priority:** High - Essential for data aggregation and reporting
 
@@ -243,7 +243,7 @@ LEFT JOIN (SELECT submission, SUM("r"."commission_percentage") as sum_result_1, 
 ---
 
 
-## 7.5. Logical Operators as Functions  (✅ COMPLETE)
+## 4. Logical Operators as Functions  (✅ COMPLETE)
 **Status:** ✅ **COMPLETED**
 **Priority:** High - Essential for conditional logic, depends on comparison operators
 
@@ -331,8 +331,75 @@ AND(
 - ✅ **PostgreSQL optimization** - Relies on database for short-circuit evaluation
 - ✅ **Comprehensive testing** - Full test coverage including nested expressions and error cases
 
-## 8. Compiler Modularization for Multiple Fields
+---
+
+## 5. Extended Nested Relationships (Multi-Level)
 **Status:** ❌ **NOT STARTED**
+**Priority:** High - Essential for complex data relationships and user experience
+
+### Core Concept:
+Extend relationship parsing and compilation to support nested relationships up to N levels deep (configurable, default 3) in main query expressions, not just within aggregate functions.
+
+### Current Limitation:
+- Parser only supports single-level relationships: `merchant_rel.business_name`
+- Nested relationships work only within aggregate contexts: `STRING_AGG(rep_links_submission, rep_rel.name, ",")`
+- No support for multi-level chains in main expressions
+
+### Target Functionality:
+**Example multi-level relationship:**
+```
+submission->merchant_rel->main_rep_rel->user_rel->name
+```
+
+**Should compile to:**
+```sql
+rel_merchant_main_rep_user.name
+```
+
+**With appropriate JOINs:**
+```sql
+FROM submission s
+  LEFT JOIN merchant rel_merchant ON s.merchant = rel_merchant.id
+  LEFT JOIN rep rel_merchant_main_rep ON rel_merchant.main_rep = rel_merchant_main_rep.id  
+  LEFT JOIN user rel_merchant_main_rep_user ON rel_merchant_main_rep.user = rel_merchant_main_rep_user.id
+```
+
+### Implementation Requirements:
+- **Parser enhancement** - Support chained relationship syntax: `merchant_rel.main_rep_rel.user_rel.name`
+- **Reuse existing infrastructure** - Extend `joinIntents` Map, semantic ID system, and alias generation
+- **Semantic ID compatibility** - Hierarchical semantic IDs for JOIN deduplication: `direct:submission→merchant→rep→user@main`
+- **Alias system integration** - Extend current alias generation for multi-level chains
+- **Configurable depth limits** - Prevent runaway queries (default: 3 levels, configurable)
+- **Metadata traversal** - Recursive relationship validation using existing `relationshipInfo` structure
+- **JOIN optimization** - Automatic sharing of common relationship prefixes
+
+### Example Usage Scenarios:
+**Business context access:**
+```
+merchant_rel.main_rep_rel.name & " manages " & merchant_rel.business_name
+```
+
+**Deep user information:**
+```
+IF(ISNULL(merchant_rel.main_rep_rel.user_rel.email), "No email", merchant_rel.main_rep_rel.user_rel.email)
+```
+
+**Complex conditional logic:**
+```
+IF(merchant_rel.main_rep_rel.user_rel.status = "active", "Active Rep", "Inactive Rep")
+```
+
+### Key Features:
+- **Automatic JOIN deduplication** - Shared relationship prefixes reuse existing JOINs
+- **Configurable depth limits** - Prevent runaway queries, customizable per use case  
+- **Full type checking** - Validate fields at each relationship level
+- **Backward compatibility** - Existing single-level relationships unchanged
+- **Performance optimized** - Builds on existing semantic ID and alias systems
+
+---
+
+## 6. Compiler Modularization for Multiple Fields (✅ COMPLETE)
+**Status:** ✅ **COMPLETED**
 **Priority:** High - Essential for efficient multi-field query generation
 
 ### Core Concept:
@@ -431,7 +498,7 @@ const results = mergeCompilerResults([
 
 ---
 
-## 9. Language Specification and Documentation
+## 7. Language Specification and Documentation
 **Status:** ❌ **NOT STARTED**
 **Priority:** Medium - Essential for language adoption and maintenance
 
@@ -582,7 +649,7 @@ const FUNCTION_METADATA = {
 ---
 
 
-## 9.5. VSCode Syntax Highlighter
+## 8. VSCode Syntax Highlighter
 **Status:** ❌ **NOT STARTED**
 **Priority:** Medium - Improves developer experience for formula writing
 
@@ -660,7 +727,7 @@ const TOKEN_DEFINITIONS = {
 ---
 
 
-## 10. Interactive Formula Examples and Testing
+## 8. Interactive Formula Examples and Testing
 **Status:** ❌ **NOT STARTED**
 **Priority:** Low - Nice-to-have for user experience
 
@@ -682,7 +749,7 @@ Interactive web interface for testing formulas with live SQL generation and vali
 
 ---
 
-## 11. EBNF Grammar Generation
+## 10. EBNF Grammar Generation
 **Status:** ❌ **NOT STARTED**
 **Priority:** Low - Ongoing maintenance effort, but enables frontend parsing
 
@@ -725,7 +792,7 @@ Generate formal EBNF grammar specification from parser structure to enable front
 
 ---
 
-## 13. Formula Language Server Protocol (LSP)
+## 11. Formula Language Server Protocol (LSP)
 **Status:** ❌ **NOT STARTED**  
 **Priority:** Low - High effort, advanced developer tooling
 
@@ -756,7 +823,7 @@ Full-featured Language Server Protocol implementation providing autocomplete, er
 
 ---
 
-## 14. Logical Operators as Functions  (✅ COMPLETE)
+## 12. Logical Operators as Functions  (✅ COMPLETE)
 **Status:** ✅ **COMPLETED**
 **Priority:** High - Essential for conditional logic, depends on comparison operators
 
