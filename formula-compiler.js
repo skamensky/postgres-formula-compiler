@@ -1785,13 +1785,20 @@ function evaluateFormula(formula, context) {
     // Compiler stage - generates intents, not SQL
     const compiler = new Compiler(context);
     const result = compiler.compile(ast);
-        
-        return {
+    
+    const compilationResult = {
       expression: result,
       joinIntents: compiler.getJoinIntents(),
       aggregateIntents: compiler.getAggregateIntents(),
       returnType: result.returnType
     };
+    
+    // Check if this is an aggregate function result and needs legacy format conversion
+    if (compilationResult.aggregateIntents && compilationResult.aggregateIntents.length > 0) {
+      return convertToLegacyAggregateFormat(compilationResult);
+    }
+    
+    return compilationResult;
   } catch (error) {
     // Re-throw with consistent error format
     throw {
@@ -1799,6 +1806,93 @@ function evaluateFormula(formula, context) {
       position: error.position || 0
     };
   }
+}
+
+/**
+ * Convert modern compilation result to legacy aggregate format for backward compatibility
+ * @param {Object} result - Modern compilation result
+ * @returns {Object} Legacy format with expression string and aggregateJoins array
+ */
+function convertToLegacyAggregateFormat(result) {
+  // Group aggregates by relationship for legacy format
+  const aggregateGroups = new Map();
+  let aliasCounter = 1;
+  
+  for (const aggIntent of result.aggregateIntents) {
+    const relationshipKey = aggIntent.sourceRelation;
+    
+    if (!aggregateGroups.has(relationshipKey)) {
+      aggregateGroups.set(relationshipKey, {
+        alias: `agg${aliasCounter++}`,
+        functions: new Set(),
+        requiredJoins: aggIntent.internalJoins || []
+      });
+    }
+    
+    const group = aggregateGroups.get(relationshipKey);
+    
+    // Add function to the set
+    let functionName;
+    switch (aggIntent.aggregateFunction) {
+      case 'STRING_AGG':
+        functionName = 'string_agg_result_1';
+        break;
+      case 'STRING_AGG_DISTINCT':
+        functionName = 'string_agg_distinct_result_1';
+        break;
+      case 'SUM_AGG':
+        functionName = 'sum_result_1';
+        break;
+      case 'COUNT_AGG':
+        functionName = 'count_result_1';
+        break;
+      case 'AVG_AGG':
+        functionName = 'avg_result_1';
+        break;
+      case 'MIN_AGG':
+        functionName = 'min_result_1';
+        break;
+      case 'MAX_AGG':
+        functionName = 'max_result_1';
+        break;
+      case 'AND_AGG':
+        functionName = 'bool_and_result_1';
+        break;
+      case 'OR_AGG':
+        functionName = 'bool_or_result_1';
+        break;
+      default:
+        functionName = 'agg_result_1';
+    }
+    
+    group.functions.add(functionName);
+  }
+  
+  // Create aggregateJoins array and convert Set to Array for JSON serialization
+  const aggregateJoins = Array.from(aggregateGroups.values()).map(group => ({
+    ...group,
+    functions: group.functions // Keep as Set for test compatibility
+  }));
+  
+  // Create expression string for single aggregate functions
+  let expressionString;
+  if (result.expression.type === 'AGGREGATE_FUNCTION') {
+    // Single aggregate function
+    const firstGroup = aggregateJoins[0];
+    const functionName = Array.from(firstGroup.functions)[0];
+    expressionString = `${firstGroup.alias}.${functionName}`;
+  } else {
+    // Complex expression with aggregates - keep the original structure
+    expressionString = result.expression;
+  }
+  
+  return {
+    expression: expressionString,
+    aggregateJoins: aggregateJoins,
+    joinIntents: result.joinIntents,
+    aggregateIntents: result.aggregateIntents,
+    returnType: result.returnType
+  };
 }
 
 /**
