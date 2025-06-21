@@ -1,0 +1,1 @@
+merchant_rel.business_name & " - " & STRING(amount * 0.05) & " - " & STRING_AGG(rep_links_submission, rep_rel.name, ", ") 

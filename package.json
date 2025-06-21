@@ -1,0 +1,18 @@
+{
+  "name": "js-to-sql-formula-compiler",
+  "version": "1.0.0",
+  "description": "JavaScript-based Excel-like formula compiler that converts formulas to PostgreSQL SQL",
+  "type": "module",
+  "main": "formula-compiler.js",
+  "scripts": {
+    "test": "node test-formula-compiler.js",
+    "demo": "node demo.js",
+    "exec": "node exec-formula"
+  },
+  "dependencies": {
+    "pg": "^8.11.0"
+  },
+  "keywords": ["formula", "compiler", "sql", "postgresql", "excel", "lexer", "parser"],
+  "author": "",
+  "license": "MIT"
+} 

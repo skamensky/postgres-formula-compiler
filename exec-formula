@@ -1,0 +1,239 @@
+#!/usr/bin/env node
+
+/**
+ * Formula Executor - Reads multiple formula files and executes them with deduplication
+ * Demonstrates hierarchical semantic IDs and cross-formula optimization
+ */
+
+import { readFileSync } from 'fs';
+import { evaluateFormula, generateSQL, mapPostgresType } from './formula-compiler.js';
+import pkg from 'pg';
+const { Client } = pkg;
+
+// Database connection string
+const connectionString = "***REMOVED***";
+
+// Build column list for any table using metadata system
+async function getColumnListForTable(tableName, client) {
+  const query = `
+    SELECT tf.name, tf.data_type
+    FROM table_field tf
+    JOIN table_info ti ON tf.table_info = ti.id
+    WHERE ti.table_name = $1
+    ORDER BY tf.name
+  `;
+  
+  const result = await client.query(query, [tableName]);
+  
+  if (result.rows.length === 0) {
+    throw new Error(`Table '${tableName}' not found in metadata system`);
+  }
+  
+  const columnList = {};
+  for (const row of result.rows) {
+    columnList[row.name] = mapPostgresType(row.data_type);
+  }
+  
+  return columnList;
+}
+
+// Build relationship info for a table using metadata system
+async function getRelationshipsForTable(tableName, client) {
+  const query = `
+    SELECT rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    WHERE rl.source_table_name = $1
+  `;
+  
+  const result = await client.query(query, [tableName]);
+  const relationships = {};
+  
+  for (const row of result.rows) {
+    const targetColumnList = await getColumnListForTable(row.target_table_name, client);
+    
+    // Use the base name (without _rel suffix) as the key
+    const relationshipKey = row.col_name.replace(/_id$/, '');
+    
+    relationships[relationshipKey] = {
+      joinColumn: row.col_name,
+      columnList: targetColumnList
+    };
+  }
+  
+  return relationships;
+}
+
+// Build inverse relationship info for a table using metadata system
+async function getInverseRelationshipsForTable(tableName, client) {
+  const query = `
+    SELECT rl.source_table_name, rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    WHERE rl.target_table_name = $1
+  `;
+  
+  const result = await client.query(query, [tableName]);
+  const inverseRelationships = {};
+  
+  for (const row of result.rows) {
+    // Use naming pattern: {source_table_name}s_{col_name}
+    const relationshipName = `${row.source_table_name}s_${row.col_name}`;
+    
+    const sourceColumnList = await getColumnListForTable(row.source_table_name, client);
+    const sourceRelationships = await getRelationshipsForTable(row.source_table_name, client);
+    
+    inverseRelationships[relationshipName] = {
+      tableName: row.source_table_name,
+      columnList: sourceColumnList,
+      joinColumn: row.col_name,
+      relationshipInfo: sourceRelationships
+    };
+  }
+  
+  return inverseRelationships;
+}
+
+async function main() {
+  try {
+    console.log('🚀 Multi-Formula Executor with Deduplication\n');
+    
+    // Read formulas from files
+    console.log('📄 Reading formulas from files...');
+    const formula1 = readFileSync('example-1.formula', 'utf8').trim();
+    const formula2 = readFileSync('example-2.formula', 'utf8').trim();
+    
+    console.log(`Formula 1: ${formula1}`);
+    console.log(`Formula 2: ${formula2}\n`);
+    
+    // Connect to database first (needed for metadata lookup)
+    console.log('🔌 Connecting to PostgreSQL database...');
+    const client = new Client({ connectionString });
+    await client.connect();
+    
+    // Build context for submission table using metadata system
+    console.log('📋 Loading table metadata...');
+    const columnList = await getColumnListForTable('submission', client);
+    
+    console.log('🔗 Loading relationship metadata...');
+    const relationshipInfo = await getRelationshipsForTable('submission', client);
+    
+    console.log('🔗 Loading inverse relationship metadata...');
+    const inverseRelationshipInfo = await getInverseRelationshipsForTable('submission', client);
+    
+    const context = {
+      tableName: 'submission',
+      columnList: columnList,
+      relationshipInfo: relationshipInfo,
+      inverseRelationshipInfo: inverseRelationshipInfo
+    };
+    
+    console.log('\n🔄 Compiling formulas to intents...');
+    
+    // Compile each formula to intents
+    const result1 = evaluateFormula(formula1, context);
+    const result2 = evaluateFormula(formula2, context);
+    
+    console.log('\n📊 Analysis of Individual Compilations:');
+    console.log('='.repeat(60));
+    
+    console.log('\nFormula 1 Analysis:');
+    console.log(`  Expression Semantic ID: ${result1.expression.semanticId}`);
+    console.log(`  Join Intents: ${result1.joinIntents.length}`);
+    result1.joinIntents.forEach((join, i) => {
+      console.log(`    ${i+1}. ${join.semanticId}`);
+    });
+    console.log(`  Aggregate Intents: ${result1.aggregateIntents.length}`);
+    result1.aggregateIntents.forEach((agg, i) => {
+      console.log(`    ${i+1}. ${agg.semanticId}`);
+      console.log(`       Internal Joins: ${agg.internalJoins.length}`);
+      agg.internalJoins.forEach((join, j) => {
+        console.log(`         ${j+1}. ${join.semanticId}`);
+      });
+    });
+    
+    console.log('\nFormula 2 Analysis:');
+    console.log(`  Expression Semantic ID: ${result2.expression.semanticId}`);
+    console.log(`  Join Intents: ${result2.joinIntents.length}`);
+    result2.joinIntents.forEach((join, i) => {
+      console.log(`    ${i+1}. ${join.semanticId}`);
+    });
+    console.log(`  Aggregate Intents: ${result2.aggregateIntents.length}`);
+    result2.aggregateIntents.forEach((agg, i) => {
+      console.log(`    ${i+1}. ${agg.semanticId}`);
+      console.log(`       Internal Joins: ${agg.internalJoins.length}`);
+      agg.internalJoins.forEach((join, j) => {
+        console.log(`         ${j+1}. ${join.semanticId}`);
+      });
+    });
+    
+    // Prepare named results for SQL generation
+    const namedResults = {
+      formula1_result: result1,
+      formula2_result: result2
+    };
+    
+    console.log('\n🔧 Generating optimized SQL with deduplication...');
+    const sqlResult = generateSQL(namedResults, 'submission');
+    
+    console.log('\n📈 Deduplication Analysis:');
+    console.log('='.repeat(60));
+    
+    // Count unique intents across both formulas
+    const allJoinIntents = new Set();
+    const allAggregateIntents = new Set();
+    
+    [result1, result2].forEach(result => {
+      result.joinIntents.forEach(join => allJoinIntents.add(join.semanticId));
+      result.aggregateIntents.forEach(agg => {
+        allAggregateIntents.add(agg.semanticId);
+        agg.internalJoins.forEach(join => allJoinIntents.add(join.semanticId));
+      });
+    });
+    
+    console.log(`Total Join Intents Across Both Formulas: ${allJoinIntents.size}`);
+    console.log(`Total Aggregate Intents Across Both Formulas: ${allAggregateIntents.size}`);
+    console.log(`Actual JOINs in Generated SQL: ${(sqlResult.fromClause.match(/LEFT JOIN/g) || []).length}`);
+    console.log(`Actual Aggregate Subqueries: ${sqlResult.aggregateSubqueries.length}`);
+    console.log(`SELECT Expressions: ${sqlResult.selectExpressions.length}`);
+    
+    console.log('\n📝 Generated Optimized SQL:');
+    console.log('='.repeat(60));
+    console.log(sqlResult.sql);
+    
+    console.log('\n⚡ Executing SQL query...\n');
+    const queryResult = await client.query(sqlResult.sql + ' LIMIT 5');
+    
+    console.log('📊 Results:');
+    console.log('='.repeat(60));
+    
+    if (queryResult.rows.length === 0) {
+      console.log('No results found');
+    } else {
+      console.log(`Found ${queryResult.rows.length} rows:\n`);
+      queryResult.rows.forEach((row, index) => {
+        console.log(`Row ${index + 1}:`);
+        console.log(`  Formula 1 Result: ${row.formula1_result || 'NULL'}`);
+        console.log(`  Formula 2 Result: ${row.formula2_result || 'NULL'}`);
+        console.log('');
+      });
+    }
+    
+    console.log('='.repeat(60));
+    console.log(`\n✅ Multi-formula execution completed successfully!`);
+    console.log('\n🎯 Deduplication Benefits Demonstrated:');
+    console.log('  ✓ Shared joins between formulas are deduplicated');
+    console.log('  ✓ Shared expressions within same joins are reused');
+    console.log('  ✓ Aggregate subqueries are optimized');
+    console.log('  ✓ Hierarchical semantic IDs enable precise deduplication');
+    
+    await client.end();
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    if (error.position !== undefined) {
+      console.error(`   Position: ${error.position}`);
+    }
+    process.exit(1);
+  }
+}
+
+main(); 
