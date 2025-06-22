@@ -60,22 +60,6 @@ export const OPERATION = {
   LESS_THAN_EQUAL: Symbol('LESS_THAN_EQUAL')
 };
 
-// Map token values to operation symbols
-export const TOKEN_TO_OPERATION = {
-  '+': OPERATION.PLUS,
-  '-': OPERATION.MINUS,
-  '*': OPERATION.MULTIPLY,
-  '/': OPERATION.DIVIDE,
-  '&': OPERATION.CONCATENATE,
-  '=': OPERATION.EQUAL,
-  '!=': OPERATION.NOT_EQUAL,
-  '<>': OPERATION.NOT_EQUAL,
-  '>': OPERATION.GREATER_THAN,
-  '>=': OPERATION.GREATER_THAN_EQUAL,
-  '<': OPERATION.LESS_THAN,
-  '<=': OPERATION.LESS_THAN_EQUAL
-};
-
 // Operation rules - defines valid type combinations and result types
 export const OPERATION_RULES = [
   // Arithmetic operations
@@ -100,12 +84,32 @@ export const OPERATION_RULES = [
   { left: TYPE.DATE, op: OPERATION.EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date = date` → `boolean`' },
   { left: TYPE.NULL, op: OPERATION.EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`null = null` → `boolean`' },
   
+  // NULL comparisons with other types (NULL can be compared with any type)
+  { left: TYPE.NULL, op: OPERATION.EQUAL, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`null = string` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.EQUAL, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`null = number` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.EQUAL, right: TYPE.BOOLEAN, result: TYPE.BOOLEAN, description: '`null = boolean` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`null = date` → `boolean`' },
+  { left: TYPE.STRING, op: OPERATION.EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`string = null` → `boolean`' },
+  { left: TYPE.NUMBER, op: OPERATION.EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`number = null` → `boolean`' },
+  { left: TYPE.BOOLEAN, op: OPERATION.EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`boolean = null` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`date = null` → `boolean`' },
+  
   // Not equal
   { left: TYPE.STRING, op: OPERATION.NOT_EQUAL, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`string != string` → `boolean`' },
   { left: TYPE.NUMBER, op: OPERATION.NOT_EQUAL, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number != number` → `boolean`' },
   { left: TYPE.BOOLEAN, op: OPERATION.NOT_EQUAL, right: TYPE.BOOLEAN, result: TYPE.BOOLEAN, description: '`boolean != boolean` → `boolean`' },
   { left: TYPE.DATE, op: OPERATION.NOT_EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date != date` → `boolean`' },
   { left: TYPE.NULL, op: OPERATION.NOT_EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`null != null` → `boolean`' },
+  
+  // NULL not equal comparisons with other types
+  { left: TYPE.NULL, op: OPERATION.NOT_EQUAL, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`null != string` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.NOT_EQUAL, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`null != number` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.NOT_EQUAL, right: TYPE.BOOLEAN, result: TYPE.BOOLEAN, description: '`null != boolean` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.NOT_EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`null != date` → `boolean`' },
+  { left: TYPE.STRING, op: OPERATION.NOT_EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`string != null` → `boolean`' },
+  { left: TYPE.NUMBER, op: OPERATION.NOT_EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`number != null` → `boolean`' },
+  { left: TYPE.BOOLEAN, op: OPERATION.NOT_EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`boolean != null` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.NOT_EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`date != null` → `boolean`' },
   
   // Relational comparisons (numbers, dates, strings)
   { left: TYPE.NUMBER, op: OPERATION.GREATER_THAN, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number > number` → `boolean`' },

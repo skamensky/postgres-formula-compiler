@@ -1,4 +1,4 @@
-import { TYPE, typeToString, TOKEN_TO_OPERATION, getOperationRule, getOperationResultType } from './types-unified.js';
+import { TYPE, typeToString, OPERATION, getOperationRule, getOperationResultType } from './types-unified.js';
 import { compileRelationshipRef } from './relationship-compiler.js';
 import { compileFunction } from './function-dispatcher.js';
 import { TokenValue } from './lexer.js';
@@ -249,17 +249,52 @@ class Compiler {
     // Collect dependent joins from both sides
     const dependentJoins = [...left.dependentJoins, ...right.dependentJoins];
     
-    // Convert token value to operation symbol
-    const operation = TOKEN_TO_OPERATION[node.op];
-    if (!operation) {
-      this.error(`Unknown binary operator: ${node.op}`, node.position);
+    // Map token value directly to operation symbol using TokenValue constants
+    let operation;
+    switch (node.op) {
+      case TokenValue.PLUS:
+        operation = OPERATION.PLUS;
+        break;
+      case TokenValue.MINUS:
+        operation = OPERATION.MINUS;
+        break;
+      case TokenValue.MULTIPLY:
+        operation = OPERATION.MULTIPLY;
+        break;
+      case TokenValue.DIVIDE:
+        operation = OPERATION.DIVIDE;
+        break;
+      case TokenValue.AMPERSAND:
+        operation = OPERATION.CONCATENATE;
+        break;
+      case TokenValue.EQ:
+        operation = OPERATION.EQUAL;
+        break;
+      case TokenValue.NEQ_BANG:
+      case TokenValue.NEQ_BRACKETS:
+        operation = OPERATION.NOT_EQUAL;
+        break;
+      case TokenValue.GT:
+        operation = OPERATION.GREATER_THAN;
+        break;
+      case TokenValue.GTE:
+        operation = OPERATION.GREATER_THAN_EQUAL;
+        break;
+      case TokenValue.LT:
+        operation = OPERATION.LESS_THAN;
+        break;
+      case TokenValue.LTE:
+        operation = OPERATION.LESS_THAN_EQUAL;
+        break;
+      default:
+        this.error(`Unknown binary operator: ${node.op}`, node.position);
     }
     
     // Check if operation is valid for these types
     const operationRule = getOperationRule(left.returnType, operation, right.returnType);
     
     // Handle special case for number + date where we need to check left operand type
-    if (!operationRule && operation === TOKEN_TO_OPERATION['+'] && 
+    if (!operationRule && operation === OPERATION.PLUS && 
         left.returnType === TYPE.NUMBER && right.returnType === TYPE.DATE) {
       // Only allow number + date if the number is a direct operand (not an expression result)
       if (left.type === TYPE.NUMBER_LITERAL || left.type === TYPE.IDENTIFIER) {
@@ -281,8 +316,12 @@ class Compiler {
     
     if (!operationRule) {
       // Special error message for string concatenation
-      if (operation === TOKEN_TO_OPERATION['&']) {
+      if (operation === OPERATION.CONCATENATE) {
         this.error(`String concatenation operator & requires both operands to be strings, got ${typeToString(left.returnType)} and ${typeToString(right.returnType)}. Use STRING() function to cast values to strings.`, node.position);
+      } else if (operation === OPERATION.GREATER_THAN || operation === OPERATION.GREATER_THAN_EQUAL || 
+                 operation === OPERATION.LESS_THAN || operation === OPERATION.LESS_THAN_EQUAL) {
+        // Special error message for comparison operators
+        this.error(`Cannot compare ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
       } else {
         this.error(`Invalid operand types for ${node.op}: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
       }
@@ -299,8 +338,6 @@ class Compiler {
     };
   }
 
-
-
   getJoinIntents() {
     return Array.from(this.joinIntents.values());
   }
@@ -308,8 +345,6 @@ class Compiler {
   getAggregateIntents() {
     return Array.from(this.aggregateIntents.values());
   }
-
-
 }
 
 // Export for ES modules
