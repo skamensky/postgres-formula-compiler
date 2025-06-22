@@ -109,15 +109,44 @@ app.post('/api/execute', async (req, res) => {
     // Get all relationships using introspection
     const allRelationships = await getAllRelationships(dbClient);
     
-    // Get inverse relationships
-    const allInverseRelationships = await getInverseRelationshipsForTables([tableName], dbClient);
+    // Collect all unique table names needed for relationships (like exec-formula does)
+    const allTableNamesForContext = new Set([tableName]);
+    const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRels) {
+      allTableNamesForContext.add(rel.toTable);
+    }
+    
+    // For multi-level aggregates, we need inverse relationships for all tables that could be traversed
+    // Start with the main table, then add tables from direct inverse relationships
+    const tablesToLoadInverseRels = new Set([tableName]);
+    
+    // Add tables from direct inverse relationships (these become intermediate tables in multi-level chains)
+    const directInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
+    for (const rel of directInverseRels) {
+      tablesToLoadInverseRels.add(rel.fromTable);
+    }
+    
+    // Get inverse relationships for all these tables in bulk
+    const allInverseRelationships = await getInverseRelationshipsForTables([...tablesToLoadInverseRels], dbClient);
     const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
     
-    // Build table infos
-    const tableInfos = Object.keys(columnLists).map(name => ({
-      tableName: name,
-      columnList: columnLists[name]
-    }));
+    // Build table infos using the same approach as exec-formula
+    const tableInfos = [
+      {
+        tableName: tableName,
+        columnList: columnLists[tableName]
+      }
+    ];
+    
+    // Add table infos for direct relationships from this table
+    for (const rel of directRels) {
+      if (columnLists[rel.toTable]) {
+        tableInfos.push({
+          tableName: rel.toTable,
+          columnList: columnLists[rel.toTable]
+        });
+      }
+    }
     
     // Build old-style relationshipInfo for backward compatibility
     const relationshipInfo = {};
