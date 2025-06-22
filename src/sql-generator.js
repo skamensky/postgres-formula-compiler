@@ -209,6 +209,125 @@ function generateSQL(namedResults, baseTableName) {
 }
 
 /**
+ * Generate SQL subquery for multi-level aggregate intents
+ * @param {Array<AggregateIntent>} aggIntents - Array of multi-level aggregate intents to consolidate
+ * @param {Map<string, string>} joinAliases - Join semantic ID to SQL alias mapping
+ * @param {string} baseTableName - Base table name (original root table)
+ * @param {Map<string, Object>} aggregateColumnMappings - Aggregate semantic ID to {alias, column} mapping
+ * @returns {string} SQL subquery
+ */
+function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableName, aggregateColumnMappings) {
+  if (aggIntents.length === 0) {
+    throw new Error('Cannot generate multi-level subquery for empty aggregate intents');
+  }
+  
+  const firstIntent = aggIntents[0];
+  const chainInfo = firstIntent.chainInfo;
+  
+  if (!chainInfo || chainInfo.length === 0) {
+    throw new Error('Multi-level aggregate missing chain information');
+  }
+  
+  // Build the complex FROM clause by traversing the relationship chain
+  // Start with the first table in the chain (closest to the base table)
+  const firstChainStep = chainInfo[0];
+  let subFromClause = firstChainStep.targetTable;
+  let currentAlias = firstChainStep.targetTable;
+  
+  // Build the chain of JOINs by traversing through intermediate tables
+  for (let i = 1; i < chainInfo.length; i++) {
+    const chainStep = chainInfo[i];
+    const nextAlias = chainStep.targetTable;
+    
+    // Join the next table in the chain
+    // Note: This is a simplified approach - in a full implementation,
+    // we'd need to properly resolve the join relationships
+    subFromClause += `\n    JOIN ${chainStep.targetTable} ${nextAlias} ON ${currentAlias}.id = ${nextAlias}.${chainStep.joinColumn}`;
+    currentAlias = nextAlias;
+  }
+  
+  // Collect all unique internal joins from all intents (for final table relationships)
+  const allInternalJoins = new Map();
+  for (const aggIntent of aggIntents) {
+    for (const joinIntent of aggIntent.internalJoins) {
+      allInternalJoins.set(joinIntent.semanticId, joinIntent);
+    }
+  }
+  
+  // Add internal joins within the final target table context
+  for (const joinIntent of allInternalJoins.values()) {
+    const alias = joinAliases.get(joinIntent.semanticId);
+    if (alias && joinIntent.relationshipType === 'direct_relationship') {
+      subFromClause += `\n    JOIN ${joinIntent.targetTable} ${alias} ON ${currentAlias}.${joinIntent.joinField} = ${alias}.id`;
+    }
+  }
+  
+  // Generate SELECT clause with multiple aggregate functions
+  const selectExpressions = [];
+  
+  for (const aggIntent of aggIntents) {
+    // Generate expression SQL for the aggregate (in final table context)
+    const exprSQL = generateExpressionSQL(aggIntent.expression, joinAliases, new Map(), currentAlias);
+    
+    // Get the pre-assigned column alias from the mappings
+    const columnMapping = aggregateColumnMappings.get(aggIntent.semanticId);
+    if (!columnMapping) {
+      throw new Error(`No column mapping found for multi-level aggregate: ${aggIntent.semanticId}`);
+    }
+    const columnAlias = columnMapping.column;
+    
+    // Build aggregate function SQL
+    let aggSQL;
+    
+    switch (aggIntent.aggregateFunction) {
+      case 'STRING_AGG':
+        const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+        aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
+        break;
+      case 'STRING_AGG_DISTINCT':
+        const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+        aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
+        break;
+      case 'COUNT_AGG':
+        aggSQL = `COUNT(*)`;
+        break;
+      case 'SUM_AGG':
+        aggSQL = `SUM(${exprSQL})`;
+        break;
+      case 'AVG_AGG':
+        aggSQL = `AVG(${exprSQL})`;
+        break;
+      case 'MIN_AGG':
+        aggSQL = `MIN(${exprSQL})`;
+        break;
+      case 'MAX_AGG':
+        aggSQL = `MAX(${exprSQL})`;
+        break;
+      case 'AND_AGG':
+        aggSQL = `BOOL_AND(${exprSQL})`;
+        break;
+      case 'OR_AGG':
+        aggSQL = `BOOL_OR(${exprSQL})`;
+        break;
+      default:
+        throw new Error(`Unknown aggregate function: ${aggIntent.aggregateFunction}`);
+    }
+    
+    selectExpressions.push(`${aggSQL} AS ${columnAlias}`);
+  }
+  
+  // Determine the grouping column - should be the foreign key that references the base table
+  // This is typically found in the first step of the chain
+  const groupingColumn = firstChainStep.joinColumn;
+  const groupingTable = firstChainStep.targetTable;
+  
+  // Add the grouping column to the SELECT clause
+  selectExpressions.unshift(`${groupingTable}.${groupingColumn} AS submission`);
+  
+  return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY ${groupingTable}.${groupingColumn}`;
+}
+
+/**
  * Generate consolidated SQL subquery for multiple aggregate intents on the same relationship
  * @param {Array<AggregateIntent>} aggIntents - Array of aggregate intents to consolidate
  * @param {Map<string, string>} joinAliases - Join semantic ID to SQL alias mapping
@@ -224,6 +343,12 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   // Use the first aggregate intent to determine the relationship structure
   const firstIntent = aggIntents[0];
   
+  // Check if this is a multi-level aggregate
+  if (firstIntent.isMultiLevel && firstIntent.chainInfo) {
+    return generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableName, aggregateColumnMappings);
+  }
+  
+  // Single-level aggregate (existing logic)
   // Build subquery FROM clause with internal joins
   const baseTableName_sub = firstIntent.expression.compilationContext.match(/agg:.*?→(.*?)\[/)[1];
   let subFromClause = baseTableName_sub;
@@ -673,4 +798,4 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
 }
 
 // Export for ES modules
-export { generateSQL, generateExpressionSQL, generateFunctionSQL, generateAggregateSubquery, generateConsolidatedAggregateSubquery };
+export { generateSQL, generateExpressionSQL, generateFunctionSQL, generateAggregateSubquery, generateConsolidatedAggregateSubquery, generateMultiLevelAggregateSubquery };
