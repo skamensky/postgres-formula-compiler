@@ -8,7 +8,7 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 - **Three-Stage Compilation**: Lexer → Parser → Compiler
 - **Comprehensive Function Library**: 36+ functions including math, text, date, and logical operations
 - **Multi-Level Relationships**: Navigate up to 3 levels deep with automatic JOIN generation
-- **SQL Optimization**: Consolidates aggregate subqueries into efficient JOINs with JOIN deduplication
+- **Advanced SQL Optimization**: Consolidates aggregate subqueries into efficient JOINs with expression-level deduplication
 - **Relationship Support**: Handles table relationships with proper alias generation
 - **Type Safety**: Validates column types and operations at compile time
 - **Precise Error Reporting**: Errors include exact character positions
@@ -174,11 +174,55 @@ LEFT JOIN (
 ) sr1 ON sr1.submission = s.id
 ```
 
+### Expression-Level Deduplication
+The optimizer detects **identical SQL expressions** and consolidates them, even when derived from different formula inputs:
+
+**Before (Multiple Identical Expressions):**
+```javascript
+// Multiple COUNT_AGG calls with different columns
+STRING(COUNT_AGG(rep_links, rep)) + " | " + 
+STRING(COUNT_AGG(rep_links, commission_percentage)) + " | " + 
+STRING(COUNT_AGG(rep_links, id))
+```
+
+```sql
+-- Generated redundant expressions
+COUNT(*) AS rep_count,
+COUNT(*) AS rep_count_2,  -- Duplicate!
+COUNT(*) AS rep_count_3   -- Duplicate!
+```
+
+**After (Single Optimized Expression):**
+```sql
+-- Deduplicated to single expression
+COUNT(*) AS rep_count
+```
+
+```sql
+-- All references use the same column
+COALESCE(sr1.rep_count, 0) || ' | ' || 
+COALESCE(sr1.rep_count, 0) || ' | ' || 
+COALESCE(sr1.rep_count, 0)
+```
+
+### Key Optimization Features
+- **Aggregate Deduplication**: Identical aggregate expressions consolidated into single SQL
+- **JOIN Consolidation**: Shared relationships deduplicated across formulas
+- **Subquery Merging**: Multiple aggregates on same relationship combined into one subquery
+- **Expression Reuse**: Same SQL expressions referenced multiple times use single calculation
+- **Semantic ID Matching**: Intelligent detection of functionally equivalent expressions
+
+### Performance Benefits
+- **Reduced Query Complexity**: Fewer subqueries and duplicate expressions
+- **Database Optimization**: Single aggregation instead of multiple identical calculations  
+- **Memory Efficiency**: Consolidated results cached and reused
+- **Execution Speed**: Significant performance improvement for complex multi-aggregate formulas
+
 ## 🧪 Test Organization
 
 The project includes a comprehensive test suite organized into focused modules:
 
-### Test Categories (309 total tests)
+### Test Categories (325 total tests)
 - **Basic Arithmetic & Literals** (14 tests)
 - **Boolean Literals** (6 tests)
 - **Comments** (6 tests)
@@ -198,7 +242,7 @@ The project includes a comprehensive test suite organized into focused modules:
 - **Aggregate Functions** (37 tests)
 
 ### Test Results
-- **309/309 tests passing (100% success rate)**
+- **325/325 tests passing (100% success rate)**
 
 ### Test Utilities
 - Centralized test contexts in `tests/test-utils.js`
