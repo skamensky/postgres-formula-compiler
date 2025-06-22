@@ -285,11 +285,11 @@ function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableN
     
     switch (aggIntent.aggregateFunction) {
       case FUNCTIONS.STRING_AGG:
-        const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+        const delimiterSQL = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
         break;
       case FUNCTIONS.STRING_AGG_DISTINCT:
-        const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+        const delimiterSQL2 = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
         break;
       case FUNCTIONS.COUNT_AGG:
@@ -392,11 +392,11 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
     
     switch (aggIntent.aggregateFunction) {
       case FUNCTIONS.STRING_AGG:
-        const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+        const delimiterSQL = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
         break;
       case FUNCTIONS.STRING_AGG_DISTINCT:
-        const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+        const delimiterSQL2 = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
         break;
       case FUNCTIONS.COUNT_AGG:
@@ -466,11 +466,11 @@ function generateAggregateSubquery(aggIntent, joinAliases, baseTableName) {
   let aggSQL;
   switch (aggIntent.aggregateFunction) {
     case FUNCTIONS.STRING_AGG:
-      const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable);
+      const delimiterSQL = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable) : "', '";
       aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
       break;
     case FUNCTIONS.STRING_AGG_DISTINCT:
-      const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable);
+      const delimiterSQL2 = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable) : "', '";
       aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
       break;
     case FUNCTIONS.SUM_AGG:
@@ -514,6 +514,13 @@ function generateAggregateSubquery(aggIntent, joinAliases, baseTableName) {
  * @returns {string} SQL expression
  */
 function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseTableName) {
+  if (!expr) {
+    throw new Error(`Cannot generate SQL for null expression (baseTableName: ${baseTableName})`);
+  }
+  if (!expr.type) {
+    throw new Error(`Expression missing type property: ${JSON.stringify(expr)} (baseTableName: ${baseTableName})`);
+  }
+  
   switch (expr.type) {
     case TYPE.NUMBER_LITERAL:
       return expr.value.toString();
