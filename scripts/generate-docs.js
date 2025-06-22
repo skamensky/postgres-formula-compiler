@@ -607,24 +607,26 @@ function findTestReferences(functionName) {
       const fileName = path.basename(filePath);
       
       lines.forEach((line, index) => {
-        // Look for function calls in various contexts
-        const patterns = [
-          new RegExp(`\\b${functionName}\\s*\\(`, 'gi'), // Function calls
-          new RegExp(`'[^']*\\b${functionName}\\s*\\([^']*'`, 'gi'), // In strings
-          new RegExp(`"[^"]*\\b${functionName}\\s*\\([^"]*"`, 'gi'), // In double quotes
-          new RegExp(`\`[^\`]*\\b${functionName}\\s*\\([^\`]*\``, 'gi') // In template literals
-        ];
-        
-        patterns.forEach(pattern => {
-          if (pattern.test(line)) {
-            testReferences.push({
-              file: fileName,
-              line: index + 1,
-              content: line.trim(),
-              url: `tests/${fileName}#L${index + 1}`
-            });
-          }
-        });
+        // Look for function calls in various contexts, but only in lines that contain 'evaluateFormula'
+        if (line.includes('evaluateFormula') && !line.trim().startsWith('//')) {
+          const patterns = [
+            new RegExp(`\\b${functionName}\\s*\\(`, 'gi'), // Function calls
+            new RegExp(`'[^']*\\b${functionName}\\s*\\([^']*'`, 'gi'), // In strings
+            new RegExp(`"[^"]*\\b${functionName}\\s*\\([^"]*"`, 'gi'), // In double quotes
+            new RegExp(`\`[^\`]*\\b${functionName}\\s*\\([^\`]*\``, 'gi') // In template literals
+          ];
+          
+          patterns.forEach(pattern => {
+            if (pattern.test(line)) {
+              testReferences.push({
+                file: fileName,
+                line: index + 1,
+                content: line.trim(),
+                url: `tests/${fileName}#L${index + 1}`
+              });
+            }
+          });
+        }
       });
     } catch (error) {
       console.warn(`Warning: Could not read test file ${filePath}:`, error.message);

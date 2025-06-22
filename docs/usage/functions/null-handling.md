@@ -12,7 +12,7 @@
 
 
 <details>
-<summary><strong>Test References</strong> (11 found)</summary>
+<summary><strong>Test References</strong> (10 found)</summary>
 
 - **if-function.test.js** (1 reference)
   - [Line 72](/tests/if-function.test.js#L72): `const result = evaluateFormula('IF(ISNULL(revenue), "No revenue", "Has revenue")', testContext);`
@@ -24,8 +24,7 @@
 - **multi-level-relationships.test.js** (1 reference)
   - [Line 129](/tests/multi-level-relationships.test.js#L129): `const result = evaluateFormula('IF(ISNULL(merchant_rel.main_rep_rel.user_rel.status), "No Status", merchant_rel.main_rep_rel.user_rel.status)', multiLevelContext);`
 
-- **null-handling.test.js** (7 references)
-  - [Line 3](/tests/null-handling.test.js#L3): `* Tests for ISNULL(), NULLVALUE(), ISBLANK() functions and NULL literal`
+- **null-handling.test.js** (6 references)
   - [Line 12](/tests/null-handling.test.js#L12): `const result = evaluateFormula('ISNULL(note)', testContext);`
   - [Line 17](/tests/null-handling.test.js#L17): `const result = evaluateFormula('ISNULL(NULL)', testContext);`
   - [Line 53](/tests/null-handling.test.js#L53): `const result = evaluateFormula('IF(ISNULL(note), "No note", note)', testContext);`
@@ -54,13 +53,12 @@
 
 
 <details>
-<summary><strong>Test References</strong> (9 found)</summary>
+<summary><strong>Test References</strong> (8 found)</summary>
 
 - **logical-operators-functions.test.js** (1 reference)
   - [Line 97](/tests/logical-operators-functions.test.js#L97): `const result = evaluateFormula('AND(ISNULL(revenue), ISBLANK(note))', testContext);`
 
-- **null-handling.test.js** (8 references)
-  - [Line 3](/tests/null-handling.test.js#L3): `* Tests for ISNULL(), NULLVALUE(), ISBLANK() functions and NULL literal`
+- **null-handling.test.js** (7 references)
   - [Line 32](/tests/null-handling.test.js#L32): `const result = evaluateFormula('ISBLANK(note)', testContext);`
   - [Line 37](/tests/null-handling.test.js#L37): `const result = evaluateFormula('ISBLANK(NULL)', testContext);`
   - [Line 103](/tests/null-handling.test.js#L103): `() => evaluateFormula('ISBLANK()', testContext),`
@@ -90,10 +88,9 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (14 found)</summary>
+<summary><strong>Test References</strong> (13 found)</summary>
 
-- **null-handling.test.js** (14 references)
-  - [Line 3](/tests/null-handling.test.js#L3): `* Tests for ISNULL(), NULLVALUE(), ISBLANK() functions and NULL literal`
+- **null-handling.test.js** (13 references)
   - [Line 22](/tests/null-handling.test.js#L22): `const result = evaluateFormula('NULLVALUE(note, "No note")', testContext);`
   - [Line 27](/tests/null-handling.test.js#L27): `const result = evaluateFormula('NULLVALUE(NULL, "Default")', testContext);`
   - [Line 48](/tests/null-handling.test.js#L48): `const result = evaluateFormula('NULLVALUE(note, "Empty") & " - " & STRING(amount)', testContext);`
@@ -128,19 +125,9 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (10 found)</summary>
+<summary><strong>Test References</strong> (0 found)</summary>
 
-- **null-handling.test.js** (10 references)
-  - [Line 23](/tests/null-handling.test.js#L23): `assertEqual(result, 'COALESCE("s"."note", \'No note\')');`
-  - [Line 28](/tests/null-handling.test.js#L28): `assertEqual(result, 'COALESCE(NULL, \'Default\')');`
-  - [Line 49](/tests/null-handling.test.js#L49): `assertEqual(result, '((COALESCE("s"."note", \'Empty\') || \' - \') || CAST("s"."amount" AS TEXT))');`
-  - [Line 59](/tests/null-handling.test.js#L59): `assertEqual(result, '(COALESCE("s"."amount", 0) + 100)');`
-  - [Line 65](/tests/null-handling.test.js#L65): `assertEqual(result, 'COALESCE("rel_merchant"."business_name", \'Unknown Business\')');`
-  - [Line 126](/tests/null-handling.test.js#L126): `assertEqual(result, 'COALESCE(NULL, \'default\')');`
-  - [Line 132](/tests/null-handling.test.js#L132): `assertEqual(result, 'COALESCE(\'maybe null\', \'definitely not null\')');`
-  - [Line 144](/tests/null-handling.test.js#L144): `assertEqual(result, '(COALESCE(\'maybe null\', \'default\') || \' value\')');`
-  - [Line 150](/tests/null-handling.test.js#L150): `assertEqual(result, 'CASE WHEN ("s"."revenue" IS NULL OR "s"."revenue" = \'\') THEN COALESCE("s"."cost", 0) ELSE "s"."revenue" END');`
-  - [Line 165](/tests/null-handling.test.js#L165): `assertEqual(result, '(((CAST(COALESCE("s"."revenue", 0) AS TEXT) || \' (empty: \') || CAST(("s"."revenue" IS NULL OR "s"."revenue" = \'\') AS TEXT)) || \')\')');`
+No test references found for this function.
 </details>
 
 <details>
@@ -150,4 +137,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:44:21.949Z*
+*Documentation generated on 2025-06-22T21:46:18.185Z*

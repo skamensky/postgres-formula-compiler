@@ -12,11 +12,9 @@
 
 
 <details>
-<summary><strong>Test References</strong> (2 found)</summary>
+<summary><strong>Test References</strong> (0 found)</summary>
 
-- **text-functions.test.js** (2 references)
-  - [Line 31](/tests/text-functions.test.js#L31): `assertEqual(result, 'LENGTH(\'hello\')');`
-  - [Line 73](/tests/text-functions.test.js#L73): `assertEqual(result, '(LENGTH(\'hello\') + 5)');`
+No test references found for this function.
 </details>
 
 <details>
@@ -38,17 +36,13 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (10 found)</summary>
+<summary><strong>Test References</strong> (6 found)</summary>
 
-- **text-functions.test.js** (10 references)
+- **text-functions.test.js** (6 references)
   - [Line 12](/tests/text-functions.test.js#L12): `const result = evaluateFormula('UPPER("hello world")', testContext);`
-  - [Line 13](/tests/text-functions.test.js#L13): `assertEqual(result, 'UPPER(\'hello world\')');`
   - [Line 60](/tests/text-functions.test.js#L60): `const result = evaluateFormula('UPPER(name)', testContext);`
-  - [Line 61](/tests/text-functions.test.js#L61): `assertEqual(result, 'UPPER("s"."name")');`
   - [Line 66](/tests/text-functions.test.js#L66): `const result = evaluateFormula('UPPER(LEFT(TRIM(name), 3)) & "..."', testContext);`
-  - [Line 67](/tests/text-functions.test.js#L67): `assertEqual(result, '(UPPER(LEFT(TRIM("s"."name"), 3)) || \'...\')');`
   - [Line 98](/tests/text-functions.test.js#L98): `const result = evaluateFormula('UPPER(SUBSTITUTE(company_name, "LLC", "Limited Liability Company"))', testContext);`
-  - [Line 99](/tests/text-functions.test.js#L99): `assertEqual(result, 'UPPER(REPLACE("s"."company_name", \'LLC\', \'Limited Liability Company\'))');`
   - [Line 119](/tests/text-functions.test.js#L119): `() => evaluateFormula('UPPER("hello", "world")', testContext),`
   - [Line 128](/tests/text-functions.test.js#L128): `() => evaluateFormula('UPPER(42)', testContext),`
 </details>
@@ -85,11 +79,10 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (3 found)</summary>
+<summary><strong>Test References</strong> (2 found)</summary>
 
-- **text-functions.test.js** (3 references)
+- **text-functions.test.js** (2 references)
   - [Line 18](/tests/text-functions.test.js#L18): `const result = evaluateFormula('LOWER("HELLO WORLD")', testContext);`
-  - [Line 19](/tests/text-functions.test.js#L19): `assertEqual(result, 'LOWER(\'HELLO WORLD\')');`
   - [Line 191](/tests/text-functions.test.js#L191): `() => evaluateFormula('LOWER(revenue)', testContext),`
 </details>
 
@@ -112,13 +105,11 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (5 found)</summary>
+<summary><strong>Test References</strong> (3 found)</summary>
 
-- **text-functions.test.js** (5 references)
+- **text-functions.test.js** (3 references)
   - [Line 24](/tests/text-functions.test.js#L24): `const result = evaluateFormula('TRIM("  hello  ")', testContext);`
-  - [Line 25](/tests/text-functions.test.js#L25): `assertEqual(result, 'TRIM(\'  hello  \')');`
   - [Line 66](/tests/text-functions.test.js#L66): `const result = evaluateFormula('UPPER(LEFT(TRIM(name), 3)) & "..."', testContext);`
-  - [Line 67](/tests/text-functions.test.js#L67): `assertEqual(result, '(UPPER(LEFT(TRIM("s"."name"), 3)) || \'...\')');`
   - [Line 200](/tests/text-functions.test.js#L200): `() => evaluateFormula('TRIM(123)', testContext),`
 </details>
 
@@ -194,18 +185,9 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (7 found)</summary>
+<summary><strong>Test References</strong> (0 found)</summary>
 
-- **if-function.test.js** (1 reference)
-  - [Line 61](/tests/if-function.test.js#L61): `assertEqual(result, 'CASE WHEN (POSITION(\'LLC\' IN \'Company LLC\') > 0) THEN REPLACE(\'Company LLC\', \'LLC\', \'Limited\') ELSE \'No change\' END');`
-
-- **text-functions.test.js** (6 references)
-  - [Line 81](/tests/text-functions.test.js#L81): `assertEqual(result, 'REPLACE(\'hello world\', \'world\', \'universe\')');`
-  - [Line 87](/tests/text-functions.test.js#L87): `assertEqual(result, 'REPLACE("s"."name", \'Inc\', \'LLC\')');`
-  - [Line 93](/tests/text-functions.test.js#L93): `assertEqual(result, 'REPLACE(\'hello hello world\', \'hello\', \'hi\')');`
-  - [Line 99](/tests/text-functions.test.js#L99): `assertEqual(result, 'UPPER(REPLACE("s"."company_name", \'LLC\', \'Limited Liability Company\'))');`
-  - [Line 105](/tests/text-functions.test.js#L105): `assertEqual(result, 'REPLACE(\'hello world\', \'hello \', \'\')');`
-  - [Line 111](/tests/text-functions.test.js#L111): `assertEqual(result, '(REPLACE(\'hello world\', \'world\', \'universe\') || \'!\')');`
+No test references found for this function.
 </details>
 
 <details>
@@ -314,13 +296,11 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (7 found)</summary>
+<summary><strong>Test References</strong> (5 found)</summary>
 
-- **text-functions.test.js** (7 references)
+- **text-functions.test.js** (5 references)
   - [Line 36](/tests/text-functions.test.js#L36): `const result = evaluateFormula('LEFT("hello world", 5)', testContext);`
-  - [Line 37](/tests/text-functions.test.js#L37): `assertEqual(result, 'LEFT(\'hello world\', 5)');`
   - [Line 66](/tests/text-functions.test.js#L66): `const result = evaluateFormula('UPPER(LEFT(TRIM(name), 3)) & "..."', testContext);`
-  - [Line 67](/tests/text-functions.test.js#L67): `assertEqual(result, '(UPPER(LEFT(TRIM("s"."name"), 3)) || \'...\')');`
   - [Line 137](/tests/text-functions.test.js#L137): `() => evaluateFormula('LEFT("hello")', testContext),`
   - [Line 146](/tests/text-functions.test.js#L146): `() => evaluateFormula('LEFT(123, 5)', testContext),`
   - [Line 218](/tests/text-functions.test.js#L218): `() => evaluateFormula('LEFT("hello", "world")', testContext),`
@@ -350,11 +330,10 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (3 found)</summary>
+<summary><strong>Test References</strong> (2 found)</summary>
 
-- **text-functions.test.js** (3 references)
+- **text-functions.test.js** (2 references)
   - [Line 42](/tests/text-functions.test.js#L42): `const result = evaluateFormula('RIGHT("hello world", 5)', testContext);`
-  - [Line 43](/tests/text-functions.test.js#L43): `assertEqual(result, 'RIGHT(\'hello world\', 5)');`
   - [Line 227](/tests/text-functions.test.js#L227): `() => evaluateFormula('RIGHT(123, "abc")', testContext),`
 </details>
 
@@ -464,4 +443,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:44:21.850Z*
+*Documentation generated on 2025-06-22T21:46:18.145Z*

@@ -34,37 +34,19 @@ No usage examples found for this function.
 
 
 <details>
-<summary><strong>Test References</strong> (33 found)</summary>
+<summary><strong>Test References</strong> (15 found)</summary>
 
-- **core-functions.test.js** (12 references)
-  - [Line 3](/tests/core-functions.test.js#L3): `* Tests for TODAY(), ME(), DATE() functions`
-  - [Line 10](/tests/core-functions.test.js#L10): `// Test 8: TODAY() function`
-  - [Line 11](/tests/core-functions.test.js#L11): `test('TODAY() function', () => {`
+- **core-functions.test.js** (4 references)
   - [Line 12](/tests/core-functions.test.js#L12): `const result = evaluateFormula('TODAY()', testContext);`
   - [Line 30](/tests/core-functions.test.js#L30): `const result = evaluateFormula('today()', testContext);`
-  - [Line 35](/tests/core-functions.test.js#L35): `test('Complex expression with TODAY()', () => {`
-  - [Line 37](/tests/core-functions.test.js#L37): `// const result = evaluateFormula('revenue + TODAY()', testContext);`
-  - [Line 40](/tests/core-functions.test.js#L40): `// Instead, test a valid expression with TODAY()`
   - [Line 41](/tests/core-functions.test.js#L41): `const result = evaluateFormula('STRING(revenue) & " on " & STRING(TODAY())', testContext);`
-  - [Line 46](/tests/core-functions.test.js#L46): `test('TODAY() with arguments error', () => {`
   - [Line 48](/tests/core-functions.test.js#L48): `() => evaluateFormula('TODAY(5)', testContext),`
-  - [Line 50](/tests/core-functions.test.js#L50): `'Should throw error when TODAY() has arguments'`
 
-- **date-functions.test.js** (17 references)
-  - [Line 16](/tests/date-functions.test.js#L16): `// Test 225: YEAR function with TODAY()`
-  - [Line 17](/tests/date-functions.test.js#L17): `test('YEAR function with TODAY()', () => {`
+- **date-functions.test.js** (7 references)
   - [Line 18](/tests/date-functions.test.js#L18): `const result = evaluateFormula('YEAR(TODAY())', testContext);`
-  - [Line 34](/tests/date-functions.test.js#L34): `// Test 228: MONTH function with TODAY()`
-  - [Line 35](/tests/date-functions.test.js#L35): `test('MONTH function with TODAY()', () => {`
   - [Line 36](/tests/date-functions.test.js#L36): `const result = evaluateFormula('MONTH(TODAY())', testContext);`
-  - [Line 58](/tests/date-functions.test.js#L58): `// Test 232: WEEKDAY function with TODAY()`
-  - [Line 59](/tests/date-functions.test.js#L59): `test('WEEKDAY function with TODAY()', () => {`
   - [Line 60](/tests/date-functions.test.js#L60): `const result = evaluateFormula('WEEKDAY(TODAY())', testContext);`
-  - [Line 70](/tests/date-functions.test.js#L70): `// Test 234: ADDMONTHS function with TODAY() and negative number`
-  - [Line 71](/tests/date-functions.test.js#L71): `test('ADDMONTHS function with TODAY() and negative number', () => {`
   - [Line 72](/tests/date-functions.test.js#L72): `const result = evaluateFormula('ADDMONTHS(TODAY(), -3)', testContext);`
-  - [Line 82](/tests/date-functions.test.js#L82): `// Test 236: ADDDAYS function with TODAY() and negative number`
-  - [Line 83](/tests/date-functions.test.js#L83): `test('ADDDAYS function with TODAY() and negative number', () => {`
   - [Line 84](/tests/date-functions.test.js#L84): `const result = evaluateFormula('ADDDAYS(TODAY(), -7)', testContext);`
   - [Line 96](/tests/date-functions.test.js#L96): `const result = evaluateFormula('DATEDIF(created_date, TODAY(), "months")', testContext);`
   - [Line 102](/tests/date-functions.test.js#L102): `const result = evaluateFormula('DATEDIF(DATE("2020-01-01"), TODAY(), "years")', testContext);`
@@ -512,4 +494,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:44:21.906Z*
+*Documentation generated on 2025-06-22T21:46:18.167Z*
