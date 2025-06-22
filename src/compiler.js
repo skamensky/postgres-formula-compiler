@@ -1,4 +1,4 @@
-import { NodeType } from './types.js';
+import { TYPE } from './types-unified.js';
 import { compileRelationshipRef } from './relationship-compiler.js';
 import { compileFunction } from './function-dispatcher.js';
 
@@ -117,7 +117,7 @@ class Compiler {
 
   compile(node) {
     switch (node.type) {
-      case NodeType.NUMBER:
+      case TYPE.NUMBER_LITERAL:
         return {
           type: 'NUMBER',
           semanticId: this.generateSemanticId('number', node.value.toString()),
@@ -127,10 +127,10 @@ class Compiler {
           value: node.value
         };
 
-      case NodeType.IDENTIFIER:
+      case TYPE.IDENTIFIER:
         return this.compileIdentifier(node);
 
-      case NodeType.BOOLEAN_LITERAL:
+      case TYPE.BOOLEAN_LITERAL:
         return {
           type: 'BOOLEAN_LITERAL',
           semanticId: this.generateSemanticId('boolean', node.value),
@@ -140,7 +140,7 @@ class Compiler {
           value: node.value
         };
 
-      case NodeType.NULL_LITERAL:
+      case TYPE.NULL_LITERAL:
         return {
           type: 'NULL_LITERAL',
           semanticId: this.generateSemanticId('null', 'NULL'),
@@ -150,7 +150,7 @@ class Compiler {
           value: null
         };
 
-      case NodeType.STRING_LITERAL:
+      case TYPE.STRING_LITERAL:
         return {
           type: 'STRING_LITERAL',
           semanticId: this.generateSemanticId('string', `'${node.value}'`),
@@ -160,7 +160,7 @@ class Compiler {
           value: node.value
         };
 
-      case NodeType.DATE_LITERAL:
+      case TYPE.DATE_LITERAL:
         return {
           type: 'DATE_LITERAL',
           semanticId: this.generateSemanticId('date', node.value),
@@ -170,16 +170,16 @@ class Compiler {
           value: node.value
         };
 
-      case NodeType.UNARY_OP:
+      case TYPE.UNARY_OP:
         return this.compileUnaryOp(node);
 
-      case NodeType.BINARY_OP:
+      case TYPE.BINARY_OP:
         return this.compileBinaryOp(node);
 
-      case NodeType.FUNCTION_CALL:
+      case TYPE.FUNCTION_CALL:
         return compileFunction(this, node);
 
-      case NodeType.RELATIONSHIP_REF:
+      case TYPE.RELATIONSHIP_REF:
         return compileRelationshipRef(this, node);
 
       default:

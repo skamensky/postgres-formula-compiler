@@ -1,4 +1,5 @@
-import { TokenType, NodeType } from './types.js';
+import { TokenType } from './types.js';
+import { TYPE } from './types-unified.js';
 
 /**
  * Parser - converts tokens into AST
@@ -40,12 +41,12 @@ class Parser {
       const operand = this.factor();
       
       // Check for consecutive unary operators (like - -)
-      if (operand.type === NodeType.UNARY_OP) {
+      if (operand.type === TYPE.UNARY_OP) {
         this.error('Consecutive operators are not allowed (use parentheses for clarity)', token.position);
       }
       
       return {
-        type: NodeType.UNARY_OP,
+        type: TYPE.UNARY_OP,
         op: '-',
         operand: operand,
         position: token.position
@@ -55,7 +56,7 @@ class Parser {
     if (token.type === TokenType.NUMBER) {
       this.eat(TokenType.NUMBER);
       return {
-        type: NodeType.NUMBER,
+        type: TYPE.NUMBER_LITERAL,
         value: token.value,
         position: token.position
       };
@@ -96,7 +97,7 @@ class Parser {
         this.eat(TokenType.RPAREN);
         
         return {
-          type: NodeType.FUNCTION_CALL,
+          type: TYPE.FUNCTION_CALL,
           name: identifier,
           args: args,
           position: position
@@ -105,20 +106,20 @@ class Parser {
         // Special identifiers: TRUE, FALSE, NULL
         if (identifier === 'TRUE' || identifier === 'FALSE') {
           return {
-            type: NodeType.BOOLEAN_LITERAL,
+            type: TYPE.BOOLEAN_LITERAL,
             value: identifier,
             position: position
           };
         } else if (identifier === 'NULL') {
           return {
-            type: NodeType.NULL_LITERAL,
+            type: TYPE.NULL_LITERAL,
             value: 'NULL',
             position: position
           };
         } else {
           // Regular identifier (column reference)
           return {
-            type: NodeType.IDENTIFIER,
+            type: TYPE.IDENTIFIER,
             value: identifier,
             position: position
           };
@@ -129,7 +130,7 @@ class Parser {
     if (token.type === TokenType.STRING) {
       this.eat(TokenType.STRING);
       return {
-        type: NodeType.STRING_LITERAL,
+        type: TYPE.STRING_LITERAL,
         value: token.value,
         position: token.position
       };
@@ -168,7 +169,7 @@ class Parser {
       }
 
       node = {
-        type: NodeType.BINARY_OP,
+        type: TYPE.BINARY_OP,
         left: node,
         op: token.value,
         right: this.factor(),
@@ -192,7 +193,7 @@ class Parser {
       this.eat(token.type);
 
       node = {
-        type: NodeType.BINARY_OP,
+        type: TYPE.BINARY_OP,
         left: node,
         op: token.value,
         right: this.expr(),
@@ -229,7 +230,7 @@ class Parser {
       }
 
       node = {
-        type: NodeType.BINARY_OP,
+        type: TYPE.BINARY_OP,
         left: node,
         op: token.value,
         right: this.term(),
@@ -282,7 +283,7 @@ class Parser {
       
       // Return as a relationship reference with chain
       return {
-        type: NodeType.RELATIONSHIP_REF,
+        type: TYPE.RELATIONSHIP_REF,
         relationshipChain: relationshipChain,
         fieldName: null, // No field name in aggregate context
         position: position
@@ -290,7 +291,7 @@ class Parser {
     } else {
       // Single identifier - return as simple identifier
       return {
-        type: NodeType.IDENTIFIER,
+        type: TYPE.IDENTIFIER,
         value: firstIdentifier,
         position: position
       };
@@ -333,7 +334,7 @@ class Parser {
     }
     
     return {
-      type: NodeType.RELATIONSHIP_REF,
+      type: TYPE.RELATIONSHIP_REF,
       relationshipChain: relationshipChain,
       fieldName: currentIdentifier,
       position: position

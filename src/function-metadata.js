@@ -1,767 +1,794 @@
 /**
  * Function Metadata - Single Source of Truth
- * All function definitions, argument specifications, and documentation metadata
+ * 
+ * This file contains all function definitions, argument specifications,
+ * and validation logic. It serves as the authoritative source for:
+ * - Function signatures and return types
+ * - Argument validation rules
+ * - Documentation generation
+ * - Error message generation
  */
 
-// Type constants
-export const TYPES = {
-  STRING: 'string',
-  NUMBER: 'number',
-  BOOLEAN: 'boolean',
-  DATE: 'date',
-  NULL: 'null',
-  EXPRESSION: 'expression',
-  INVERSE_RELATIONSHIP: 'inverse_relationship',
-  STRING_LITERAL: 'string_literal'
-};
+import { TYPE, typeToString } from './types-unified.js';
 
-// AST Node Type constants (to eliminate magic strings in validation)
-export const AST_TYPES = {
-  STRING_LITERAL: 'STRING_LITERAL',
-  IDENTIFIER: 'IDENTIFIER',
-  FUNCTION_CALL: 'FUNCTION_CALL',
-  BINARY_OP: 'BINARY_OP',
-  // etc.
-};
-
-// Return Type constants (these happen to match TYPES but make intent clearer)
-export const RETURN_TYPES = {
-  STRING: 'string',
-  NUMBER: 'number',
-  BOOLEAN: 'boolean',
-  DATE: 'date',
-  NULL: 'null'
-};
-
-// Function name constants to eliminate magic strings
+// Function name constants - eliminates magic strings
 export const FUNCTIONS = {
-  // Core functions
-  TODAY: 'TODAY',
-  ME: 'ME',
-  DATE: 'DATE',
-  STRING: 'STRING',
-  IF: 'IF',
-  
-  // NULL handling functions
-  ISNULL: 'ISNULL',
-  NULLVALUE: 'NULLVALUE',
-  ISBLANK: 'ISBLANK',
-  
-  // Logical functions
-  AND: 'AND',
-  OR: 'OR',
-  NOT: 'NOT',
-  
   // Math functions
-  ABS: 'ABS',
   ROUND: 'ROUND',
+  ABS: 'ABS',
+  CEIL: 'CEIL',
+  CEILING: 'CEILING',
+  FLOOR: 'FLOOR',
+  POWER: 'POWER',
+  SQRT: 'SQRT',
+  LOG: 'LOG',
+  LOG10: 'LOG10',
+  EXP: 'EXP',
+  SIN: 'SIN',
+  COS: 'COS',
+  TAN: 'TAN',
+  RANDOM: 'RANDOM',
   MIN: 'MIN',
   MAX: 'MAX',
   MOD: 'MOD',
-  CEILING: 'CEILING',
-  FLOOR: 'FLOOR',
+  SIGN: 'SIGN',
   
   // String functions
+  LENGTH: 'LENGTH',
   UPPER: 'UPPER',
   LOWER: 'LOWER',
   TRIM: 'TRIM',
-  LEN: 'LEN',
-  LEFT: 'LEFT',
-  RIGHT: 'RIGHT',
-  MID: 'MID',
+  SUBSTR: 'SUBSTR',
+  CONCAT: 'CONCAT',
+  REPLACE: 'REPLACE',
   CONTAINS: 'CONTAINS',
-  SUBSTITUTE: 'SUBSTITUTE',
+  STARTS_WITH: 'STARTS_WITH',
+  ENDS_WITH: 'ENDS_WITH',
   
   // Date functions
+  NOW: 'NOW',
+  TODAY: 'TODAY',
   YEAR: 'YEAR',
   MONTH: 'MONTH',
   DAY: 'DAY',
-  WEEKDAY: 'WEEKDAY',
-  ADDMONTHS: 'ADDMONTHS',
-  ADDDAYS: 'ADDDAYS',
-  DATEDIF: 'DATEDIF',
+  HOUR: 'HOUR',
+  MINUTE: 'MINUTE',
+  SECOND: 'SECOND',
+  DATE_ADD: 'DATE_ADD',
+  DATE_DIFF: 'DATE_DIFF',
+  FORMAT_DATE: 'FORMAT_DATE',
+  
+  // Logical functions
+  IF: 'IF',
+  
+  // Null handling functions
+  ISNULL: 'ISNULL',
+  COALESCE: 'COALESCE',
   
   // Aggregate functions
-  STRING_AGG: 'STRING_AGG',
-  STRING_AGG_DISTINCT: 'STRING_AGG_DISTINCT',
-  SUM_AGG: 'SUM_AGG',
-  COUNT_AGG: 'COUNT_AGG',
-  AVG_AGG: 'AVG_AGG',
+  COUNT: 'COUNT',
+  SUM: 'SUM',
+  AVG: 'AVG',
   MIN_AGG: 'MIN_AGG',
   MAX_AGG: 'MAX_AGG',
-  AND_AGG: 'AND_AGG',
-  OR_AGG: 'OR_AGG'
+  STRING_AGG: 'STRING_AGG',
+  
+  // Core functions
+  EVAL: 'EVAL'
 };
 
-// Function categories for documentation
+// Category constants
 export const CATEGORIES = {
-  CORE: 'core',
-  NULL_HANDLING: 'null-handling',
-  LOGICAL: 'logical',
-  MATH: 'math',
-  STRING: 'string',
-  DATE: 'date',
-  AGGREGATE: 'aggregate'
+  MATH: 'Math',
+  STRING: 'String',
+  DATE: 'Date',
+  LOGICAL: 'Logical',
+  NULL_HANDLING: 'Null Handling',
+  AGGREGATE: 'Aggregate',
+  CORE: 'Core'
 };
 
-// Function metadata definitions
+// Complete function metadata
 export const FUNCTION_METADATA = {
-  // Core Functions
-  [FUNCTIONS.TODAY]: {
-    name: FUNCTIONS.TODAY,
-    category: CATEGORIES.CORE,
-    description: 'Returns the current date',
-    arguments: [],
-    returnType: TYPES.DATE,
-    testRefs: ['tests/core-functions.test.js:15'],
-    requiresSpecialHandling: false
-  },
-  
-  [FUNCTIONS.ME]: {
-    name: FUNCTIONS.ME,
-    category: CATEGORIES.CORE,
-    description: 'Returns the current user identifier',
-    arguments: [],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/core-functions.test.js:23'],
-    requiresSpecialHandling: false
-  },
-  
-  [FUNCTIONS.DATE]: {
-    name: FUNCTIONS.DATE,
-    category: CATEGORIES.CORE,
-    description: 'Converts a string literal to a date',
-    arguments: [
-      { name: 'dateString', type: TYPES.STRING_LITERAL, description: 'String representation of date' }
-    ],
-    returnType: TYPES.DATE,
-    testRefs: ['tests/core-functions.test.js:31'],
-    requiresSpecialHandling: true
-  },
-  
-  [FUNCTIONS.STRING]: {
-    name: FUNCTIONS.STRING,
-    category: CATEGORIES.CORE,
-    description: 'Converts any value to string representation',
-    arguments: [
-      { name: 'value', type: TYPES.EXPRESSION, description: 'Value to convert to string' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/string-functions-concatenation.test.js:15'],
-    requiresSpecialHandling: false
-  },
-  
-  [FUNCTIONS.IF]: {
-    name: FUNCTIONS.IF,
-    category: CATEGORIES.CORE,
-    description: 'Conditional expression with optional else clause',
-    arguments: [
-      { name: 'condition', type: TYPES.BOOLEAN, description: 'Boolean condition to evaluate' },
-      { name: 'trueValue', type: TYPES.EXPRESSION, description: 'Value when condition is true' },
-      { name: 'falseValue', type: TYPES.EXPRESSION, description: 'Value when condition is false', optional: true }
-    ],
-    returnType: TYPES.EXPRESSION, // Matches type of true/false values
-    testRefs: ['tests/if-function.test.js:15'],
-    requiresSpecialHandling: true,
-    minArgs: 2,
-    maxArgs: 3
-  },
-  
-  // NULL Handling Functions
-  [FUNCTIONS.ISNULL]: {
-    name: FUNCTIONS.ISNULL,
-    category: CATEGORIES.NULL_HANDLING,
-    description: 'Returns true if the value is NULL',
-    arguments: [
-      { name: 'value', type: TYPES.EXPRESSION, description: 'Value to check for NULL' }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/null-handling.test.js:15'],
-    requiresSpecialHandling: false
-  },
-  
-  [FUNCTIONS.NULLVALUE]: {
-    name: FUNCTIONS.NULLVALUE,
-    category: CATEGORIES.NULL_HANDLING,
-    description: 'Returns default value if first value is NULL',
-    arguments: [
-      { name: 'value', type: TYPES.EXPRESSION, description: 'Value to check for NULL' },
-      { name: 'defaultValue', type: TYPES.EXPRESSION, description: 'Default value if first is NULL' }
-    ],
-    returnType: TYPES.EXPRESSION,
-    testRefs: ['tests/null-handling.test.js:33'],
-    requiresSpecialHandling: false
-  },
-  
-  [FUNCTIONS.ISBLANK]: {
-    name: FUNCTIONS.ISBLANK,
-    category: CATEGORIES.NULL_HANDLING,
-    description: 'Returns true if the value is NULL or empty string',
-    arguments: [
-      { name: 'value', type: TYPES.EXPRESSION, description: 'Value to check for blank' }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/null-handling.test.js:55'],
-    requiresSpecialHandling: false
-  },
-  
-  // Logical Functions
-  [FUNCTIONS.AND]: {
-    name: FUNCTIONS.AND,
-    category: CATEGORIES.LOGICAL,
-    description: 'Returns true if all conditions are true',
-    arguments: [
-      { name: 'condition', type: TYPES.BOOLEAN, description: 'Boolean condition', variadic: true }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/logical-operators-functions.test.js:15'],
-    requiresSpecialHandling: true,
-    minArgs: 2,
-    maxArgs: null // unlimited
-  },
-  
-  [FUNCTIONS.OR]: {
-    name: FUNCTIONS.OR,
-    category: CATEGORIES.LOGICAL,
-    description: 'Returns true if any condition is true',
-    arguments: [
-      { name: 'condition', type: TYPES.BOOLEAN, description: 'Boolean condition', variadic: true }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/logical-operators-functions.test.js:45'],
-    requiresSpecialHandling: true,
-    minArgs: 2,
-    maxArgs: null // unlimited
-  },
-  
-  [FUNCTIONS.NOT]: {
-    name: FUNCTIONS.NOT,
-    category: CATEGORIES.LOGICAL,
-    description: 'Returns the logical negation of the condition',
-    arguments: [
-      { name: 'condition', type: TYPES.BOOLEAN, description: 'Boolean condition to negate' }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/logical-operators-functions.test.js:73'],
-    requiresSpecialHandling: false
-  },
-  
-  // Math Functions
-  [FUNCTIONS.ABS]: {
-    name: FUNCTIONS.ABS,
-    category: CATEGORIES.MATH,
-    description: 'Returns the absolute value of a number',
-    arguments: [
-      { name: 'number', type: TYPES.NUMBER, description: 'Number to get absolute value of' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/math-functions.test.js:35'],
-    requiresSpecialHandling: false
-  },
-  
+  // Math functions
   [FUNCTIONS.ROUND]: {
     name: FUNCTIONS.ROUND,
     category: CATEGORIES.MATH,
     description: 'Rounds a number to specified decimal places',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
     arguments: [
-      { name: 'number', type: TYPES.NUMBER, description: 'Number to round' },
-      { name: 'decimals', type: TYPES.NUMBER, description: 'Number of decimal places' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/math-functions.test.js:15'],
-    requiresSpecialHandling: false
+      { name: 'number', type: TYPE.NUMBER, description: 'Number to round' },
+      { name: 'decimals', type: TYPE.NUMBER, description: 'Number of decimal places' }
+    ]
   },
   
-  [FUNCTIONS.MIN]: {
-    name: FUNCTIONS.MIN,
+  [FUNCTIONS.ABS]: {
+    name: FUNCTIONS.ABS,
     category: CATEGORIES.MATH,
-    description: 'Returns the smaller of two numbers',
+    description: 'Returns the absolute value of a number',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'num1', type: TYPES.NUMBER, description: 'First number' },
-      { name: 'num2', type: TYPES.NUMBER, description: 'Second number' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/math-functions.test.js:60'],
-    requiresSpecialHandling: false
+      { name: 'number', type: TYPE.NUMBER, description: 'Number to get absolute value of' }
+    ]
   },
   
-  [FUNCTIONS.MAX]: {
-    name: FUNCTIONS.MAX,
+  [FUNCTIONS.CEIL]: {
+    name: FUNCTIONS.CEIL,
     category: CATEGORIES.MATH,
-    description: 'Returns the larger of two numbers',
+    description: 'Rounds a number up to the nearest integer',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'num1', type: TYPES.NUMBER, description: 'First number' },
-      { name: 'num2', type: TYPES.NUMBER, description: 'Second number' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/math-functions.test.js:85'],
-    requiresSpecialHandling: false
-  },
-  
-  [FUNCTIONS.MOD]: {
-    name: FUNCTIONS.MOD,
-    category: CATEGORIES.MATH,
-    description: 'Returns the remainder after division',
-    arguments: [
-      { name: 'dividend', type: TYPES.NUMBER, description: 'Number to divide' },
-      { name: 'divisor', type: TYPES.NUMBER, description: 'Number to divide by' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/math-functions.test.js:110'],
-    requiresSpecialHandling: false
+      { name: 'number', type: TYPE.NUMBER, description: 'Number to round up' }
+    ]
   },
   
   [FUNCTIONS.CEILING]: {
     name: FUNCTIONS.CEILING,
     category: CATEGORIES.MATH,
     description: 'Rounds a number up to the nearest integer',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'number', type: TYPES.NUMBER, description: 'Number to round up' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/math-functions.test.js:135'],
-    requiresSpecialHandling: false
+      { name: 'number', type: TYPE.NUMBER, description: 'Number to round up' }
+    ]
   },
   
   [FUNCTIONS.FLOOR]: {
     name: FUNCTIONS.FLOOR,
     category: CATEGORIES.MATH,
     description: 'Rounds a number down to the nearest integer',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'number', type: TYPES.NUMBER, description: 'Number to round down' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/math-functions.test.js:155'],
-    requiresSpecialHandling: false
+      { name: 'number', type: TYPE.NUMBER, description: 'Number to round down' }
+    ]
   },
   
-  // String Functions
+  [FUNCTIONS.POWER]: {
+    name: FUNCTIONS.POWER,
+    category: CATEGORIES.MATH,
+    description: 'Raises a number to a power',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'base', type: TYPE.NUMBER, description: 'Base number' },
+      { name: 'exponent', type: TYPE.NUMBER, description: 'Exponent' }
+    ]
+  },
+  
+  [FUNCTIONS.SQRT]: {
+    name: FUNCTIONS.SQRT,
+    category: CATEGORIES.MATH,
+    description: 'Returns the square root of a number',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'value', type: TYPE.NUMBER, description: 'Number to get square root of' }
+    ]
+  },
+  
+  [FUNCTIONS.LOG]: {
+    name: FUNCTIONS.LOG,
+    category: CATEGORIES.MATH,
+    description: 'Returns the natural logarithm of a number',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'value', type: TYPE.NUMBER, description: 'Number to get natural logarithm of' }
+    ]
+  },
+  
+  [FUNCTIONS.LOG10]: {
+    name: FUNCTIONS.LOG10,
+    category: CATEGORIES.MATH,
+    description: 'Returns the base-10 logarithm of a number',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'value', type: TYPE.NUMBER, description: 'Number to get base-10 logarithm of' }
+    ]
+  },
+  
+  [FUNCTIONS.EXP]: {
+    name: FUNCTIONS.EXP,
+    category: CATEGORIES.MATH,
+    description: 'Returns e raised to the power of a number',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'value', type: TYPE.NUMBER, description: 'Exponent' }
+    ]
+  },
+  
+  [FUNCTIONS.SIN]: {
+    name: FUNCTIONS.SIN,
+    category: CATEGORIES.MATH,
+    description: 'Returns the sine of an angle in radians',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'angle', type: TYPE.NUMBER, description: 'Angle in radians' }
+    ]
+  },
+  
+  [FUNCTIONS.COS]: {
+    name: FUNCTIONS.COS,
+    category: CATEGORIES.MATH,
+    description: 'Returns the cosine of an angle in radians',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'angle', type: TYPE.NUMBER, description: 'Angle in radians' }
+    ]
+  },
+  
+  [FUNCTIONS.TAN]: {
+    name: FUNCTIONS.TAN,
+    category: CATEGORIES.MATH,
+    description: 'Returns the tangent of an angle in radians',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'angle', type: TYPE.NUMBER, description: 'Angle in radians' }
+    ]
+  },
+  
+  [FUNCTIONS.RANDOM]: {
+    name: FUNCTIONS.RANDOM,
+    category: CATEGORIES.MATH,
+    description: 'Returns a random number between 0 and 1',
+    returnType: TYPE.NUMBER,
+    minArgs: 0,
+    maxArgs: 0,
+    arguments: []
+  },
+  
+  [FUNCTIONS.MIN]: {
+    name: FUNCTIONS.MIN,
+    category: CATEGORIES.MATH,
+    description: 'Returns the minimum of two numbers',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'num1', type: TYPE.NUMBER, description: 'First number' },
+      { name: 'num2', type: TYPE.NUMBER, description: 'Second number' }
+    ]
+  },
+  
+  [FUNCTIONS.MAX]: {
+    name: FUNCTIONS.MAX,
+    category: CATEGORIES.MATH,
+    description: 'Returns the maximum of two numbers',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'num1', type: TYPE.NUMBER, description: 'First number' },
+      { name: 'num2', type: TYPE.NUMBER, description: 'Second number' }
+    ]
+  },
+  
+  [FUNCTIONS.MOD]: {
+    name: FUNCTIONS.MOD,
+    category: CATEGORIES.MATH,
+    description: 'Returns the remainder of division',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'dividend', type: TYPE.NUMBER, description: 'Number to divide' },
+      { name: 'divisor', type: TYPE.NUMBER, description: 'Number to divide by' }
+    ]
+  },
+  
+  [FUNCTIONS.SIGN]: {
+    name: FUNCTIONS.SIGN,
+    category: CATEGORIES.MATH,
+    description: 'Returns the sign of a number (-1, 0, or 1)',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'value', type: TYPE.NUMBER, description: 'Number to get sign of' }
+    ]
+  },
+  
+  // String functions
+  [FUNCTIONS.LENGTH]: {
+    name: FUNCTIONS.LENGTH,
+    category: CATEGORIES.STRING,
+    description: 'Returns the length of a string',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'text', type: TYPE.STRING, description: 'String to get length of' }
+    ]
+  },
+  
   [FUNCTIONS.UPPER]: {
     name: FUNCTIONS.UPPER,
     category: CATEGORIES.STRING,
-    description: 'Converts text to uppercase',
+    description: 'Converts a string to uppercase',
+    returnType: TYPE.STRING,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to convert to uppercase' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/text-functions.test.js:15'],
-    requiresSpecialHandling: false
+      { name: 'text', type: TYPE.STRING, description: 'String to convert to uppercase' }
+    ]
   },
   
   [FUNCTIONS.LOWER]: {
     name: FUNCTIONS.LOWER,
     category: CATEGORIES.STRING,
-    description: 'Converts text to lowercase',
+    description: 'Converts a string to lowercase',
+    returnType: TYPE.STRING,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to convert to lowercase' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/text-functions.test.js:16'],
-    requiresSpecialHandling: false
+      { name: 'text', type: TYPE.STRING, description: 'String to convert to lowercase' }
+    ]
   },
   
   [FUNCTIONS.TRIM]: {
     name: FUNCTIONS.TRIM,
     category: CATEGORIES.STRING,
-    description: 'Removes leading and trailing whitespace',
+    description: 'Removes whitespace from both ends of a string',
+    returnType: TYPE.STRING,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to trim whitespace from' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/text-functions.test.js:17'],
-    requiresSpecialHandling: false
+      { name: 'text', type: TYPE.STRING, description: 'String to trim' }
+    ]
   },
   
-  [FUNCTIONS.LEN]: {
-    name: FUNCTIONS.LEN,
+  [FUNCTIONS.SUBSTR]: {
+    name: FUNCTIONS.SUBSTR,
     category: CATEGORIES.STRING,
-    description: 'Returns the length of text',
+    description: 'Extracts a substring from a string',
+    returnType: TYPE.STRING,
+    minArgs: 2,
+    maxArgs: 3,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to measure length of' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/text-functions.test.js:20'],
-    requiresSpecialHandling: false
+      { name: 'text', type: TYPE.STRING, description: 'Source string' },
+      { name: 'start', type: TYPE.NUMBER, description: 'Starting position (1-based)' },
+      { name: 'length', type: TYPE.NUMBER, description: 'Length of substring (optional)', optional: true }
+    ]
   },
   
-  [FUNCTIONS.LEFT]: {
-    name: FUNCTIONS.LEFT,
+  [FUNCTIONS.CONCAT]: {
+    name: FUNCTIONS.CONCAT,
     category: CATEGORIES.STRING,
-    description: 'Returns the leftmost characters from text',
+    description: 'Concatenates two or more strings',
+    returnType: TYPE.STRING,
+    minArgs: 2,
+    maxArgs: null, // unlimited
+    variadic: true,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to extract from' },
-      { name: 'count', type: TYPES.NUMBER, description: 'Number of characters to extract' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/text-functions.test.js:40'],
-    requiresSpecialHandling: false
+      { name: 'strings', type: TYPE.STRING, description: 'Strings to concatenate', variadic: true }
+    ]
   },
   
-  [FUNCTIONS.RIGHT]: {
-    name: FUNCTIONS.RIGHT,
+  [FUNCTIONS.REPLACE]: {
+    name: FUNCTIONS.REPLACE,
     category: CATEGORIES.STRING,
-    description: 'Returns the rightmost characters from text',
+    description: 'Replaces occurrences of a substring with another string',
+    returnType: TYPE.STRING,
+    minArgs: 3,
+    maxArgs: 3,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to extract from' },
-      { name: 'count', type: TYPES.NUMBER, description: 'Number of characters to extract' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/text-functions.test.js:65'],
-    requiresSpecialHandling: false
-  },
-  
-  [FUNCTIONS.MID]: {
-    name: FUNCTIONS.MID,
-    category: CATEGORIES.STRING,
-    description: 'Returns characters from the middle of text',
-    arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to extract from' },
-      { name: 'start', type: TYPES.NUMBER, description: 'Starting position (1-based)' },
-      { name: 'length', type: TYPES.NUMBER, description: 'Number of characters to extract' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/text-functions.test.js:90'],
-    requiresSpecialHandling: false
+      { name: 'text', type: TYPE.STRING, description: 'Source string' },
+      { name: 'search', type: TYPE.STRING, description: 'String to search for' },
+      { name: 'replacement', type: TYPE.STRING, description: 'Replacement string' }
+    ]
   },
   
   [FUNCTIONS.CONTAINS]: {
     name: FUNCTIONS.CONTAINS,
     category: CATEGORIES.STRING,
-    description: 'Returns true if text contains the search string',
+    description: 'Checks if a string contains a substring',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: 2,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to search in' },
-      { name: 'searchText', type: TYPES.STRING, description: 'Text to search for' }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/text-functions.test.js:119'],
-    requiresSpecialHandling: false
+      { name: 'text', type: TYPE.STRING, description: 'String to search in' },
+      { name: 'search', type: TYPE.STRING, description: 'Substring to search for' }
+    ]
   },
   
-  [FUNCTIONS.SUBSTITUTE]: {
-    name: FUNCTIONS.SUBSTITUTE,
+  [FUNCTIONS.STARTS_WITH]: {
+    name: FUNCTIONS.STARTS_WITH,
     category: CATEGORIES.STRING,
-    description: 'Replaces old text with new text in a string',
+    description: 'Checks if a string starts with a substring',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: 2,
     arguments: [
-      { name: 'text', type: TYPES.STRING, description: 'Text to perform substitution in' },
-      { name: 'oldText', type: TYPES.STRING, description: 'Text to replace' },
-      { name: 'newText', type: TYPES.STRING, description: 'Replacement text' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/text-functions.test.js:144'],
-    requiresSpecialHandling: false
+      { name: 'text', type: TYPE.STRING, description: 'String to check' },
+      { name: 'prefix', type: TYPE.STRING, description: 'Prefix to check for' }
+    ]
   },
   
-  // Date Functions
+  [FUNCTIONS.ENDS_WITH]: {
+    name: FUNCTIONS.ENDS_WITH,
+    category: CATEGORIES.STRING,
+    description: 'Checks if a string ends with a substring',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'text', type: TYPE.STRING, description: 'String to check' },
+      { name: 'suffix', type: TYPE.STRING, description: 'Suffix to check for' }
+    ]
+  },
+  
+  // Date functions
+  [FUNCTIONS.NOW]: {
+    name: FUNCTIONS.NOW,
+    category: CATEGORIES.DATE,
+    description: 'Returns the current date and time',
+    returnType: TYPE.DATE,
+    minArgs: 0,
+    maxArgs: 0,
+    arguments: []
+  },
+  
+  [FUNCTIONS.TODAY]: {
+    name: FUNCTIONS.TODAY,
+    category: CATEGORIES.DATE,
+    description: 'Returns the current date (without time)',
+    returnType: TYPE.DATE,
+    minArgs: 0,
+    maxArgs: 0,
+    arguments: []
+  },
+  
   [FUNCTIONS.YEAR]: {
     name: FUNCTIONS.YEAR,
     category: CATEGORIES.DATE,
     description: 'Extracts the year from a date',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'date', type: TYPES.DATE, description: 'Date to extract year from' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/date-functions.test.js:15'],
-    requiresSpecialHandling: false
+      { name: 'date', type: TYPE.DATE, description: 'Date to extract year from' }
+    ]
   },
   
   [FUNCTIONS.MONTH]: {
     name: FUNCTIONS.MONTH,
     category: CATEGORIES.DATE,
-    description: 'Extracts the month from a date',
+    description: 'Extracts the month from a date (1-12)',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'date', type: TYPES.DATE, description: 'Date to extract month from' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/date-functions.test.js:35'],
-    requiresSpecialHandling: false
+      { name: 'date', type: TYPE.DATE, description: 'Date to extract month from' }
+    ]
   },
   
   [FUNCTIONS.DAY]: {
     name: FUNCTIONS.DAY,
     category: CATEGORIES.DATE,
-    description: 'Extracts the day from a date',
+    description: 'Extracts the day from a date (1-31)',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'date', type: TYPES.DATE, description: 'Date to extract day from' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/date-functions.test.js:55'],
-    requiresSpecialHandling: false
+      { name: 'date', type: TYPE.DATE, description: 'Date to extract day from' }
+    ]
   },
   
-  [FUNCTIONS.WEEKDAY]: {
-    name: FUNCTIONS.WEEKDAY,
+  [FUNCTIONS.HOUR]: {
+    name: FUNCTIONS.HOUR,
     category: CATEGORIES.DATE,
-    description: 'Returns the day of the week as a number (1=Sunday)',
+    description: 'Extracts the hour from a date (0-23)',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'date', type: TYPES.DATE, description: 'Date to get weekday from' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/date-functions.test.js:75'],
-    requiresSpecialHandling: false
+      { name: 'date', type: TYPE.DATE, description: 'Date to extract hour from' }
+    ]
   },
   
-  [FUNCTIONS.ADDMONTHS]: {
-    name: FUNCTIONS.ADDMONTHS,
+  [FUNCTIONS.MINUTE]: {
+    name: FUNCTIONS.MINUTE,
     category: CATEGORIES.DATE,
-    description: 'Adds months to a date',
+    description: 'Extracts the minute from a date (0-59)',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'date', type: TYPES.DATE, description: 'Starting date' },
-      { name: 'months', type: TYPES.NUMBER, description: 'Number of months to add' }
-    ],
-    returnType: TYPES.DATE,
-    testRefs: ['tests/date-functions.test.js:95'],
-    requiresSpecialHandling: false
+      { name: 'date', type: TYPE.DATE, description: 'Date to extract minute from' }
+    ]
   },
   
-  [FUNCTIONS.ADDDAYS]: {
-    name: FUNCTIONS.ADDDAYS,
+  [FUNCTIONS.SECOND]: {
+    name: FUNCTIONS.SECOND,
     category: CATEGORIES.DATE,
-    description: 'Adds days to a date',
+    description: 'Extracts the second from a date (0-59)',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'date', type: TYPES.DATE, description: 'Starting date' },
-      { name: 'days', type: TYPES.NUMBER, description: 'Number of days to add' }
-    ],
-    returnType: TYPES.DATE,
-    testRefs: ['tests/date-functions.test.js:120'],
-    requiresSpecialHandling: false
+      { name: 'date', type: TYPE.DATE, description: 'Date to extract second from' }
+    ]
   },
   
-  [FUNCTIONS.DATEDIF]: {
-    name: FUNCTIONS.DATEDIF,
+  [FUNCTIONS.DATE_ADD]: {
+    name: FUNCTIONS.DATE_ADD,
     category: CATEGORIES.DATE,
-    description: 'Returns the difference between two dates in specified units',
+    description: 'Adds a specified amount of time to a date',
+    returnType: TYPE.DATE,
+    minArgs: 3,
+    maxArgs: 3,
     arguments: [
-      { name: 'startDate', type: TYPES.DATE, description: 'Starting date' },
-      { name: 'endDate', type: TYPES.DATE, description: 'Ending date' },
-      { name: 'unit', type: TYPES.STRING_LITERAL, description: 'Unit: "days", "months", or "years"' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/date-functions.test.js:145'],
-    requiresSpecialHandling: true
+      { name: 'date', type: TYPE.DATE, description: 'Base date' },
+      { name: 'amount', type: TYPE.NUMBER, description: 'Amount to add' },
+      { name: 'unit', type: TYPE.STRING_LITERAL, description: 'Time unit (day, month, year, hour, minute, second)' }
+    ]
   },
   
-  // Aggregate Functions
-  [FUNCTIONS.STRING_AGG]: {
-    name: FUNCTIONS.STRING_AGG,
-    category: CATEGORIES.AGGREGATE,
-    description: 'Concatenates values from related records with delimiter',
+  [FUNCTIONS.DATE_DIFF]: {
+    name: FUNCTIONS.DATE_DIFF,
+    category: CATEGORIES.DATE,
+    description: 'Calculates the difference between two dates',
+    returnType: TYPE.NUMBER,
+    minArgs: 3,
+    maxArgs: 3,
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to evaluate for each record' },
-      { name: 'delimiter', type: TYPES.STRING, description: 'String delimiter to separate values' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/aggregate-functions.test.js:15'],
-    requiresSpecialHandling: true
+      { name: 'date1', type: TYPE.DATE, description: 'First date' },
+      { name: 'date2', type: TYPE.DATE, description: 'Second date' },
+      { name: 'unit', type: TYPE.STRING_LITERAL, description: 'Time unit (day, month, year, hour, minute, second)' }
+    ]
   },
   
-  [FUNCTIONS.STRING_AGG_DISTINCT]: {
-    name: FUNCTIONS.STRING_AGG_DISTINCT,
-    category: CATEGORIES.AGGREGATE,
-    description: 'Concatenates distinct values from related records with delimiter',
+  [FUNCTIONS.FORMAT_DATE]: {
+    name: FUNCTIONS.FORMAT_DATE,
+    category: CATEGORIES.DATE,
+    description: 'Formats a date as a string',
+    returnType: TYPE.STRING,
+    minArgs: 2,
+    maxArgs: 2,
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to evaluate for each record' },
-      { name: 'delimiter', type: TYPES.STRING, description: 'String delimiter to separate values' }
-    ],
-    returnType: TYPES.STRING,
-    testRefs: ['tests/aggregate-functions.test.js:33'],
-    requiresSpecialHandling: true
+      { name: 'date', type: TYPE.DATE, description: 'Date to format' },
+      { name: 'format', type: TYPE.STRING_LITERAL, description: 'Format string' }
+    ]
   },
   
-  [FUNCTIONS.SUM_AGG]: {
-    name: FUNCTIONS.SUM_AGG,
-    category: CATEGORIES.AGGREGATE,
-    description: 'Sums numeric values from related records',
+  // Logical functions
+  [FUNCTIONS.IF]: {
+    name: FUNCTIONS.IF,
+    category: CATEGORIES.LOGICAL,
+    description: 'Returns one value if condition is true, another if false',
+    returnType: TYPE.EXPRESSION, // return type depends on the branches
+    minArgs: 3,
+    maxArgs: 3,
+    specialHandling: 'conditional', // compiler handles type checking specially
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Numeric expression to sum' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/aggregate-functions.test.js:45'],
-    requiresSpecialHandling: true
+      { name: 'condition', type: TYPE.BOOLEAN, description: 'Condition to evaluate' },
+      { name: 'trueValue', type: TYPE.EXPRESSION, description: 'Value to return if condition is true' },
+      { name: 'falseValue', type: TYPE.EXPRESSION, description: 'Value to return if condition is false' }
+    ]
   },
   
-  [FUNCTIONS.COUNT_AGG]: {
-    name: FUNCTIONS.COUNT_AGG,
-    category: CATEGORIES.AGGREGATE,
-    description: 'Counts related records',
+  // Null handling functions
+  [FUNCTIONS.ISNULL]: {
+    name: FUNCTIONS.ISNULL,
+    category: CATEGORIES.NULL_HANDLING,
+    description: 'Returns true if the value is null',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 1,
+    maxArgs: 1,
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to count' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to evaluate (value ignored)' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/aggregate-functions.test.js:55'],
-    requiresSpecialHandling: true
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Value to check for null' }
+    ]
   },
   
-  [FUNCTIONS.AVG_AGG]: {
-    name: FUNCTIONS.AVG_AGG,
-    category: CATEGORIES.AGGREGATE,
-    description: 'Averages numeric values from related records',
+  [FUNCTIONS.COALESCE]: {
+    name: FUNCTIONS.COALESCE,
+    category: CATEGORIES.NULL_HANDLING,
+    description: 'Returns the first non-null value from a list of expressions',
+    returnType: TYPE.EXPRESSION, // return type depends on the arguments
+    minArgs: 2,
+    maxArgs: null, // unlimited
+    variadic: true,
+    specialHandling: 'coalesce', // compiler handles type checking specially
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Numeric expression to average' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/aggregate-functions.test.js:65'],
-    requiresSpecialHandling: true
+      { name: 'values', type: TYPE.EXPRESSION, description: 'Values to check (returns first non-null)', variadic: true }
+    ]
+  },
+  
+  // Aggregate functions
+  [FUNCTIONS.COUNT]: {
+    name: FUNCTIONS.COUNT,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Counts the number of non-null values',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Expression to count' }
+    ]
+  },
+  
+  [FUNCTIONS.SUM]: {
+    name: FUNCTIONS.SUM,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Sums numeric values',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.NUMBER, description: 'Numeric expression to sum' }
+    ]
+  },
+  
+  [FUNCTIONS.AVG]: {
+    name: FUNCTIONS.AVG,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Calculates the average of numeric values',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.NUMBER, description: 'Numeric expression to average' }
+    ]
   },
   
   [FUNCTIONS.MIN_AGG]: {
     name: FUNCTIONS.MIN_AGG,
     category: CATEGORIES.AGGREGATE,
-    description: 'Finds minimum value from related records',
+    description: 'Finds the minimum value',
+    returnType: TYPE.EXPRESSION, // return type matches input type
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to find minimum of' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/aggregate-functions.test.js:75'],
-    requiresSpecialHandling: true
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Expression to find minimum of' }
+    ]
   },
   
   [FUNCTIONS.MAX_AGG]: {
     name: FUNCTIONS.MAX_AGG,
     category: CATEGORIES.AGGREGATE,
-    description: 'Finds maximum value from related records',
+    description: 'Finds the maximum value',
+    returnType: TYPE.EXPRESSION, // return type matches input type
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to find maximum of' }
-    ],
-    returnType: TYPES.NUMBER,
-    testRefs: ['tests/aggregate-functions.test.js:85'],
-    requiresSpecialHandling: true
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Expression to find maximum of' }
+    ]
   },
   
-  [FUNCTIONS.AND_AGG]: {
-    name: FUNCTIONS.AND_AGG,
+  [FUNCTIONS.STRING_AGG]: {
+    name: FUNCTIONS.STRING_AGG,
     category: CATEGORIES.AGGREGATE,
-    description: 'Returns true if all values from related records are true',
+    description: 'Concatenates string values with a separator',
+    returnType: TYPE.STRING,
+    minArgs: 3,
+    maxArgs: 3,
+    aggregateFunction: true,
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Boolean expression to evaluate' }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/aggregate-functions.test.js:95'],
-    requiresSpecialHandling: true
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.STRING, description: 'String expression to concatenate' },
+      { name: 'separator', type: TYPE.STRING, description: 'Separator between values' }
+    ]
   },
   
-  [FUNCTIONS.OR_AGG]: {
-    name: FUNCTIONS.OR_AGG,
-    category: CATEGORIES.AGGREGATE,
-    description: 'Returns true if any value from related records is true',
+  // Core functions
+  [FUNCTIONS.EVAL]: {
+    name: FUNCTIONS.EVAL,
+    category: CATEGORIES.CORE,
+    description: 'Evaluates an expression from another table',
+    returnType: TYPE.EXPRESSION, // return type depends on the evaluated expression
+    minArgs: 1,
+    maxArgs: 1,
+    specialHandling: 'relationship', // compiler handles this specially
     arguments: [
-      { name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
-      { name: 'expression', type: TYPES.EXPRESSION, description: 'Boolean expression to evaluate' }
-    ],
-    returnType: TYPES.BOOLEAN,
-    testRefs: ['tests/aggregate-functions.test.js:105'],
-    requiresSpecialHandling: true
+      { name: 'relationshipRef', type: TYPE.INVERSE_RELATIONSHIP, description: 'Reference to relationship and expression' }
+    ]
   }
 };
 
-// Export function names list for easy iteration
-export const ALL_FUNCTION_NAMES = Object.values(FUNCTIONS);
-
-// Export categorized function lists
-export const FUNCTION_CATEGORIES = {
-  [CATEGORIES.CORE]: [FUNCTIONS.TODAY, FUNCTIONS.ME, FUNCTIONS.DATE, FUNCTIONS.STRING, FUNCTIONS.IF],
-  [CATEGORIES.NULL_HANDLING]: [FUNCTIONS.ISNULL, FUNCTIONS.NULLVALUE, FUNCTIONS.ISBLANK],
-  [CATEGORIES.LOGICAL]: [FUNCTIONS.AND, FUNCTIONS.OR, FUNCTIONS.NOT],
-  [CATEGORIES.MATH]: [FUNCTIONS.ABS, FUNCTIONS.ROUND, FUNCTIONS.MIN, FUNCTIONS.MAX, FUNCTIONS.MOD, FUNCTIONS.CEILING, FUNCTIONS.FLOOR],
-  [CATEGORIES.STRING]: [FUNCTIONS.UPPER, FUNCTIONS.LOWER, FUNCTIONS.TRIM, FUNCTIONS.LEN, FUNCTIONS.LEFT, FUNCTIONS.RIGHT, FUNCTIONS.MID, FUNCTIONS.CONTAINS, FUNCTIONS.SUBSTITUTE],
-  [CATEGORIES.DATE]: [FUNCTIONS.YEAR, FUNCTIONS.MONTH, FUNCTIONS.DAY, FUNCTIONS.WEEKDAY, FUNCTIONS.ADDMONTHS, FUNCTIONS.ADDDAYS, FUNCTIONS.DATEDIF],
-  [CATEGORIES.AGGREGATE]: [FUNCTIONS.STRING_AGG, FUNCTIONS.STRING_AGG_DISTINCT, FUNCTIONS.SUM_AGG, FUNCTIONS.COUNT_AGG, FUNCTIONS.AVG_AGG, FUNCTIONS.MIN_AGG, FUNCTIONS.MAX_AGG, FUNCTIONS.AND_AGG, FUNCTIONS.OR_AGG]
-};
-
 /**
- * Get function metadata by name
- * @param {string} functionName - Function name
- * @returns {Object|null} Function metadata or null if not found
- */
-export function getFunctionMetadata(functionName) {
-  return FUNCTION_METADATA[functionName] || null;
-}
-
-/**
- * Check if a function exists
- * @param {string} functionName - Function name to check
- * @returns {boolean} True if function exists
- */
-export function isValidFunction(functionName) {
-  return functionName in FUNCTION_METADATA;
-}
-
-/**
- * Validate function arguments against metadata
- * @param {string} functionName - Function name
- * @param {Array} args - Compiled arguments
- * @param {Object} compiler - Compiler instance for error reporting
- * @param {Object} node - AST node for position info
- * @returns {Object} Validation result with validated args
+ * Validates function arguments against metadata
+ * @param {string} functionName - Name of the function
+ * @param {Array} args - Array of argument AST nodes with returnType property
+ * @param {Object} compiler - Compiler instance with error method
+ * @param {Object} node - AST node for error positioning
+ * @returns {boolean} True if validation passes
  */
 export function validateFunctionArgs(functionName, args, compiler, node) {
-  const metadata = getFunctionMetadata(functionName);
+  const metadata = FUNCTION_METADATA[functionName];
   if (!metadata) {
     compiler.error(`Unknown function: ${functionName}`, node.position);
+    return false;
   }
   
-  // Argument count validation
-  const expectedMin = metadata.minArgs || metadata.arguments.length;
-  const expectedMax = metadata.maxArgs !== undefined ? metadata.maxArgs : metadata.arguments.length;
-  
-  if (args.length < expectedMin) {
-    if (expectedMin === 1) {
-      compiler.error(`${functionName}() takes at least ${expectedMin} argument`, node.position);
-    } else {
-      compiler.error(`${functionName}() takes at least ${expectedMin} arguments`, node.position);
+  // Check argument count for non-variadic functions
+  if (!metadata.variadic) {
+    if (args.length < metadata.minArgs) {
+      const argText = metadata.minArgs === 1 ? 'argument' : 'arguments';
+      compiler.error(`${functionName}() takes at least ${metadata.minArgs} ${argText}`, node.position);
+      return false;
+    }
+    
+    if (metadata.maxArgs !== null && args.length > metadata.maxArgs) {
+      if (metadata.minArgs === metadata.maxArgs) {
+        const argText = metadata.minArgs === 1 ? 'argument' : 'arguments';
+        compiler.error(`${functionName}() takes exactly ${metadata.minArgs} ${argText}`, node.position);
+      } else {
+        compiler.error(`${functionName}() expects at most ${metadata.maxArgs} arguments, got ${args.length}`, node.position);
+      }
+      return false;
+    }
+  } else {
+    // For variadic functions, check minimum only
+    if (args.length < metadata.minArgs) {
+      compiler.error(`${functionName}() expects at least ${metadata.minArgs} arguments, got ${args.length}`, node.position);
+      return false;
     }
   }
   
-  if (expectedMax !== null && args.length > expectedMax) {
-    if (expectedMin === expectedMax) {
-      compiler.error(`${functionName}() takes exactly ${expectedMin} argument${expectedMin === 1 ? '' : 's'}`, node.position);
-    } else {
-      compiler.error(`${functionName}() takes ${expectedMin}-${expectedMax} arguments`, node.position);
-    }
+  // Skip type validation for special handling functions
+  if (metadata.specialHandling) {
+    return true;
   }
   
-  // Type validation for each argument
-  const validatedArgs = [];
+  // Validate argument types
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
-    // For variadic functions, use the first argument spec for all extra args
-    const expectedArgIndex = Math.min(i, metadata.arguments.length - 1);
-    const expectedArg = metadata.arguments[expectedArgIndex];
+    const expectedArg = metadata.variadic ? 
+      metadata.arguments[0] : // For variadic, all args use first spec
+      metadata.arguments[i];   // For regular, use specific spec
     
     if (!expectedArg) {
-      // This shouldn't happen due to count validation above, but handle gracefully
-      validatedArgs.push(arg);
-      continue;
+      continue; // Extra args for variadic functions
     }
     
-    // Type checking based on expected argument type
-    if (expectedArg.type === TYPES.STRING_LITERAL && arg.type !== AST_TYPES.STRING_LITERAL) {
-      compiler.error(`${functionName}() ${expectedArg.name} must be a string literal, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.BOOLEAN && arg.returnType !== RETURN_TYPES.BOOLEAN) {
-      compiler.error(`${functionName}() ${expectedArg.name} must be boolean, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.NUMBER && arg.returnType !== RETURN_TYPES.NUMBER) {
-      compiler.error(`${functionName}() ${expectedArg.name} must be number, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.STRING && arg.returnType !== RETURN_TYPES.STRING) {
-      compiler.error(`${functionName}() ${expectedArg.name} must be string, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.DATE && arg.returnType !== RETURN_TYPES.DATE) {
-      compiler.error(`${functionName}() ${expectedArg.name} must be date, got ${arg.returnType}`, node.position);
-    }
-    // TYPES.EXPRESSION accepts any type
-    // TYPES.INVERSE_RELATIONSHIP is handled specially by aggregate functions
+    // Get the return type for comparison (always a string)
+    const argReturnType = arg.returnType;
     
-    validatedArgs.push(arg);
+    // Type validation based on expected type
+    if (expectedArg.type === TYPE.STRING_LITERAL && arg.type !== TYPE.STRING_LITERAL) {
+      compiler.error(`${functionName}() ${expectedArg.name} must be a string literal, got ${argReturnType}`, node.position);
+    } else if (expectedArg.type === TYPE.BOOLEAN && argReturnType !== 'boolean') {
+      compiler.error(`${functionName}() ${expectedArg.name} must be boolean, got ${argReturnType}`, node.position);
+    } else if (expectedArg.type === TYPE.NUMBER && argReturnType !== 'number') {
+      compiler.error(`${functionName}() ${expectedArg.name} must be number, got ${argReturnType}`, node.position);
+    } else if (expectedArg.type === TYPE.STRING && argReturnType !== 'string') {
+      compiler.error(`${functionName}() ${expectedArg.name} must be string, got ${argReturnType}`, node.position);
+    } else if (expectedArg.type === TYPE.DATE && argReturnType !== 'date') {
+      compiler.error(`${functionName}() ${expectedArg.name} must be date, got ${argReturnType}`, node.position);
+    }
   }
   
-  return {
-    metadata,
-    validatedArgs
-  };
+  return true;
 }

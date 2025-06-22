@@ -3,6 +3,8 @@
  * Handles TODAY, ME, DATE, STRING, and IF functions
  */
 
+import { TYPE } from '../types-unified.js';
+
 /**
  * Compile core/special function calls
  * @param {Object} compiler - Compiler instance

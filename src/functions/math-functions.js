@@ -6,11 +6,11 @@
 
 import { 
   validateFunctionArgs, 
-  getFunctionMetadata, 
   FUNCTIONS, 
-  FUNCTION_CATEGORIES, 
-  CATEGORIES 
+  CATEGORIES,
+  FUNCTION_METADATA
 } from '../function-metadata.js';
+import { TYPE } from '../types-unified.js';
 
 /**
  * Compile math function calls
@@ -21,8 +21,9 @@ import {
 export function compileMathFunction(compiler, node) {
   const funcName = node.name;
   
-  // Check if this function belongs to math category
-  if (!FUNCTION_CATEGORIES[CATEGORIES.MATH].includes(funcName)) {
+  // Check if this function exists and belongs to math category
+  const metadata = FUNCTION_METADATA[funcName];
+  if (!metadata || metadata.category !== CATEGORIES.MATH) {
     return null; // Not handled by this module
   }
   
@@ -30,16 +31,24 @@ export function compileMathFunction(compiler, node) {
   const compiledArgs = node.args.map(arg => compiler.compile(arg));
   
   // Validate using metadata
-  const { metadata, validatedArgs } = validateFunctionArgs(funcName, compiledArgs, compiler, node);
+  if (!validateFunctionArgs(funcName, compiledArgs, compiler, node)) {
+    return; // Validation failed, error already reported
+  }
   
   // All math functions use standard compilation (no special handling required)
+  // Convert Symbol return type to string for consistency
+  const returnTypeString = metadata.returnType === TYPE.NUMBER ? 'number' : 
+                          metadata.returnType === TYPE.STRING ? 'string' :
+                          metadata.returnType === TYPE.BOOLEAN ? 'boolean' :
+                          metadata.returnType === TYPE.DATE ? 'date' : 'unknown';
+  
   return {
     type: 'FUNCTION_CALL',
-    semanticId: compiler.generateSemanticId('function', funcName, validatedArgs.map(a => a.semanticId)),
-    dependentJoins: validatedArgs.flatMap(a => a.dependentJoins),
-    returnType: metadata.returnType,
+    semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
+    dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
+    returnType: returnTypeString,
     compilationContext: compiler.compilationContext,
     value: { name: funcName },
-    children: validatedArgs
+    children: compiledArgs
   };
 }

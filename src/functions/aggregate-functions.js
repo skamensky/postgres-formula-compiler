@@ -7,10 +7,10 @@
 
 import { 
   FUNCTIONS, 
-  FUNCTION_CATEGORIES, 
   CATEGORIES,
-  getFunctionMetadata
+  FUNCTION_METADATA
 } from '../function-metadata.js';
+import { TYPE } from '../types-unified.js';
 
 /**
  * Parse multi-level relationship chain from aggregate function first argument
@@ -166,17 +166,20 @@ export function compileAggregateFunction(compiler, node) {
   const funcName = node.name;
   
   // Check if this is an aggregate function
-  if (!FUNCTION_CATEGORIES[CATEGORIES.AGGREGATE].includes(funcName)) {
+  const metadata = FUNCTION_METADATA[funcName];
+  if (!metadata || metadata.category !== CATEGORIES.AGGREGATE) {
     return null; // Not handled by this module
   }
   
-  let expectedArgCount = 2; // Most aggregate functions take 2 args
-  if (funcName === FUNCTIONS.STRING_AGG || funcName === FUNCTIONS.STRING_AGG_DISTINCT) {
-    expectedArgCount = 3; // STRING_AGG takes delimiter as 3rd arg
-  }
-  
-  if (node.args.length !== expectedArgCount) {
-    compiler.error(`${funcName}() takes exactly ${expectedArgCount} arguments`, node.position);
+  // Validate argument count using metadata
+  if (node.args.length < metadata.minArgs || 
+      (metadata.maxArgs !== null && node.args.length > metadata.maxArgs)) {
+    const expectedText = metadata.maxArgs === null ? 
+      `at least ${metadata.minArgs}` : 
+      metadata.minArgs === metadata.maxArgs ? 
+        `exactly ${metadata.minArgs}` : 
+        `${metadata.minArgs}-${metadata.maxArgs}`;
+    compiler.error(`${funcName}() takes ${expectedText} arguments, got ${node.args.length}`, node.position);
   }
 
   // First argument must be an inverse relationship identifier or dot-separated chain
@@ -185,9 +188,9 @@ export function compileAggregateFunction(compiler, node) {
   let relationshipName;
   
   // Handle both single identifier and dot-separated chain
-  if (relationshipArg.type === 'IDENTIFIER') {
+  if (relationshipArg.type === TYPE.IDENTIFIER) {
     relationshipName = relationshipArg.value.toLowerCase();
-  } else if (relationshipArg.type === 'RELATIONSHIP_REF') {
+  } else if (relationshipArg.type === TYPE.RELATIONSHIP_REF) {
     // For multi-level chains, reconstruct the full dot-separated path
     const relationshipChain = relationshipArg.relationshipChain || [relationshipArg.relationName];
     relationshipName = relationshipChain.join('.').toLowerCase();
@@ -291,15 +294,14 @@ export function compileAggregateFunction(compiler, node) {
   
   // Handle delimiter for STRING_AGG functions
   let delimiterResult = null;
-  if (funcName === FUNCTIONS.STRING_AGG || funcName === FUNCTIONS.STRING_AGG_DISTINCT) {
-    delimiterResult = compiler.compile(node.args[2]); // Compile in main context
+  if (funcName === FUNCTIONS.STRING_AGG) {
+    delimiterResult = compiler.compile(node.args[2]); // Third argument is the delimiter
     if (delimiterResult.returnType !== 'string') {
       compiler.error(`${funcName}() delimiter must be string, got ${delimiterResult.returnType}`, node.position);
     }
   }
   
   // Determine return type using metadata
-  const metadata = getFunctionMetadata(funcName);
   const returnType = metadata.returnType;
   
   // Generate aggregate intent
