@@ -99,9 +99,9 @@ function generateSQL(namedResults, baseTableName) {
     aggIntents.forEach((aggIntent, index) => {
       let columnAlias;
       if (aggIntent.aggregateFunction.startsWith(FUNCTIONS.STRING_AGG)) {
-        columnAlias = `rep_names`;
+        columnAlias = `string_agg_value`;
       } else if (aggIntent.aggregateFunction === FUNCTIONS.COUNT_AGG) {
-        columnAlias = `rep_count`;
+        columnAlias = `count_value`;
       } else if (aggIntent.aggregateFunction === FUNCTIONS.SUM_AGG) {
         columnAlias = `sum_value`;
       } else if (aggIntent.aggregateFunction === FUNCTIONS.AVG_AGG) {
@@ -111,9 +111,9 @@ function generateSQL(namedResults, baseTableName) {
       } else if (aggIntent.aggregateFunction === FUNCTIONS.MAX_AGG) {
         columnAlias = `max_value`;
       } else if (aggIntent.aggregateFunction === FUNCTIONS.AND_AGG) {
-        columnAlias = `and_value`;
+        columnAlias = `bool_and_value`;
       } else if (aggIntent.aggregateFunction === FUNCTIONS.OR_AGG) {
-        columnAlias = `or_value`;
+        columnAlias = `bool_or_value`;
       } else {
         columnAlias = `agg_col_${index + 1}`;
       }
