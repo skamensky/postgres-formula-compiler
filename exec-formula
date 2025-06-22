@@ -274,26 +274,30 @@ async function getRelationshipsForTable(tableName, client) {
   return relationships;
 }
 
-// Build all relationship infos recursively (NEW FLAT STRUCTURE)
-async function getAllRelationshipInfos(tableName, client, visitedTables = new Set(), maxDepth = 3, currentDepth = 0) {
-  if (currentDepth >= maxDepth || visitedTables.has(tableName)) {
-    return [];
+// Build all relationship infos from database (NEW FLAT STRUCTURE)
+async function getAllRelationshipInfos(client) {
+  const query = `
+    SELECT rl.source_table_name, rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    ORDER BY rl.source_table_name, rl.col_name
+  `;
+  
+  const result = await client.query(query);
+  const relationships = [];
+  
+  for (const row of result.rows) {
+    // Use the base name (without _id suffix) as the relationship name
+    const relationshipName = row.col_name.replace(/_id$/, '');
+    
+    relationships.push({
+      name: relationshipName,
+      fromTable: row.source_table_name,
+      toTable: row.target_table_name,
+      joinColumn: row.col_name
+    });
   }
   
-  visitedTables.add(tableName);
-  const allRelationships = [];
-  
-  // Get direct relationships from this table
-  const directRelationships = await getRelationshipsForTable(tableName, client);
-  allRelationships.push(...directRelationships);
-  
-  // Recursively get relationships from target tables
-  for (const rel of directRelationships) {
-    const nestedRelationships = await getAllRelationshipInfos(rel.toTable, client, visitedTables, maxDepth, currentDepth + 1);
-    allRelationships.push(...nestedRelationships);
-  }
-  
-  return allRelationships;
+  return relationships;
 }
 
 // Build table infos for all tables referenced in relationships (NEW FLAT STRUCTURE)
@@ -344,11 +348,21 @@ async function getInverseRelationshipsForTable(tableName, client) {
     const sourceColumnList = await getColumnListForTable(row.source_table_name, client);
     const sourceRelationships = await getRelationshipsForTable(row.source_table_name, client);
     
+    // Convert flat relationships to old nested format for backward compatibility
+    const nestedRelationshipInfo = {};
+    for (const rel of sourceRelationships) {
+      const targetColumnList = await getColumnListForTable(rel.toTable, client);
+      nestedRelationshipInfo[rel.name] = {
+        joinColumn: rel.joinColumn,
+        columnList: targetColumnList
+      };
+    }
+    
     inverseRelationships[relationshipName] = {
       tableName: row.source_table_name,
       columnList: sourceColumnList,
       joinColumn: row.col_name,
-      relationshipInfo: sourceRelationships
+      relationshipInfo: nestedRelationshipInfo
     };
   }
   
@@ -431,11 +445,30 @@ async function main() {
       console.log('🔗 Loading relationship metadata...');
     }
     
-    // NEW: Get all relationships recursively for multi-level support
-    const allRelationships = await getAllRelationshipInfos(tableName, client);
+    // NEW: Get all relationships from database for multi-level support
+    const allRelationships = await getAllRelationshipInfos(client);
     
-    // NEW: Get all table infos needed
-    const tableInfos = await getTableInfosForRelationships(tableName, allRelationships, client);
+    // Build table infos - start with main table and add direct relationship targets
+    const tableInfos = [
+      {
+        tableName: tableName,
+        columnList: columnList
+      }
+    ];
+    
+    // Add table infos for direct relationships from this table
+    const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRels) {
+      try {
+        const targetColumnList = await getColumnListForTable(rel.toTable, client);
+        tableInfos.push({
+          tableName: rel.toTable,
+          columnList: targetColumnList
+        });
+      } catch (error) {
+        // Ignore if target table doesn't exist - will fall back to old format
+      }
+    }
     
     if (outputFormat === 'console') {
       console.log('🔗 Loading inverse relationship metadata...');

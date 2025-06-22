@@ -657,7 +657,7 @@ class Parser {
  */
 
 class Compiler {
-  constructor(context) {
+  constructor(context, options = {}) {
     this.context = context;
     this.tableName = context.tableName;
     this.columnList = {};
@@ -665,6 +665,7 @@ class Compiler {
     this.aggregateIntents = new Map(); // semanticId -> AggregateIntent
     this.compilationContext = 'main'; // Track current compilation context
     this.idCounter = 1; // For generating unique IDs
+    this.maxRelationshipDepth = options.maxRelationshipDepth || 3; // Configurable max depth
     
     // Initialize column list from primary table
     this.initializeColumnList();
@@ -904,10 +905,9 @@ class Compiler {
   compileRelationshipRef(node) {
     // Handle both single-level (backward compatibility) and multi-level relationships
     const relationshipChain = node.relationshipChain || [node.relationName];
-    const maxDepth = 5; // Configurable depth limit to prevent runaway queries
     
-    if (relationshipChain.length > maxDepth) {
-      this.error(`Relationship chain too deep (max ${maxDepth} levels): ${relationshipChain.join('.')}.${node.fieldName}`, node.position);
+    if (relationshipChain.length > this.maxRelationshipDepth) {
+      this.error(`Relationship chain too deep (max ${this.maxRelationshipDepth} levels): ${relationshipChain.join('.')}.${node.fieldName}`, node.position);
     }
     
     return this.compileMultiLevelRelationship(relationshipChain, node.fieldName, node.position);
@@ -997,6 +997,32 @@ class Compiler {
     // Validate final field exists in the target table
     const finalTableInfo = tableLookup.get(currentTable);
     if (!finalTableInfo) {
+      // If using old format, fall back to checking relationshipInfo
+      if (this.context.relationshipInfo) {
+        // Try to find the field type through old relationship traversal
+        const fieldType = this.getFieldTypeFromOldFormat(relationshipChain, fieldName);
+        if (fieldType) {
+          // Generate semantic ID for backward compatibility
+          const relationshipRefSemanticId = this.generateSemanticId(
+            'multi_relationship_ref', 
+            `${relationshipChain.join('.')}.${fieldName}`, 
+            allJoinSemanticIds
+          );
+          
+          return {
+            type: 'RELATIONSHIP_REF',
+            semanticId: relationshipRefSemanticId,
+            dependentJoins: allJoinSemanticIds,
+            returnType: fieldType,
+            compilationContext: this.compilationContext,
+            value: { 
+              relationshipChain: relationshipChain,
+              fieldName: fieldName.toLowerCase(),
+              finalTable: currentTable
+            }
+          };
+        }
+      }
       this.error(`Unknown target table: ${currentTable}`, position);
     }
     
@@ -1880,7 +1906,7 @@ class Compiler {
       relationshipInfos: subRelationshipInfos
     };
     
-    const subCompiler = new Compiler(subContext);
+    const subCompiler = new Compiler(subContext, { maxRelationshipDepth: this.maxRelationshipDepth });
     subCompiler.compilationContext = `agg:${this.tableName}→${inverseRelInfo.tableName}[${inverseRelInfo.joinColumn}]`;
     
     // Compile the expression in sub-context
@@ -1941,15 +1967,47 @@ class Compiler {
   getAggregateIntents() {
     return Array.from(this.aggregateIntents.values());
   }
+
+  /**
+   * Get field type from old nested relationship format (fallback)
+   * @param {Array<string>} relationshipChain - Chain of relationship names
+   * @param {string} fieldName - Final field name
+   * @returns {string|null} Field type or null if not found
+   */
+  getFieldTypeFromOldFormat(relationshipChain, fieldName) {
+    let currentRelationshipInfo = this.context.relationshipInfo;
+    
+    // Traverse the relationship chain using old format
+    for (let i = 0; i < relationshipChain.length; i++) {
+      const relationName = relationshipChain[i];
+      
+      if (!currentRelationshipInfo || !currentRelationshipInfo[relationName]) {
+        return null; // Relationship not found
+      }
+      
+      const relInfo = currentRelationshipInfo[relationName];
+      
+      if (i === relationshipChain.length - 1) {
+        // Last relationship in chain - check for field in target table
+        return relInfo.columnList ? relInfo.columnList[fieldName.toLowerCase()] : null;
+      } else {
+        // Continue traversing - move to nested relationships
+        currentRelationshipInfo = relInfo.relationshipInfo || {};
+      }
+    }
+    
+    return null;
+  }
 }
 
 /**
  * Main API function - Now returns intent representation only
  * @param {string} formula - The formula string to compile
  * @param {Object} context - Context object with tableName and columnList
+ * @param {Object} options - Optional compilation options
  * @returns {CompilationResult} Intent representation
  */
-function evaluateFormula(formula, context) {
+function evaluateFormula(formula, context, options = {}) {
   try {
     // Lexer stage
     const lexer = new Lexer(formula);
@@ -1959,7 +2017,7 @@ function evaluateFormula(formula, context) {
     const ast = parser.parse();
     
     // Compiler stage - generates intents, not SQL
-    const compiler = new Compiler(context);
+    const compiler = new Compiler(context, options);
     const result = compiler.compile(ast);
     
     const compilationResult = {

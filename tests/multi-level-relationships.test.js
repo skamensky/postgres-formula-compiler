@@ -203,7 +203,7 @@ test('Error: depth limit exceeded', () => {
 
   assertError(
     () => evaluateFormula('a_rel.b_rel.c_rel.d_rel.e_rel.f_rel.field', deepContext),
-    /Relationship chain too deep \(max 5 levels\)/,
+    /Relationship chain too deep \(max 3 levels\)/,
     'Should throw error when depth limit is exceeded'
   );
 });
@@ -246,6 +246,36 @@ test('Comparison operations with multi-level relationships', () => {
   assertEqual(result.expression.value.op, '=');
   assertEqual(result.expression.returnType, 'boolean');
   assertEqual(result.joinIntents.length, 3);
+});
+
+// Test 16: Configurable maxRelationshipDepth option
+test('Configurable maxRelationshipDepth option', () => {
+  const deepContext = {
+    tableName: 'submission',
+    tableInfos: [
+      { tableName: 'submission', columnList: { 'id': 'number' } },
+      { tableName: 'table1', columnList: { 'id': 'number' } },
+      { tableName: 'table2', columnList: { 'id': 'number' } },
+      { tableName: 'table3', columnList: { 'field': 'string' } }
+    ],
+    relationshipInfos: [
+      { name: 'a', fromTable: 'submission', toTable: 'table1', joinColumn: 'id' },
+      { name: 'b', fromTable: 'table1', toTable: 'table2', joinColumn: 'id' },
+      { name: 'c', fromTable: 'table2', toTable: 'table3', joinColumn: 'id' }
+    ]
+  };
+
+  // Should work with custom maxRelationshipDepth = 5
+  const result = evaluateFormula('a_rel.b_rel.c_rel.field', deepContext, { maxRelationshipDepth: 5 });
+  assertEqual(result.expression.type, 'RELATIONSHIP_REF');
+  assertEqual(result.joinIntents.length, 3);
+  
+  // Should fail with custom maxRelationshipDepth = 2
+  assertError(
+    () => evaluateFormula('a_rel.b_rel.c_rel.field', deepContext, { maxRelationshipDepth: 2 }),
+    /Relationship chain too deep \(max 2 levels\)/,
+    'Should respect custom maxRelationshipDepth option'
+  );
 });
 
 printTestResults();
