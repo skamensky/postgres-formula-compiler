@@ -230,4 +230,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T20:47:56.011Z*
+*Documentation generated on 2025-06-22T20:49:39.497Z*

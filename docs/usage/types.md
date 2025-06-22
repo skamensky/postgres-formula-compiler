@@ -171,4 +171,4 @@ The formula language supports automatic type conversion in many contexts:
 - Only `boolean` values can be used with `AND`, `OR`, `NOT`
 - Comparison operations always return `boolean`
 
-*Documentation generated on ${new Date().toISOString()}*
+*Documentation generated on 2025-06-22T20:49:39.495Z*
