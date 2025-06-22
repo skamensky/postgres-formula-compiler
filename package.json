@@ -6,7 +6,7 @@
   "main": "formula-compiler.js",
   "scripts": {
     "test": "node tests/run-all-tests.js",
-    "exec-all": "./exec-formula --output markdown examples/table/submission/*.formula > exec-results.md"
+    "exec-all": "echo '# Formula Execution Results\n' > exec-results.md && echo '## Merchant Table Formulas\n' >> exec-results.md && ./exec-formula --output markdown examples/table/merchant/*.formula >> exec-results.md && echo '\n## Submission Table Formulas\n' >> exec-results.md && ./exec-formula --output markdown examples/table/submission/*.formula >> exec-results.md"
   },
   "dependencies": {
     "pg": "^8.11.0",
