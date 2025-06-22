@@ -548,8 +548,8 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
     case TYPE.BINARY_OP:
       const leftSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const rightSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
-      const leftType = typeToString(expr.children[0].returnType);
-      const rightType = typeToString(expr.children[1].returnType);
+      const leftType = expr.children[0].returnType;
+      const rightType = expr.children[1].returnType;
       
       if (expr.value.op === '&') {
         return `(${leftSQL} || ${rightSQL})`;
@@ -599,7 +599,7 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
  * @returns {string} Default SQL value
  */
 function getDefaultValueForAggregateType(returnType) {
-  const typeString = typeToString(returnType);
+  const typeString = typeof returnType === 'string' ? returnType : typeToString(returnType);
   switch (typeString) {
     case 'string':
       return "''";
