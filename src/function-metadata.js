@@ -1065,66 +1065,45 @@ export function validateFunctionArgs(functionName, args, compiler, node) {
   
   // Check argument count for non-variadic functions
   if (!metadata.variadic) {
-    // Check for exact argument count first (when minArgs === maxArgs)
-    if (metadata.minArgs === metadata.maxArgs && args.length !== metadata.minArgs) {
-              if (metadata.minArgs === 0) {
-          compiler.error(`${functionName}() takes no arguments`, node.position);
-        } else if (metadata.minArgs === 1) {
-          // Special case for functions that expect "exactly 1 argument" vs "at least 1 argument"
-          if (functionName === 'CEILING') {
-            compiler.error(`${functionName}() takes exactly 1 argument`, node.position);
-          } else if (functionName === 'ABS') {
-            compiler.error(`${functionName}() takes at least 1 argument`, node.position);
-          } else {
-            compiler.error(`${functionName}() takes exactly one argument`, node.position);
-          }
-        } else if (metadata.minArgs === 2) {
-          // Special formatting for two-argument functions
-          if (functionName === 'LEFT' || functionName === 'RIGHT') {
-            compiler.error(`${functionName}() takes exactly two arguments: ${functionName}(text, num)`, node.position);
-          } else if (functionName === 'CONTAINS') {
-            compiler.error(`${functionName}() takes exactly two arguments: ${functionName}(text, search)`, node.position);
-          } else if (functionName === 'ROUND' || functionName === 'MIN') {
-            compiler.error(`${functionName}() takes at least 2 arguments`, node.position);
-          } else if (functionName === 'MOD') {
-            compiler.error(`${functionName}() takes exactly 2 arguments`, node.position);
-          } else {
-            compiler.error(`${functionName}() takes exactly two arguments`, node.position);
-          }
-        } else if (metadata.minArgs === 3) {
-          // Special formatting for three-argument functions
-          if (functionName === 'MID') {
-            compiler.error(`${functionName}() takes exactly three arguments: ${functionName}(text, start, length)`, node.position);
-          } else if (functionName === 'SUBSTITUTE') {
-            compiler.error(`${functionName}() takes exactly three arguments: ${functionName}(text, old_text, new_text)`, node.position);
-          } else {
-            compiler.error(`${functionName}() takes exactly three arguments`, node.position);
-          }
+        // Check for wrong argument count
+    if (args.length < metadata.minArgs || (metadata.maxArgs !== null && args.length > metadata.maxArgs)) {
+      let errorMsg;
+      
+      if (metadata.minArgs === 0 && metadata.maxArgs === 0) {
+        errorMsg = `${functionName}() takes no arguments`;
+      } else if (metadata.minArgs === metadata.maxArgs) {
+        // Fixed argument count
+        if (metadata.minArgs === 1) {
+          errorMsg = `${functionName}() takes exactly one argument`;
         } else {
-          compiler.error(`${functionName}() takes exactly ${metadata.minArgs} arguments`, node.position);
+          errorMsg = `${functionName}() takes exactly ${metadata.minArgs} arguments`;
         }
-      return false;
-    }
-    
-    // Then check for range constraints
-    if (args.length < metadata.minArgs) {
-      if (metadata.minArgs === 1) {
-        compiler.error(`${functionName}() takes at least 1 argument`, node.position);
+      } else if (metadata.maxArgs === null) {
+        // Variadic function with minimum
+        if (metadata.minArgs === 1) {
+          errorMsg = `${functionName}() takes at least one argument`;
+        } else {
+          errorMsg = `${functionName}() takes at least ${metadata.minArgs} arguments`;
+        }
       } else {
-        compiler.error(`${functionName}() takes at least ${metadata.minArgs} arguments`, node.position);
+        // Range of arguments
+        errorMsg = `${functionName}() takes between ${metadata.minArgs} and ${metadata.maxArgs} arguments, got ${args.length}`;
       }
+      
+      compiler.error(errorMsg, node.position);
       return false;
     }
-    
-    if (metadata.maxArgs !== null && args.length > metadata.maxArgs) {
-      compiler.error(`${functionName}() expects at most ${metadata.maxArgs} arguments, got ${args.length}`, node.position);
-      return false;
-    }
+
   } else {
     // For variadic functions, check minimum only
     if (args.length < metadata.minArgs) {
-      const argText = metadata.minArgs === 2 ? 'two arguments' : `${metadata.minArgs} arguments`;
-      compiler.error(`${functionName}() takes at least ${argText}`, node.position);
+      let errorMsg;
+      if (metadata.minArgs === 1) {
+        errorMsg = `${functionName}() takes at least one argument`;
+      } else {
+        errorMsg = `${functionName}() takes at least ${metadata.minArgs} arguments`;
+      }
+      compiler.error(errorMsg, node.position);
       return false;
     }
   }
