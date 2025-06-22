@@ -1,0 +1,1 @@
+merchant_rel.main_rep_rel.user_rel.username & " manages " & merchant_rel.business_name & " with " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps"

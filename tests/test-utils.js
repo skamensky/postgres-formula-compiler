@@ -67,6 +67,26 @@ export function assertError(fn, expectedMessagePattern, message = '') {
   }
 }
 
+export function assertArrayEqual(actual, expected, message = '') {
+  if (!Array.isArray(actual) || !Array.isArray(expected)) {
+    throw new Error(`Both values must be arrays. ${message}`);
+  }
+  if (actual.length !== expected.length) {
+    throw new Error(`Array lengths differ: expected ${expected.length}, got ${actual.length}. ${message}`);
+  }
+  for (let i = 0; i < actual.length; i++) {
+    if (actual[i] !== expected[i]) {
+      throw new Error(`Array element ${i} differs: expected ${expected[i]}, got ${actual[i]}. ${message}`);
+    }
+  }
+}
+
+export function assertDeepEqual(actual, expected, message = '') {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+    throw new Error(`Deep comparison failed: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}. ${message}`);
+  }
+}
+
 // Test context - shared by all test files
 export const testContext = {
   tableName: 'test_table',

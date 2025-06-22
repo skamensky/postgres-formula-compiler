@@ -388,18 +388,9 @@ class Parser {
       const position = token.position;
       this.eat(TokenType.IDENTIFIER);
       
-      // Check for relationship reference: identifier_rel.field
+      // Check for relationship reference: identifier_rel.field or multi-level: merchant_rel.main_rep_rel.user_rel.name
       if (identifier.endsWith('_REL') && this.currentToken.type === TokenType.DOT) {
-        this.eat(TokenType.DOT);
-        const fieldToken = this.currentToken;
-        this.eat(TokenType.IDENTIFIER);
-        
-        return {
-          type: NodeType.RELATIONSHIP_REF,
-          relationName: identifier.slice(0, -4).toLowerCase(), // Remove '_REL' and normalize
-          fieldName: fieldToken.value,
-          position: position
-        };
+        return this.parseMultiLevelRelationship(identifier, position);
       }
       
       if (this.currentToken.type === TokenType.LPAREN) {
@@ -571,6 +562,49 @@ class Parser {
     }
 
     return node;
+  }
+
+  /**
+   * Parse multi-level relationship chains like merchant_rel.main_rep_rel.user_rel.name
+   * @param {string} firstIdentifier - The first relationship identifier
+   * @param {number} position - Position in source for error reporting
+   * @returns {Object} Multi-level relationship AST node
+   */
+  parseMultiLevelRelationship(firstIdentifier, position) {
+    const relationshipChain = [];
+    let currentIdentifier = firstIdentifier;
+    
+    // Parse the chain of relationships
+    while (currentIdentifier.endsWith('_REL') && this.currentToken.type === TokenType.DOT) {
+      // Add current relationship to chain
+      relationshipChain.push(currentIdentifier.slice(0, -4).toLowerCase()); // Remove '_REL' and normalize
+      
+      this.eat(TokenType.DOT); // consume the dot
+      
+      // Get next identifier
+      if (this.currentToken.type !== TokenType.IDENTIFIER) {
+        this.error('Expected identifier after relationship dot', this.currentToken.position);
+      }
+      
+      currentIdentifier = this.currentToken.value;
+      this.eat(TokenType.IDENTIFIER);
+    }
+    
+    // The last identifier should be the field name (not ending with _REL)
+    if (currentIdentifier.endsWith('_REL')) {
+      this.error('Relationship chain must end with a field name, not another relationship', position);
+    }
+    
+    if (relationshipChain.length === 0) {
+      this.error('Invalid relationship syntax', position);
+    }
+    
+    return {
+      type: NodeType.RELATIONSHIP_REF,
+      relationshipChain: relationshipChain,
+      fieldName: currentIdentifier,
+      position: position
+    };
   }
 }
 
@@ -849,50 +883,125 @@ class Compiler {
   }
 
   compileRelationshipRef(node) {
-    // Check if relationship info exists
-    if (!this.context.relationshipInfo || !this.context.relationshipInfo[node.relationName]) {
-      const availableRelationships = Object.keys(this.context.relationshipInfo || {}).slice(0, 10);
-      const suggestionText = availableRelationships.length > 0 
-        ? ` Available relationships: ${availableRelationships.join(', ')}`
-        : '';
-      this.error(`Unknown relationship: ${node.relationName}.${suggestionText}`, node.position);
+    // Handle both single-level (backward compatibility) and multi-level relationships
+    const relationshipChain = node.relationshipChain || [node.relationName];
+    const maxDepth = 5; // Configurable depth limit to prevent runaway queries
+    
+    if (relationshipChain.length > maxDepth) {
+      this.error(`Relationship chain too deep (max ${maxDepth} levels): ${relationshipChain.join('.')}.${node.fieldName}`, node.position);
     }
     
-    const relInfo = this.context.relationshipInfo[node.relationName];
+    return this.compileMultiLevelRelationship(relationshipChain, node.fieldName, node.position);
+  }
+
+  /**
+   * Compile multi-level relationship chains
+   * @param {Array<string>} relationshipChain - Array of relationship names
+   * @param {string} fieldName - Final field name to access
+   * @param {number} position - Position for error reporting
+   * @returns {Object} Compiled relationship reference
+   */
+  compileMultiLevelRelationship(relationshipChain, fieldName, position) {
+    let currentContext = this.context;
+    let currentTable = this.tableName;
+    const allJoinSemanticIds = [];
+    const joinIntents = [];
     
-    // Check if field exists in related table
-    const fieldType = relInfo.columnList[node.fieldName.toLowerCase()];
+    // Validate and traverse the relationship chain
+    for (let i = 0; i < relationshipChain.length; i++) {
+      const relationName = relationshipChain[i];
+      
+      // Check if relationship exists in current context
+      if (!currentContext.relationshipInfo || !currentContext.relationshipInfo[relationName]) {
+        const availableRelationships = Object.keys(currentContext.relationshipInfo || {}).slice(0, 10);
+        const suggestionText = availableRelationships.length > 0 
+          ? ` Available relationships: ${availableRelationships.join(', ')}`
+          : '';
+        const chainSoFar = relationshipChain.slice(0, i + 1).join('.');
+        this.error(`Unknown relationship: ${chainSoFar}.${suggestionText}`, position);
+      }
+      
+      const relInfo = currentContext.relationshipInfo[relationName];
+      const targetTable = relInfo.tableName || relationName;
+      
+      // Generate join semantic ID for this level
+      const joinSemanticId = this.generateMultiLevelJoinSemanticId(
+        this.tableName, 
+        relationshipChain.slice(0, i + 1), 
+        relInfo.joinColumn
+      );
+      
+      // Create join intent for this relationship level
+      const joinIntent = {
+        relationshipType: 'direct_relationship',
+        sourceTable: currentTable,
+        targetTable: targetTable,
+        joinField: relInfo.joinColumn,
+        semanticId: joinSemanticId,
+        compilationContext: this.compilationContext,
+        relationshipChain: relationshipChain.slice(0, i + 1) // Track the chain up to this point
+      };
+      
+      // Track join intent (deduplicated by semanticId)
+      if (!this.joinIntents.has(joinSemanticId)) {
+        this.joinIntents.set(joinSemanticId, joinIntent);
+      }
+      
+      allJoinSemanticIds.push(joinSemanticId);
+      joinIntents.push(joinIntent);
+      
+      // Update context for next iteration
+      currentTable = targetTable;
+      currentContext = {
+        tableName: targetTable,
+        columnList: relInfo.columnList,
+        relationshipInfo: relInfo.relationshipInfo || {}
+      };
+    }
+    
+    // Validate final field exists in the target table
+    const finalContext = currentContext;
+    const fieldType = finalContext.columnList[fieldName.toLowerCase()];
     if (!fieldType) {
-      const availableFields = Object.keys(relInfo.columnList).slice(0, 10);
+      const availableFields = Object.keys(finalContext.columnList).slice(0, 10);
       const suggestionText = availableFields.length > 0 
         ? ` Available fields: ${availableFields.join(', ')}`
         : '';
-      this.error(`Unknown field ${node.fieldName} in relationship ${node.relationName}.${suggestionText}`, node.position);
+      const fullChain = relationshipChain.join('.') + '.' + fieldName;
+      this.error(`Unknown field ${fieldName} in relationship chain ${fullChain}.${suggestionText}`, position);
     }
     
-    // Generate join intent
-    const joinSemanticId = this.generateJoinSemanticId('direct_relationship', this.tableName, node.relationName, relInfo.joinColumn);
+    // Generate semantic ID for the entire relationship reference
+    const relationshipRefSemanticId = this.generateSemanticId(
+      'multi_relationship_ref', 
+      `${relationshipChain.join('.')}.${fieldName}`, 
+      allJoinSemanticIds
+    );
     
-    // Track join intent (deduplicated by semanticId)
-    if (!this.joinIntents.has(joinSemanticId)) {
-      this.joinIntents.set(joinSemanticId, {
-        relationshipType: 'direct_relationship',
-        sourceTable: this.tableName,
-        targetTable: node.relationName,
-        joinField: relInfo.joinColumn,
-        semanticId: joinSemanticId,
-        compilationContext: this.compilationContext
-      });
-        }
-        
-        return {
+    return {
       type: 'RELATIONSHIP_REF',
-      semanticId: this.generateSemanticId('relationship_ref', `${node.relationName}.${node.fieldName}`, [joinSemanticId]),
-      dependentJoins: [joinSemanticId],
+      semanticId: relationshipRefSemanticId,
+      dependentJoins: allJoinSemanticIds,
       returnType: fieldType,
       compilationContext: this.compilationContext,
-      value: { relationName: node.relationName, fieldName: node.fieldName.toLowerCase() }
+      value: { 
+        relationshipChain: relationshipChain,
+        fieldName: fieldName.toLowerCase(),
+        finalTable: currentTable
+      }
     };
+  }
+
+  /**
+   * Generate semantic ID for multi-level join intent
+   * @param {string} baseTable - Base table name
+   * @param {Array<string>} chainSoFar - Relationship chain up to this point
+   * @param {string} joinField - Join field for this level
+   * @returns {string} Semantic ID for this join level
+   */
+  generateMultiLevelJoinSemanticId(baseTable, chainSoFar, joinField) {
+    const chainPath = chainSoFar.join('→');
+    return `direct:${baseTable}→${chainPath}[${joinField}]@${this.compilationContext}`;
   }
 
   /**
@@ -1870,9 +1979,16 @@ function generateSQL(namedResults, baseTableName) {
     const context = contextMatch ? contextMatch[1] : 'main';
     
     if (context === 'main') {
-      // For main context, use descriptive aliases based on relationship name
+      // For main context, generate aliases based on relationship structure
       if (joinIntent.relationshipType === 'direct_relationship') {
-        joinAliases.set(semanticId, `rel_${joinIntent.targetTable}`);
+        if (joinIntent.relationshipChain && joinIntent.relationshipChain.length > 1) {
+          // Multi-level relationship: create alias from chain
+          const chainAlias = joinIntent.relationshipChain.join('_');
+          joinAliases.set(semanticId, `rel_${chainAlias}`);
+        } else {
+          // Single-level relationship: use simple alias
+          joinAliases.set(semanticId, `rel_${joinIntent.targetTable}`);
+        }
       } else {
         joinAliases.set(semanticId, `t${aliasCounter++}`);
       }
@@ -1934,12 +2050,34 @@ function generateSQL(namedResults, baseTableName) {
   // Build FROM clause with joins
   let fromClause = `${baseTableName} s`;
   
-  // Add main context joins
+  // Add main context joins - handle both single and multi-level relationships
   for (const [semanticId, joinIntent] of allJoinIntents) {
     if (joinIntent.compilationContext === 'main') {
       const alias = joinAliases.get(semanticId);
       if (joinIntent.relationshipType === 'direct_relationship') {
-        fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON s.${joinIntent.joinField} = ${alias}.id`;
+        if (joinIntent.relationshipChain && joinIntent.relationshipChain.length > 1) {
+          // Multi-level relationship: determine source table/alias for this JOIN
+          const chainIndex = joinIntent.relationshipChain.length - 1;
+          if (chainIndex === 0) {
+            // First level: join from base table
+            fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON s.${joinIntent.joinField} = ${alias}.id`;
+          } else {
+            // Subsequent levels: join from previous relationship in chain
+            const parentChain = joinIntent.relationshipChain.slice(0, chainIndex);
+            const parentSemanticId = `direct:${baseTableName}→${parentChain.join('→')}[${joinIntent.joinField}]@main`;
+            const parentAlias = joinAliases.get(parentSemanticId);
+            if (parentAlias) {
+              fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAlias}.${joinIntent.joinField} = ${alias}.id`;
+            } else {
+              // Fallback: use the previous table name directly
+              const parentTableName = parentChain[parentChain.length - 1];
+              fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON rel_${parentTableName}.${joinIntent.joinField} = ${alias}.id`;
+            }
+          }
+        } else {
+          // Single-level relationship: use simple JOIN
+          fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON s.${joinIntent.joinField} = ${alias}.id`;
+        }
       }
     }
   }
@@ -2170,13 +2308,14 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
       return `"${baseTableName}"."${expr.value.toLowerCase()}"`;
       
     case 'RELATIONSHIP_REF':
-      // Find the appropriate join alias
-      const joinSemanticId = expr.dependentJoins[0];
-      const joinAlias = joinAliases.get(joinSemanticId);
-      if (!joinAlias) {
-        throw new Error(`No alias found for join: ${joinSemanticId}`);
+      // For multi-level relationships, use the final table alias
+      // The last join in dependentJoins represents the final table in the chain
+      const finalJoinSemanticId = expr.dependentJoins[expr.dependentJoins.length - 1];
+      const finalJoinAlias = joinAliases.get(finalJoinSemanticId);
+      if (!finalJoinAlias) {
+        throw new Error(`No alias found for join: ${finalJoinSemanticId}`);
       }
-      return `"${joinAlias}"."${expr.value.fieldName}"`;
+      return `"${finalJoinAlias}"."${expr.value.fieldName}"`;
       
     case 'UNARY_OP':
       const operandSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);

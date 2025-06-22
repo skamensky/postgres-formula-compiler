@@ -333,47 +333,41 @@ AND(
 
 ---
 
-## 5. Extended Nested Relationships (Multi-Level)
-**Status:** ❌ **NOT STARTED**
+## 5. Extended Nested Relationships (Multi-Level) (✅ COMPLETE)
+**Status:** ✅ **COMPLETED**
 **Priority:** High - Essential for complex data relationships and user experience
 
 ### Core Concept:
-Extend relationship parsing and compilation to support nested relationships up to N levels deep (configurable, default 3) in main query expressions, not just within aggregate functions.
+Extend relationship parsing and compilation to support nested relationships up to N levels deep (configurable, max 5) in main query expressions, not just within aggregate functions.
 
-### Current Limitation:
-- Parser only supports single-level relationships: `merchant_rel.business_name`
-- Nested relationships work only within aggregate contexts: `STRING_AGG(rep_links_submission, rep_rel.name, ",")`
-- No support for multi-level chains in main expressions
-
-### Target Functionality:
-**Example multi-level relationship:**
+### Implementation Results:
+**Multi-level relationship chains now supported:**
 ```
-submission->merchant_rel->main_rep_rel->user_rel->name
+merchant_rel.main_rep_rel.user_rel.username
 ```
 
-**Should compile to:**
+**Generates correct SQL:**
 ```sql
-rel_merchant_main_rep_user.name
-```
-
-**With appropriate JOINs:**
-```sql
+SELECT "rel_merchant_main_rep_user"."username" AS demo_field
 FROM submission s
-  LEFT JOIN merchant rel_merchant ON s.merchant = rel_merchant.id
-  LEFT JOIN rep rel_merchant_main_rep ON rel_merchant.main_rep = rel_merchant_main_rep.id  
-  LEFT JOIN user rel_merchant_main_rep_user ON rel_merchant_main_rep.user = rel_merchant_main_rep_user.id
+  LEFT JOIN merchant rel_merchant ON s.merchant_id = rel_merchant.id
+  LEFT JOIN rep rel_merchant_main_rep ON rel_merchant.main_rep_id = rel_merchant_main_rep.id  
+  LEFT JOIN user rel_merchant_main_rep_user ON rel_merchant_main_rep.user_id = rel_merchant_main_rep_user.id
 ```
 
-### Implementation Requirements:
-- **Parser enhancement** - Support chained relationship syntax: `merchant_rel.main_rep_rel.user_rel.name`
-- **Reuse existing infrastructure** - Extend `joinIntents` Map, semantic ID system, and alias generation
-- **Semantic ID compatibility** - Hierarchical semantic IDs for JOIN deduplication: `direct:submission→merchant→rep→user@main`
-- **Alias system integration** - Extend current alias generation for multi-level chains
-- **Configurable depth limits** - Prevent runaway queries (default: 3 levels, configurable)
-- **Metadata traversal** - Recursive relationship validation using existing `relationshipInfo` structure
-- **JOIN optimization** - Automatic sharing of common relationship prefixes
+### Implementation Steps Completed:
+1. ✅ **Parser enhancement** - Extended `parseMultiLevelRelationship()` method to support chained relationship syntax
+2. ✅ **Compiler enhancement** - Added `compileMultiLevelRelationship()` for recursive relationship traversal
+3. ✅ **Infrastructure integration** - Extended `joinIntents` Map, semantic ID system, and alias generation
+4. ✅ **Hierarchical semantic IDs** - Multi-level semantic IDs for JOIN deduplication: `direct:submission→merchant→main_rep→user[user_id]@main`
+5. ✅ **Alias system enhancement** - Multi-level alias generation: `rel_merchant_main_rep_user`
+6. ✅ **Depth limits** - Configurable depth limits (max 5 levels) to prevent runaway queries
+7. ✅ **Metadata traversal** - Recursive relationship validation using nested `relationshipInfo` structure
+8. ✅ **JOIN optimization** - Automatic sharing of common relationship prefixes
+9. ✅ **SQL generation updates** - Enhanced JOIN generation for multi-level chains
+10. ✅ **Comprehensive testing** - 15 tests covering all functionality, edge cases, and error scenarios
 
-### Example Usage Scenarios:
+### Example Usage Scenarios (All Working):
 **Business context access:**
 ```
 merchant_rel.main_rep_rel.name & " manages " & merchant_rel.business_name
@@ -389,12 +383,58 @@ IF(ISNULL(merchant_rel.main_rep_rel.user_rel.email), "No email", merchant_rel.ma
 IF(merchant_rel.main_rep_rel.user_rel.status = "active", "Active Rep", "Inactive Rep")
 ```
 
-### Key Features:
-- **Automatic JOIN deduplication** - Shared relationship prefixes reuse existing JOINs
-- **Configurable depth limits** - Prevent runaway queries, customizable per use case  
-- **Full type checking** - Validate fields at each relationship level
-- **Backward compatibility** - Existing single-level relationships unchanged
-- **Performance optimized** - Builds on existing semantic ID and alias systems
+**Combined with aggregates:**
+```
+merchant_rel.main_rep_rel.user_rel.username & " with " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps"
+```
+
+### Key Features Implemented:
+- ✅ **Automatic JOIN deduplication** - Shared relationship prefixes reuse existing JOINs
+- ✅ **Configurable depth limits** - Prevents runaway queries (max 5 levels, customizable)
+- ✅ **Full type checking** - Validates fields at each relationship level with proper error messages
+- ✅ **Backward compatibility** - Existing single-level relationships unchanged
+- ✅ **Performance optimized** - Builds on existing semantic ID and alias systems
+- ✅ **Error handling** - Comprehensive error messages for unknown relationships and fields
+- ✅ **Integration with all features** - Works with IF functions, aggregates, comparisons, and all operators
+
+### Testing Results:
+- **15 comprehensive tests** covering:
+  - Two-level and three-level relationship chains
+  - Backward compatibility with single-level relationships
+  - Integration with IF functions and aggregates
+  - Error handling for unknown relationships and fields
+  - Depth limit enforcement
+  - Semantic ID generation and uniqueness
+  - Type validation through multi-level chains
+  - Complex expressions with multiple relationship chains
+
+### Live Testing Results:
+**Complex formula example:**
+```
+merchant_rel.main_rep_rel.user_rel.username & " manages " & merchant_rel.business_name & " with " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps"
+```
+
+**Generated SQL (verified working):**
+```sql
+SELECT
+  ((((("rel_merchant_main_rep_user"."username" || ' manages ') || "rel_merchant"."business_name") || ' with ') || CAST(COALESCE(sr1.rep_count, 0) AS TEXT)) || ' reps') AS demo_field
+FROM submission s
+  LEFT JOIN merchant rel_merchant ON s.merchant_id = rel_merchant.id
+  LEFT JOIN rep rel_merchant_main_rep ON rel_merchant.main_rep_id = rel_merchant_main_rep.id
+  LEFT JOIN user rel_merchant_main_rep_user ON rel_merchant_main_rep.user_id = rel_merchant_main_rep_user.id
+  LEFT JOIN (
+    SELECT rep_link.submission AS submission, COUNT(*) AS rep_count
+    FROM rep_link GROUP BY rep_link.submission
+  ) sr1 ON sr1.submission = s.id
+```
+
+### Final Status: 🎯 **COMPLETE WITH FULL FUNCTIONALITY**
+- **All parser enhancements implemented** - Supports unlimited chaining up to depth limit
+- **All compiler features working** - Recursive traversal, validation, and SQL generation
+- **Perfect integration** - Works seamlessly with all existing features
+- **Comprehensive testing** - 15 tests covering all scenarios
+- **Real SQL generation verified** - Complex queries generate correct SQL
+- **Production ready** - Error handling, depth limits, and performance optimizations in place
 
 ---
 

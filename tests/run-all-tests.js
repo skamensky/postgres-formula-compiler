@@ -26,6 +26,7 @@ const testFiles = [
   './math-functions.test.js',
   './date-functions.test.js',
   './relationships.test.js',
+  './multi-level-relationships.test.js',
   './aggregate-functions.test.js',
   './error-handling-basic.test.js'
   // TODO: Add remaining test files as they are created:
