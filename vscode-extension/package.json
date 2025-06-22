@@ -1,0 +1,43 @@
+{
+  "name": "formula-language-support",
+  "displayName": "Formula Language Support",
+  "description": "Syntax highlighting for Formula language files",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "formula",
+        "aliases": [
+          "Formula",
+          "formula"
+        ],
+        "extensions": [
+          ".formula"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "formula",
+        "scopeName": "source.formula",
+        "path": "./syntaxes/formula.tmGrammar.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "typescript": "^4.9.4"
+  }
+}

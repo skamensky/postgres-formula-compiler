@@ -7,11 +7,14 @@
   "scripts": {
     "test": "node tests/run-all-tests.js",
     "exec-all": "for dir in examples/table/*/; do table=$(basename \"$dir\"); echo \"Processing $table table...\"; ./exec-formula --output markdown \"$dir\"*.formula > \"${table}-exec-results.md\"; done",
-    "generate-docs": "node scripts/generate-docs.js"
+    "generate-docs": "node scripts/generate-docs.js",
+    "generate-vscode-extension": "node scripts/generate-vscode-grammar.js"
   },
   "dependencies": {
     "pg": "^8.11.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "vscode-languageserver": "^8.1.0",
+    "vscode-languageserver-textdocument": "^1.0.8"
   },
   "keywords": ["formula", "compiler", "sql", "postgresql", "excel", "lexer", "parser"],
   "author": "",
