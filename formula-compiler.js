@@ -26,6 +26,716 @@ function mapPostgresType(pgType) {
   return 'string';
 }
 
+// Constants for documentation metadata
+const TYPES = {
+  STRING: 'string',
+  NUMBER: 'number', 
+  BOOLEAN: 'boolean',
+  DATE: 'date',
+  EXPRESSION: 'expression',
+  INVERSE_RELATIONSHIP: 'inverse_relationship',
+  COLUMN_REFERENCE: 'column_reference',
+  NULL: 'null'
+};
+
+const RETURN_TYPES = {
+  STRING: TYPES.STRING,
+  NUMBER: TYPES.NUMBER,
+  BOOLEAN: TYPES.BOOLEAN,
+  DATE: TYPES.DATE,
+  NULL: TYPES.NULL
+};
+
+const DOC_LINKS = {
+  EXPRESSIONS: 'docs/SYNTAX.md#expressions',
+  INVERSE_RELATIONSHIPS: 'docs/RELATIONSHIPS.md#inverse-relationships',
+  COLUMN_REFERENCES: 'docs/RELATIONSHIPS.md#column-references',
+  DATA_TYPES: 'docs/DATA_TYPES.md',
+  OPERATORS: 'docs/OPERATORS.md',
+  FUNCTIONS: 'docs/FUNCTIONS.md'
+};
+
+// Function metadata for documentation generation
+const FUNCTION_METADATA = {
+  // Core Functions
+  'TODAY': {
+    arguments: [],
+    returnType: RETURN_TYPES.DATE,
+    description: 'Returns the current date',
+    category: 'Core',
+    testRefs: ['tests/core-functions.test.js:12', 'tests/core-functions.test.js:18']
+  },
+  'ME': {
+    arguments: [],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Returns the current user identifier', 
+    category: 'Core',
+    testRefs: ['tests/core-functions.test.js:24', 'tests/core-functions.test.js:30']
+  },
+  'DATE': {
+    arguments: [
+      {name: 'date_string', type: TYPES.STRING, description: 'Date string in ISO format (YYYY-MM-DD)'}
+    ],
+    returnType: RETURN_TYPES.DATE,
+    description: 'Converts a string to a date value',
+    category: 'Core',
+    testRefs: ['tests/core-functions.test.js:36', 'tests/core-functions.test.js:42']
+  },
+  'STRING': {
+    arguments: [
+      {name: 'value', type: TYPES.EXPRESSION, description: 'Expression to convert to string', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Converts a value to a string representation',
+    category: 'Core',
+    testRefs: ['tests/core-functions.test.js:48', 'tests/core-functions.test.js:54']
+  },
+
+  // Text Functions
+  'UPPER': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Text to convert to uppercase'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Converts text to uppercase',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:12', 'tests/text-functions.test.js:18']
+  },
+  'LOWER': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Text to convert to lowercase'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Converts text to lowercase',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:24', 'tests/text-functions.test.js:30']
+  },
+  'TRIM': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Text to remove leading and trailing spaces from'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Removes leading and trailing whitespace from text',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:36', 'tests/text-functions.test.js:42']
+  },
+  'LEN': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Text to measure length of'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the length of text in characters',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:48', 'tests/text-functions.test.js:54']
+  },
+  'LEFT': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Source text'},
+      {name: 'num_chars', type: TYPES.NUMBER, description: 'Number of characters to extract from the left'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Returns the leftmost characters from text',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:60', 'tests/text-functions.test.js:66']
+  },
+  'RIGHT': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Source text'},
+      {name: 'num_chars', type: TYPES.NUMBER, description: 'Number of characters to extract from the right'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Returns the rightmost characters from text',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:72', 'tests/text-functions.test.js:78']
+  },
+  'MID': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Source text'},
+      {name: 'start_pos', type: TYPES.NUMBER, description: 'Starting position (1-based)'},
+      {name: 'length', type: TYPES.NUMBER, description: 'Number of characters to extract'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Returns characters from the middle of text',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:84', 'tests/text-functions.test.js:90']
+  },
+  'CONTAINS': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Text to search within'},
+      {name: 'search_text', type: TYPES.STRING, description: 'Text to search for'}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns true if text contains the search text',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:96', 'tests/text-functions.test.js:102']
+  },
+  'SUBSTITUTE': {
+    arguments: [
+      {name: 'text', type: TYPES.STRING, description: 'Original text'},
+      {name: 'old_text', type: TYPES.STRING, description: 'Text to replace'},
+      {name: 'new_text', type: TYPES.STRING, description: 'Replacement text'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Replaces old text with new text in a string',
+    category: 'Text',
+    testRefs: ['tests/text-functions.test.js:108', 'tests/text-functions.test.js:114']
+  },
+
+  // Math Functions
+  'ABS': {
+    arguments: [
+      {name: 'number', type: TYPES.NUMBER, description: 'Number to get absolute value of'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the absolute value of a number',
+    category: 'Math',
+    testRefs: ['tests/math-functions.test.js:12', 'tests/math-functions.test.js:18']
+  },
+  'ROUND': {
+    arguments: [
+      {name: 'number', type: TYPES.NUMBER, description: 'Number to round'},
+      {name: 'decimals', type: TYPES.NUMBER, description: 'Number of decimal places'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Rounds a number to specified decimal places',
+    category: 'Math',
+    testRefs: ['tests/math-functions.test.js:24', 'tests/math-functions.test.js:30']
+  },
+  'MIN': {
+    arguments: [
+      {name: 'num1', type: TYPES.NUMBER, description: 'First number'},
+      {name: 'num2', type: TYPES.NUMBER, description: 'Second number'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the smaller of two numbers',
+    category: 'Math',
+    testRefs: ['tests/math-functions.test.js:36', 'tests/math-functions.test.js:42']
+  },
+  'MAX': {
+    arguments: [
+      {name: 'num1', type: TYPES.NUMBER, description: 'First number'},
+      {name: 'num2', type: TYPES.NUMBER, description: 'Second number'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the larger of two numbers',
+    category: 'Math',
+    testRefs: ['tests/math-functions.test.js:48', 'tests/math-functions.test.js:54']
+  },
+  'MOD': {
+    arguments: [
+      {name: 'dividend', type: TYPES.NUMBER, description: 'Number to divide'},
+      {name: 'divisor', type: TYPES.NUMBER, description: 'Number to divide by'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the remainder after division',
+    category: 'Math',
+    testRefs: ['tests/math-functions.test.js:60', 'tests/math-functions.test.js:66']
+  },
+  'CEILING': {
+    arguments: [
+      {name: 'number', type: TYPES.NUMBER, description: 'Number to round up'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Rounds a number up to the nearest integer',
+    category: 'Math',
+    testRefs: ['tests/math-functions.test.js:72', 'tests/math-functions.test.js:78']
+  },
+  'FLOOR': {
+    arguments: [
+      {name: 'number', type: TYPES.NUMBER, description: 'Number to round down'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Rounds a number down to the nearest integer',
+    category: 'Math',
+    testRefs: ['tests/math-functions.test.js:84', 'tests/math-functions.test.js:90']
+  },
+
+  // Date Functions
+  'YEAR': {
+    arguments: [
+      {name: 'date', type: TYPES.DATE, description: 'Date to extract year from'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the year component of a date',
+    category: 'Date',
+    testRefs: ['tests/date-functions.test.js:12', 'tests/date-functions.test.js:18']
+  },
+  'MONTH': {
+    arguments: [
+      {name: 'date', type: TYPES.DATE, description: 'Date to extract month from'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the month component of a date (1-12)',
+    category: 'Date',
+    testRefs: ['tests/date-functions.test.js:24', 'tests/date-functions.test.js:30']
+  },
+  'DAY': {
+    arguments: [
+      {name: 'date', type: TYPES.DATE, description: 'Date to extract day from'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the day component of a date (1-31)',
+    category: 'Date',
+    testRefs: ['tests/date-functions.test.js:36', 'tests/date-functions.test.js:42']
+  },
+  'WEEKDAY': {
+    arguments: [
+      {name: 'date', type: TYPES.DATE, description: 'Date to get weekday for'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Returns the day of week (1=Sunday, 7=Saturday)',
+    category: 'Date',
+    testRefs: ['tests/date-functions.test.js:48', 'tests/date-functions.test.js:54']
+  },
+  'ADDMONTHS': {
+    arguments: [
+      {name: 'date', type: TYPES.DATE, description: 'Starting date'},
+      {name: 'months', type: TYPES.NUMBER, description: 'Number of months to add (can be negative)'}
+    ],
+    returnType: RETURN_TYPES.DATE,
+    description: 'Adds months to a date',
+    category: 'Date',
+    testRefs: ['tests/date-functions.test.js:60', 'tests/date-functions.test.js:66']
+  },
+  'ADDDAYS': {
+    arguments: [
+      {name: 'date', type: TYPES.DATE, description: 'Starting date'},
+      {name: 'days', type: TYPES.NUMBER, description: 'Number of days to add (can be negative)'}
+    ],
+    returnType: RETURN_TYPES.DATE,
+    description: 'Adds days to a date',
+    category: 'Date',
+    testRefs: ['tests/date-functions.test.js:72', 'tests/date-functions.test.js:78']
+  },
+  'DATEDIF': {
+    arguments: [
+      {name: 'start_date', type: TYPES.DATE, description: 'Starting date'},
+      {name: 'end_date', type: TYPES.DATE, description: 'Ending date'},
+      {name: 'unit', type: TYPES.STRING, description: 'Unit of measurement: "days", "months", or "years"'}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Calculates the difference between two dates',
+    category: 'Date',
+    testRefs: ['tests/date-functions.test.js:84', 'tests/date-functions.test.js:90']
+  },
+
+  // Null Handling Functions
+  'ISNULL': {
+    arguments: [
+      {name: 'value', type: TYPES.EXPRESSION, description: 'Expression to check for NULL', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns true if the value is NULL',
+    category: 'Null Handling',
+    testRefs: ['tests/null-handling.test.js:12', 'tests/null-handling.test.js:18']
+  },
+  'NULLVALUE': {
+    arguments: [
+      {name: 'value', type: TYPES.EXPRESSION, description: 'Expression that might be NULL', linkTo: DOC_LINKS.EXPRESSIONS},
+      {name: 'default_value', type: TYPES.EXPRESSION, description: 'Value to return if first argument is NULL', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: 'varies',
+    description: 'Returns the default value if the first argument is NULL, otherwise returns the first argument',
+    category: 'Null Handling',
+    testRefs: ['tests/null-handling.test.js:24', 'tests/null-handling.test.js:30']
+  },
+  'ISBLANK': {
+    arguments: [
+      {name: 'value', type: TYPES.EXPRESSION, description: 'Expression to check for NULL or empty string', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns true if the value is NULL or an empty string',
+    category: 'Null Handling',
+    testRefs: ['tests/null-handling.test.js:36', 'tests/null-handling.test.js:42']
+  },
+
+  // Logical Functions
+  'AND': {
+    arguments: [
+      {name: 'condition1', type: TYPES.BOOLEAN, description: 'First boolean condition'},
+      {name: 'condition2', type: TYPES.BOOLEAN, description: 'Second boolean condition'},
+      {name: '...', type: TYPES.BOOLEAN, description: 'Additional boolean conditions (variadic)'}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns true if all conditions are true',
+    category: 'Logical',
+    testRefs: ['tests/logical-operators-functions.test.js:12', 'tests/logical-operators-functions.test.js:18']
+  },
+  'OR': {
+    arguments: [
+      {name: 'condition1', type: TYPES.BOOLEAN, description: 'First boolean condition'},
+      {name: 'condition2', type: TYPES.BOOLEAN, description: 'Second boolean condition'},
+      {name: '...', type: TYPES.BOOLEAN, description: 'Additional boolean conditions (variadic)'}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns true if any condition is true',
+    category: 'Logical',
+    testRefs: ['tests/logical-operators-functions.test.js:24', 'tests/logical-operators-functions.test.js:30']
+  },
+  'NOT': {
+    arguments: [
+      {name: 'condition', type: TYPES.BOOLEAN, description: 'Boolean condition to negate'}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns the opposite boolean value',
+    category: 'Logical',
+    testRefs: ['tests/logical-operators-functions.test.js:36', 'tests/logical-operators-functions.test.js:42']
+  },
+
+  // Conditional Function
+  'IF': {
+    arguments: [
+      {name: 'condition', type: TYPES.BOOLEAN, description: 'Boolean condition to test'},
+      {name: 'true_value', type: TYPES.EXPRESSION, description: 'Value to return if condition is true', linkTo: DOC_LINKS.EXPRESSIONS},
+      {name: 'false_value', type: TYPES.EXPRESSION, description: 'Value to return if condition is false (optional)', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: 'varies',
+    description: 'Returns one value if condition is true, another if false',
+    category: 'Conditional',
+    testRefs: ['tests/if-function.test.js:12', 'tests/if-function.test.js:18']
+  },
+
+  // Aggregate Functions
+  'STRING_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.EXPRESSION, description: 'Formula expression to evaluate for each record', linkTo: DOC_LINKS.EXPRESSIONS},
+      {name: 'delimiter', type: TYPES.STRING, description: 'String to separate concatenated values'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Concatenates values from related records using specified delimiter',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:12', 'tests/aggregate-functions.test.js:18']
+  },
+  'STRING_AGG_DISTINCT': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.EXPRESSION, description: 'Formula expression to evaluate for each record', linkTo: DOC_LINKS.EXPRESSIONS},
+      {name: 'delimiter', type: TYPES.STRING, description: 'String to separate concatenated values'}
+    ],
+    returnType: RETURN_TYPES.STRING,
+    description: 'Concatenates unique values from related records using specified delimiter',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:24', 'tests/aggregate-functions.test.js:30']
+  },
+  'SUM_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.EXPRESSION, description: 'Numeric expression to sum', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Sums numeric values from related records',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:36', 'tests/aggregate-functions.test.js:42']
+  },
+  'COUNT_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to count', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Counts non-null values from related records',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:48', 'tests/aggregate-functions.test.js:54']
+  },
+  'AVG_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.EXPRESSION, description: 'Numeric expression to average', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Calculates the average of numeric values from related records',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:60', 'tests/aggregate-functions.test.js:66']
+  },
+  'MIN_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to find minimum of', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Finds the minimum value from related records',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:72', 'tests/aggregate-functions.test.js:78']
+  },
+  'MAX_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.EXPRESSION, description: 'Expression to find maximum of', linkTo: DOC_LINKS.EXPRESSIONS}
+    ],
+    returnType: RETURN_TYPES.NUMBER,
+    description: 'Finds the maximum value from related records',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:84', 'tests/aggregate-functions.test.js:90']
+  },
+  'AND_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.BOOLEAN, description: 'Boolean expression to aggregate with AND'}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns true if all boolean values from related records are true',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:96', 'tests/aggregate-functions.test.js:102']
+  },
+  'OR_AGG': {
+    arguments: [
+      {name: 'relationship', type: TYPES.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate', linkTo: DOC_LINKS.INVERSE_RELATIONSHIPS},
+      {name: 'expression', type: TYPES.BOOLEAN, description: 'Boolean expression to aggregate with OR'}
+    ],
+    returnType: RETURN_TYPES.BOOLEAN,
+    description: 'Returns true if any boolean value from related records is true',
+    category: 'Aggregate',
+    testRefs: ['tests/aggregate-functions.test.js:108', 'tests/aggregate-functions.test.js:114']
+  }
+};
+
+// Operator metadata for documentation
+const OPERATOR_METADATA = {
+  '+': {
+    precedence: 1,
+    associativity: 'left',
+    description: 'Addition operator for numeric values',
+    category: 'Arithmetic',
+    testRefs: ['tests/basic-arithmetic-literals.test.js:12']
+  },
+  '-': {
+    precedence: 1,
+    associativity: 'left',
+    description: 'Subtraction operator for numeric values or unary negation',
+    category: 'Arithmetic',
+    testRefs: ['tests/basic-arithmetic-literals.test.js:18']
+  },
+  '*': {
+    precedence: 2,
+    associativity: 'left',
+    description: 'Multiplication operator for numeric values',
+    category: 'Arithmetic',
+    testRefs: ['tests/multiplication-division.test.js:12']
+  },
+  '/': {
+    precedence: 2,
+    associativity: 'left',
+    description: 'Division operator for numeric values',
+    category: 'Arithmetic',
+    testRefs: ['tests/multiplication-division.test.js:18']
+  },
+  '&': {
+    precedence: 0,
+    associativity: 'left',
+    description: 'String concatenation operator',
+    category: 'String',
+    testRefs: ['tests/string-functions-concatenation.test.js:12']
+  },
+  '=': {
+    precedence: 3,
+    associativity: 'left',
+    description: 'Equality comparison operator',
+    category: 'Comparison',
+    testRefs: ['tests/comparison-operators.test.js:12']
+  },
+  '!=': {
+    precedence: 3,
+    associativity: 'left',
+    description: 'Inequality comparison operator',
+    category: 'Comparison',
+    testRefs: ['tests/comparison-operators.test.js:18']
+  },
+  '<>': {
+    precedence: 3,
+    associativity: 'left',
+    description: 'Inequality comparison operator (alternative syntax)',
+    category: 'Comparison',
+    testRefs: ['tests/comparison-operators.test.js:24']
+  },
+  '<': {
+    precedence: 3,
+    associativity: 'left',
+    description: 'Less than comparison operator',
+    category: 'Comparison',
+    testRefs: ['tests/comparison-operators.test.js:30']
+  },
+  '<=': {
+    precedence: 3,
+    associativity: 'left',
+    description: 'Less than or equal comparison operator',
+    category: 'Comparison',
+    testRefs: ['tests/comparison-operators.test.js:36']
+  },
+  '>': {
+    precedence: 3,
+    associativity: 'left',
+    description: 'Greater than comparison operator',
+    category: 'Comparison',
+    testRefs: ['tests/comparison-operators.test.js:42']
+  },
+  '>=': {
+    precedence: 3,
+    associativity: 'left',
+    description: 'Greater than or equal comparison operator',
+    category: 'Comparison',
+    testRefs: ['tests/comparison-operators.test.js:48']
+  }
+};
+
+// AST Node metadata for documentation
+const AST_NODE_METADATA = {
+  'BINARY_OP': {
+    properties: ['left', 'op', 'right', 'position'],
+    description: 'Binary operation between two expressions',
+    testRefs: ['tests/basic-arithmetic-literals.test.js:12']
+  },
+  'UNARY_OP': {
+    properties: ['op', 'operand', 'position'],
+    description: 'Unary operation on a single expression (like negation)',
+    testRefs: ['tests/basic-arithmetic-literals.test.js:36']
+  },
+  'NUMBER': {
+    properties: ['value', 'position'],
+    description: 'Numeric literal value',
+    testRefs: ['tests/basic-arithmetic-literals.test.js:6']
+  },
+  'IDENTIFIER': {
+    properties: ['value', 'position'],
+    description: 'Column reference or function name',
+    testRefs: ['tests/basic-arithmetic-literals.test.js:42']
+  },
+  'FUNCTION_CALL': {
+    properties: ['name', 'args', 'position'],
+    description: 'Function call with arguments',
+    testRefs: ['tests/core-functions.test.js:12']
+  },
+  'DATE_LITERAL': {
+    properties: ['value', 'position'],
+    description: 'Date literal value',
+    testRefs: ['tests/core-functions.test.js:36']
+  },
+  'STRING_LITERAL': {
+    properties: ['value', 'position'],
+    description: 'String literal value in double quotes',
+    testRefs: ['tests/basic-arithmetic-literals.test.js:48']
+  },
+  'BOOLEAN_LITERAL': {
+    properties: ['value', 'position'],
+    description: 'Boolean literal (TRUE or FALSE)',
+    testRefs: ['tests/boolean-literals.test.js:12']
+  },
+  'NULL_LITERAL': {
+    properties: ['value', 'position'],
+    description: 'NULL literal value',
+    testRefs: ['tests/null-handling.test.js:6']
+  },
+  'RELATIONSHIP_REF': {
+    properties: ['relationName', 'fieldName', 'position'],
+    description: 'Reference to a field in a related table',
+    testRefs: ['tests/relationships.test.js:12']
+  }
+};
+
+// Token metadata for documentation
+const TOKEN_METADATA = {
+  'NUMBER': {
+    pattern: '/\\d+(\\.\\d+)?/',
+    description: 'Numeric literals (integers and decimals)',
+    textMateScope: 'constant.numeric.formula'
+  },
+  'IDENTIFIER': {
+    pattern: '/[a-zA-Z_]\\w*/',
+    description: 'Column names, function names, and keywords',
+    textMateScope: 'variable.other.formula'
+  },
+  'FUNCTION': {
+    pattern: '/\\b(TODAY|ME|DATE|STRING|...)\\b/',
+    description: 'Built-in formula function names',
+    textMateScope: 'keyword.function.formula'
+  },
+  'STRING': {
+    pattern: '/"[^"]*"/',
+    description: 'String literals enclosed in double quotes',
+    textMateScope: 'string.quoted.double.formula'
+  },
+  'PLUS': {
+    pattern: '/\\+/',
+    description: 'Addition operator',
+    textMateScope: 'keyword.operator.arithmetic.formula'
+  },
+  'MINUS': {
+    pattern: '/\\-/',
+    description: 'Subtraction or negation operator',
+    textMateScope: 'keyword.operator.arithmetic.formula'
+  },
+  'MULTIPLY': {
+    pattern: '/\\*/',
+    description: 'Multiplication operator',
+    textMateScope: 'keyword.operator.arithmetic.formula'
+  },
+  'DIVIDE': {
+    pattern: '/\\//',
+    description: 'Division operator',
+    textMateScope: 'keyword.operator.arithmetic.formula'
+  },
+  'AMPERSAND': {
+    pattern: '/&/',
+    description: 'String concatenation operator',
+    textMateScope: 'keyword.operator.string.formula'
+  },
+  'LPAREN': {
+    pattern: '/\\(/',
+    description: 'Left parenthesis for grouping',
+    textMateScope: 'punctuation.definition.group.begin.formula'
+  },
+  'RPAREN': {
+    pattern: '/\\)/',
+    description: 'Right parenthesis for grouping',
+    textMateScope: 'punctuation.definition.group.end.formula'
+  },
+  'COMMA': {
+    pattern: '/,/',
+    description: 'Comma separator for function arguments',
+    textMateScope: 'punctuation.separator.formula'
+  },
+  'DOT': {
+    pattern: '/\\./',
+    description: 'Dot operator for relationship field access',
+    textMateScope: 'punctuation.accessor.formula'
+  },
+  'GT': {
+    pattern: '/>/',
+    description: 'Greater than comparison operator',
+    textMateScope: 'keyword.operator.comparison.formula'
+  },
+  'GTE': {
+    pattern: '/>=/',
+    description: 'Greater than or equal comparison operator',
+    textMateScope: 'keyword.operator.comparison.formula'
+  },
+  'LT': {
+    pattern: '/</',
+    description: 'Less than comparison operator',
+    textMateScope: 'keyword.operator.comparison.formula'
+  },
+  'LTE': {
+    pattern: '/<=/',
+    description: 'Less than or equal comparison operator',
+    textMateScope: 'keyword.operator.comparison.formula'
+  },
+  'EQ': {
+    pattern: '/=/',
+    description: 'Equality comparison operator',
+    textMateScope: 'keyword.operator.comparison.formula'
+  },
+  'NEQ': {
+    pattern: '/!=|<>/',
+    description: 'Inequality comparison operator',
+    textMateScope: 'keyword.operator.comparison.formula'
+  },
+  'EOF': {
+    pattern: 'END_OF_INPUT',
+    description: 'End of formula input',
+    textMateScope: null
+  }
+};
+
 // Token types
 const TokenType = {
   NUMBER: 'NUMBER',
@@ -2437,11 +3147,37 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
 }
 
 // Export for ES modules
-export { evaluateFormula, generateSQL, mapPostgresType };
+export { 
+  evaluateFormula, 
+  generateSQL, 
+  mapPostgresType,
+  FUNCTION_METADATA,
+  OPERATOR_METADATA,
+  AST_NODE_METADATA,
+  TOKEN_METADATA,
+  TYPES,
+  RETURN_TYPES,
+  DOC_LINKS,
+  TokenType,
+  NodeType
+};
 
 // Export for Node.js/CommonJS (but don't use require/import in this file)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { evaluateFormula, generateSQL, mapPostgresType };
+  module.exports = { 
+    evaluateFormula, 
+    generateSQL, 
+    mapPostgresType,
+    FUNCTION_METADATA,
+    OPERATOR_METADATA,
+    AST_NODE_METADATA,
+    TOKEN_METADATA,
+    TYPES,
+    RETURN_TYPES,
+    DOC_LINKS,
+    TokenType,
+    NodeType
+  };
 }
 
 // Export for browser/global scope
@@ -2449,4 +3185,13 @@ if (typeof window !== 'undefined') {
   window.evaluateFormula = evaluateFormula;
   window.generateSQL = generateSQL;
   window.mapPostgresType = mapPostgresType;
+  window.FUNCTION_METADATA = FUNCTION_METADATA;
+  window.OPERATOR_METADATA = OPERATOR_METADATA;
+  window.AST_NODE_METADATA = AST_NODE_METADATA;
+  window.TOKEN_METADATA = TOKEN_METADATA;
+  window.TYPES = TYPES;
+  window.RETURN_TYPES = RETURN_TYPES;
+  window.DOC_LINKS = DOC_LINKS;
+  window.TokenType = TokenType;
+  window.NodeType = NodeType;
 } 
