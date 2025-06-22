@@ -574,7 +574,127 @@ const results = mergeCompilerResults([
 
 ---
 
-## 7. Language Specification and Documentation
+## 7. Multi-Level Aggregate Functions (Chained Inverse Relationships)
+**Status:** ❌ **NOT STARTED**
+**Priority:** High - Essential for complex multi-table aggregation from parent records
+
+### Core Concept:
+Extend aggregate functions to support chained inverse relationships, enabling aggregation across multiple relationship levels. For example, aggregate all rep names across all submissions belonging to a merchant.
+
+### Current vs. New Capability:
+**Current (single-level from submission):**
+```
+STRING_AGG(rep_links_submission, rep_rel.name, ",")
+```
+- Aggregates rep_link records that reference the current submission
+- Single inverse relationship: submission ← rep_links
+
+**New (multi-level from merchant):**
+```
+STRING_AGG(submissions_merchant_rep_links_submission, rep_rel.name, ",")
+```
+- Chains multiple inverse relationships: merchant ← submissions ← rep_links
+- Then accesses regular relationship: rep_link → rep.name
+- Pattern: `{first_inverse}_{second_inverse}[_{third_inverse}...]`
+
+### Naming Pattern:
+- Format: `{inverse1}_{inverse2}[_{inverse3}...]`
+- Example: `submissions_merchant_rep_links_submission`
+  - `submissions_merchant`: submissions that belong to merchant (first inverse)
+  - `rep_links_submission`: rep_links that belong to submission (second inverse)
+- Chaining: merchant → submissions → rep_links → aggregate
+
+### Implementation Steps:
+1. **Add configurable depth limits:**
+   - New compiler option: `maxInverseAggregateDepth` (default: 2)
+   - Implement iterative/recursive parsing for N-level chains
+   - Validation to prevent runaway queries
+
+2. **Extend aggregate function parsing:**
+   - Modify `compileAggregateFunction()` to detect chained inverse relationship names
+   - Parse pattern: `{inverse1}_{inverse2}[_{inverse3}...]` using iteration/recursion
+   - Validate each inverse relationship exists in chain
+
+3. **Multi-level inverse relationship validation:**
+   - Traverse inverse relationship chain iteratively
+   - Validate each step: merchant ← submissions, submission ← rep_links, etc.
+   - Error on unknown relationships with helpful suggestions
+   - Ensure chain connectivity (output of step N becomes input of step N+1)
+
+4. **Complex JOIN generation using semantic intent system:**
+   - Generate hierarchical semantic IDs for multi-level aggregates
+   - Example: `multi_aggregate:STRING_AGG[merchant→submissions→rep_links]@main`
+   - Prevent duplicate semantically identical multi-level JOINs
+   - Build nested subquery structure:
+     ```sql
+     LEFT JOIN (
+       SELECT merchant_id, STRING_AGG(r.name, ',') as result
+       FROM submission s
+       JOIN rep_link rl ON s.id = rl.submission  
+       JOIN rep r ON rl.rep = r.id
+       GROUP BY s.merchant_id
+     ) agg1 ON agg1.merchant_id = m.id
+     ```
+
+5. **Iterative relationship chain processing:**
+   - Use configurable loop/recursion (not hardcoded nested loops)
+   - Build relationship chain dynamically based on parsed inverse names
+   - Support depth limits with clear error messages
+   - Handle context switching between relationship levels
+
+6. **Integration with existing aggregate infrastructure:**
+   - Extend all aggregate functions: STRING_AGG, COUNT_AGG, SUM_AGG, etc.
+   - Maintain compatibility with single-level aggregates
+   - Use existing sub-expression compilation for nested expressions
+   - Preserve aggregate optimization (multiple aggregates on same chain share subquery)
+
+### SQL Generation Strategy:
+- **Never GROUP BY on root table** - maintains current architecture
+- Generate complex LEFT JOINs with subquery structure
+- Subquery contains the GROUP BY at the appropriate relationship level
+- Use semantic intent system to deduplicate identical multi-level aggregate JOINs
+- Optimize multiple aggregates on same relationship chain into single subquery
+
+### Example SQL Generation:
+**Input Formula (from merchant perspective):**
+```
+STRING_AGG(submissions_merchant_rep_links_submission, rep_rel.name, ",") & " (total: " & STRING(COUNT_AGG(submissions_merchant_rep_links_submission, rep_rel.id)) & ")"
+```
+
+**Generated SQL:**
+```sql
+SELECT agg1.string_agg_result || ' (total: ' || agg1.count_agg_result || ')' as result
+FROM merchant m
+LEFT JOIN (
+  SELECT 
+    s.merchant_id,
+    STRING_AGG(r.name, ',') as string_agg_result,
+    COUNT(r.id) as count_agg_result
+  FROM submission s
+  JOIN rep_link rl ON s.id = rl.submission
+  JOIN rep r ON rl.rep = r.id  
+  GROUP BY s.merchant_id
+) agg1 ON agg1.merchant_id = m.id
+```
+
+### Key Features:
+- ✅ **Configurable depth limits** - `maxInverseAggregateDepth` option (default: 2, max recommended: 5)
+- ✅ **Iterative chain processing** - Loop-based parsing, not hardcoded levels
+- ✅ **Full function compatibility** - All aggregate functions work with multi-level chains
+- ✅ **Semantic JOIN deduplication** - Prevents duplicate multi-level aggregate JOINs
+- ✅ **Complex relationship validation** - Validates each step in the inverse chain
+- ✅ **Optimization** - Multiple aggregates on same chain share single subquery
+- ✅ **Error handling** - Clear error messages for unknown relationships and depth limits
+
+### Error Scenarios:
+- **Unknown inverse relationship in chain**: "Unknown inverse relationship: submissions_merchant in chain submissions_merchant_rep_links_submission"
+- **Broken chain connectivity**: "Invalid relationship chain: rep_links_submission cannot follow submissions_merchant (submission → merchant → rep_link is not valid)"
+- **Depth limit exceeded**: "Multi-level aggregate chain too deep (max 2 levels): submissions_merchant_rep_links_submission_payments_rep_link"
+- **Invalid aggregate expression**: "Aggregate expression rep_rel.name requires rep relationship in submissions_merchant_rep_links_submission context"
+
+---
+
+## 8. Language Specification and Documentation
 **Status:** ❌ **NOT STARTED**
 **Priority:** Medium - Essential for language adoption and maintenance
 
@@ -725,7 +845,7 @@ const FUNCTION_METADATA = {
 ---
 
 
-## 8. VSCode Syntax Highlighter
+## 9. VSCode Syntax Highlighter
 **Status:** ❌ **NOT STARTED**
 **Priority:** Medium - Improves developer experience for formula writing
 
@@ -803,7 +923,7 @@ const TOKEN_DEFINITIONS = {
 ---
 
 
-## 8. Interactive Formula Examples and Testing
+## 10. Interactive Formula Examples and Testing
 **Status:** ❌ **NOT STARTED**
 **Priority:** Low - Nice-to-have for user experience
 
@@ -825,7 +945,7 @@ Interactive web interface for testing formulas with live SQL generation and vali
 
 ---
 
-## 10. EBNF Grammar Generation
+## 11. EBNF Grammar Generation
 **Status:** ❌ **NOT STARTED**
 **Priority:** Low - Ongoing maintenance effort, but enables frontend parsing
 
@@ -868,7 +988,7 @@ Generate formal EBNF grammar specification from parser structure to enable front
 
 ---
 
-## 11. Formula Language Server Protocol (LSP)
+## 12. Formula Language Server Protocol (LSP)
 **Status:** ❌ **NOT STARTED**  
 **Priority:** Low - High effort, advanced developer tooling
 
@@ -899,7 +1019,7 @@ Full-featured Language Server Protocol implementation providing autocomplete, er
 
 ---
 
-## 12. Logical Operators as Functions  (✅ COMPLETE)
+## 13. Logical Operators as Functions  (✅ COMPLETE)
 **Status:** ✅ **COMPLETED**
 **Priority:** High - Essential for conditional logic, depends on comparison operators
 
