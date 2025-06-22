@@ -1128,23 +1128,23 @@ export function validateFunctionArgs(functionName, args, compiler, node) {
     
     // Type validation based on expected type
     if (expectedArg.type === TYPE.STRING_LITERAL && arg.type !== TYPE.STRING_LITERAL) {
-      compiler.error(`${functionName}() ${argName} must be a string literal, got ${argReturnType}`, node.position);
+      compiler.error(`${functionName}() ${argName} must be a string literal, got ${typeToString(argReturnType)}`, node.position);
     } else if (expectedArg.type === TYPE.BOOLEAN && argReturnType !== TYPE.BOOLEAN) {
       if (argName.startsWith('requires') || argName.startsWith('boolean argument')) {
-        compiler.error(`${functionName}() ${argName}, got ${argReturnType}`, node.position);
+        compiler.error(`${functionName}() ${argName}, got ${typeToString(argReturnType)}`, node.position);
       } else {
-        compiler.error(`${functionName}() ${argName} must be boolean, got ${argReturnType}`, node.position);
+        compiler.error(`${functionName}() ${argName} must be boolean, got ${typeToString(argReturnType)}`, node.position);
       }
     } else if (expectedArg.type === TYPE.NUMBER && argReturnType !== TYPE.NUMBER) {
-      compiler.error(`${functionName}() ${argName} must be number, got ${argReturnType}`, node.position);
+      compiler.error(`${functionName}() ${argName} must be number, got ${typeToString(argReturnType)}`, node.position);
     } else if (expectedArg.type === TYPE.STRING && argReturnType !== TYPE.STRING) {
       if (argName.startsWith('requires')) {
-        compiler.error(`${functionName}() ${argName}, got ${argReturnType}`, node.position);
+        compiler.error(`${functionName}() ${argName}, got ${typeToString(argReturnType)}`, node.position);
       } else {
-        compiler.error(`${functionName}() ${argName} must be string, got ${argReturnType}`, node.position);
+        compiler.error(`${functionName}() ${argName} must be string, got ${typeToString(argReturnType)}`, node.position);
       }
     } else if (expectedArg.type === TYPE.DATE && argReturnType !== TYPE.DATE) {
-      compiler.error(`${functionName}() ${argName} must be date, got ${argReturnType}`, node.position);
+      compiler.error(`${functionName}() ${argName} must be date, got ${typeToString(argReturnType)}`, node.position);
     }
   }
   

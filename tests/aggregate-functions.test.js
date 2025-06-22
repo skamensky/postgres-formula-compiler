@@ -5,13 +5,14 @@
  */
 
 import { evaluateFormula, test, assertEqual, assertError, relationshipContext, printTestResults } from './test-utils.js';
+import { TYPE } from '../src/types-unified.js';
 
 console.log('Running Aggregate Functions Tests...\n');
 
 // Basic STRING_AGG tests
 test('STRING_AGG basic usage', () => {
   const result = evaluateFormula('STRING_AGG(rep_links_submission, commission_percentage, ",")', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'STRING_AGG');
   assertEqual(result.aggregateIntents[0].sourceRelation, 'rep_links_submission');
@@ -19,14 +20,14 @@ test('STRING_AGG basic usage', () => {
 
 test('STRING_AGG with expression', () => {
   const result = evaluateFormula('STRING_AGG(rep_links_submission, rep_rel.name, ",")', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'STRING_AGG');
 });
 
 test('STRING_AGG_DISTINCT basic usage', () => {
   const result = evaluateFormula('STRING_AGG_DISTINCT(rep_links_submission, commission_percentage, "|")', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'STRING_AGG_DISTINCT');
 });
@@ -34,35 +35,35 @@ test('STRING_AGG_DISTINCT basic usage', () => {
 // Numeric aggregate functions
 test('SUM_AGG basic usage', () => {
   const result = evaluateFormula('SUM_AGG(rep_links_submission, commission_percentage)', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
 });
 
 test('COUNT_AGG basic usage', () => {
   const result = evaluateFormula('COUNT_AGG(rep_links_submission, commission_percentage)', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'COUNT_AGG');
 });
 
 test('AVG_AGG basic usage', () => {
   const result = evaluateFormula('AVG_AGG(rep_links_submission, commission_percentage)', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'AVG_AGG');
 });
 
 test('MIN_AGG basic usage', () => {
   const result = evaluateFormula('MIN_AGG(rep_links_submission, commission_percentage)', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'MIN_AGG');
 });
 
 test('MAX_AGG basic usage', () => {
   const result = evaluateFormula('MAX_AGG(rep_links_submission, commission_percentage)', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'MAX_AGG');
 });
@@ -70,14 +71,14 @@ test('MAX_AGG basic usage', () => {
 // Boolean aggregate functions
 test('AND_AGG basic usage', () => {
   const result = evaluateFormula('AND_AGG(rep_links_submission, commission_percentage > 0)', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'AND_AGG');
 });
 
 test('OR_AGG basic usage', () => {
   const result = evaluateFormula('OR_AGG(rep_links_submission, commission_percentage > 10)', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'OR_AGG');
 });
@@ -108,7 +109,7 @@ test('Complex expression with aggregates', () => {
 // Nested relationships within aggregates
 test('Aggregate with nested relationship', () => {
   const result = evaluateFormula('STRING_AGG(rep_links_submission, rep_rel.name, ",")', relationshipContext);
-  assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+  assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].internalJoins.length, 1); // Should have internal join for rep_rel
 });
@@ -124,7 +125,7 @@ test('Multi-level aggregate function chain parsing', () => {
   try {
     const result = evaluateFormula('STRING_AGG(submissions_merchant.rep_links_submission, rep_rel.name, ",")', relationshipContext);
     // If we get here, parsing worked
-    assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+    assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'STRING_AGG');
     // Check if multi-level properties are set
     if (result.aggregateIntents[0].isMultiLevel) {
@@ -143,7 +144,7 @@ test('Multi-level aggregate function chain parsing', () => {
 test('Multi-level aggregate with COUNT_AGG', () => {
   try {
     const result = evaluateFormula('COUNT_AGG(submissions_merchant.rep_links_submission, rep_rel.id)', relationshipContext);
-    assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+    assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'COUNT_AGG');
   } catch (error) {
     if (error.message.includes('Unknown inverse relationship in chain')) {
@@ -157,7 +158,7 @@ test('Multi-level aggregate with COUNT_AGG', () => {
 test('Multi-level aggregate with SUM_AGG', () => {
   try {
     const result = evaluateFormula('SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage)', relationshipContext);
-    assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+    assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
   } catch (error) {
     if (error.message.includes('Unknown inverse relationship in chain')) {
@@ -205,7 +206,7 @@ test('Multi-level aggregate with complex expression', () => {
 test('Multi-level chain parsing - three levels', () => {
   try {
     const result = evaluateFormula('STRING_AGG(submissions_merchant.locations_merchant.staff_location, name, ",")', relationshipContext);
-    assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
+    assertEqual(result.expression.type, TYPE.AGGREGATE_FUNCTION);
   } catch (error) {
     if (error.message.includes('Unknown inverse relationship in chain') || error.message.includes('Multi-level aggregate chain too deep')) {
       console.log('  ℹ Multi-level three-level chain parsing detected but context not available (expected)');

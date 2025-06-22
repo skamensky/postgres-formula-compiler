@@ -227,8 +227,8 @@ test('Semantic ID generation for multi-level relationships', () => {
 // Test 13: Type validation through multi-level chain
 test('Type validation through multi-level chain', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.user_rel.username', multiLevelContext);
-  assertEqual(result.expression.returnType, 'string');
-  assertEqual(result.returnType, 'string');
+  assertEqual(result.expression.returnType, TYPE.STRING);
+  assertEqual(result.returnType, TYPE.STRING);
 });
 
 // Test 14: Complex expression with multiple multi-level relationships
@@ -245,7 +245,7 @@ test('Comparison operations with multi-level relationships', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.user_rel.status = "active"', multiLevelContext);
   assertEqual(result.expression.type, TYPE.BINARY_OP);
   assertEqual(result.expression.value.op, '=');
-  assertEqual(result.expression.returnType, 'boolean');
+  assertEqual(result.expression.returnType, TYPE.BOOLEAN);
   assertEqual(result.joinIntents.length, 3);
 });
 

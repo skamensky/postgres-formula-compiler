@@ -10,7 +10,7 @@ import {
   CATEGORIES,
   FUNCTION_METADATA
 } from '../function-metadata.js';
-import { TYPE } from '../types-unified.js';
+import { TYPE, typeToString } from '../types-unified.js';
 
 /**
  * Parse multi-level relationship chain from aggregate function first argument
@@ -297,7 +297,7 @@ export function compileAggregateFunction(compiler, node) {
   if (funcName === FUNCTIONS.STRING_AGG) {
     delimiterResult = compiler.compile(node.args[2]); // Third argument is the delimiter
     if (delimiterResult.returnType !== TYPE.STRING) {
-      compiler.error(`${funcName}() delimiter must be string, got ${delimiterResult.returnType}`, node.position);
+      compiler.error(`${funcName}() delimiter must be string, got ${typeToString(delimiterResult.returnType)}`, node.position);
     }
   }
   

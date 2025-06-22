@@ -10,7 +10,7 @@ import {
   CATEGORIES,
   FUNCTION_METADATA
 } from '../function-metadata.js';
-import { TYPE } from '../types-unified.js';
+import { TYPE, typeToString } from '../types-unified.js';
 
 /**
  * Compile date function calls
@@ -80,7 +80,7 @@ function compileDateExtractionFunction(compiler, node, metadata) {
   
   // Custom type validation
   if (arg.returnType !== TYPE.DATE) {
-    compiler.error(`${funcName}() requires date argument, got ${arg.returnType}`, node.position);
+    compiler.error(`${funcName}() requires date argument, got ${typeToString(arg.returnType)}`, node.position);
   }
   
   return {
@@ -116,10 +116,10 @@ function compileAddDateFunction(compiler, node, metadata) {
   
   // Custom type validation
   if (arg1.returnType !== TYPE.DATE) {
-    compiler.error(`${funcName}() first argument must be date, got ${arg1.returnType}`, node.position);
+    compiler.error(`${funcName}() first argument must be date, got ${typeToString(arg1.returnType)}`, node.position);
   }
   if (arg2.returnType !== TYPE.NUMBER) {
-    compiler.error(`${funcName}() second argument must be number, got ${arg2.returnType}`, node.position);
+    compiler.error(`${funcName}() second argument must be number, got ${typeToString(arg2.returnType)}`, node.position);
   }
   
   return {
@@ -152,10 +152,10 @@ function compileDatedifFunction(compiler, node, metadata) {
   
   // Validate argument types for first two arguments
   if (datedifArg1.returnType !== TYPE.DATE) {
-    compiler.error('DATEDIF() first argument must be date, got ' + datedifArg1.returnType, node.position);
+    compiler.error('DATEDIF() first argument must be date, got ' + typeToString(datedifArg1.returnType), node.position);
   }
   if (datedifArg2.returnType !== TYPE.DATE) {
-    compiler.error('DATEDIF() second argument must be date, got ' + datedifArg2.returnType, node.position);
+    compiler.error('DATEDIF() second argument must be date, got ' + typeToString(datedifArg2.returnType), node.position);
   }
   
   // Third argument must be a string literal
