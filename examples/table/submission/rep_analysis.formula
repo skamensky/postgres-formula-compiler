@@ -1,1 +1,1 @@
-IF(AND_AGG(rep_links_submission, commission_percentage > 0), "All reps have commission", "Some reps without commission") & " | High performers: " & STRING_AGG(rep_links_submission, IF(commission_percentage > 5, rep_rel.name, ""), ", ")
+IF(AND_AGG(rep_links_submission, commission_percentage > 0), "All reps have commission", "Some reps without commission") & " | High performers: " & STRING_AGG(rep_links_submission, IF(commission_percentage > 5, STRING(commission_percentage) & "%", ""), ", ")
