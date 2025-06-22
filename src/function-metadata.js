@@ -1078,13 +1078,6 @@ export function validateFunctionArgs(functionName, args, compiler, node) {
         } else {
           errorMsg = `${functionName}() takes exactly ${metadata.minArgs} arguments`;
         }
-      } else if (metadata.maxArgs === null) {
-        // Variadic function with minimum
-        if (metadata.minArgs === 1) {
-          errorMsg = `${functionName}() takes at least one argument`;
-        } else {
-          errorMsg = `${functionName}() takes at least ${metadata.minArgs} arguments`;
-        }
       } else {
         // Range of arguments
         errorMsg = `${functionName}() takes between ${metadata.minArgs} and ${metadata.maxArgs} arguments, got ${args.length}`;
