@@ -1251,4 +1251,4 @@ CORE: 'Core'
 }
 ```
 
-*Documentation generated on 2025-06-22T21:40:57.303Z*
+*Documentation generated on 2025-06-22T21:44:21.992Z*

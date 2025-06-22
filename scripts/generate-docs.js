@@ -649,60 +649,56 @@ function findTestReferences(functionName) {
  */
 function findExampleReferences(functionName) {
   const exampleReferences = [];
-  const searchDirs = [
-    path.join(rootDir, 'examples'),
-    path.join(rootDir, 'docs', 'examples'),
-    path.join(rootDir, 'src') // Also search source files for usage examples
-  ];
+  const examplesDir = path.join(rootDir, 'examples');
   
-  searchDirs.forEach(dir => {
-    if (!fs.existsSync(dir)) return;
+  if (!fs.existsSync(examplesDir)) {
+    return exampleReferences;
+  }
+  
+  // Recursively search for files in examples directory only
+  const searchFiles = (dirPath) => {
+    const items = fs.readdirSync(dirPath);
     
-    // Recursively search for files
-    const searchFiles = (dirPath) => {
-      const items = fs.readdirSync(dirPath);
+    items.forEach(item => {
+      const fullPath = path.join(dirPath, item);
+      const stat = fs.statSync(fullPath);
       
-      items.forEach(item => {
-        const fullPath = path.join(dirPath, item);
-        const stat = fs.statSync(fullPath);
-        
-        if (stat.isDirectory()) {
-          searchFiles(fullPath);
-        } else if (item.endsWith('.js') || item.endsWith('.md') || item.endsWith('.txt')) {
-          try {
-            const content = fs.readFileSync(fullPath, 'utf8');
-            const lines = content.split('\n');
-            const relativePath = path.relative(rootDir, fullPath);
+      if (stat.isDirectory()) {
+        searchFiles(fullPath);
+      } else if (item.endsWith('.js') || item.endsWith('.md') || item.endsWith('.txt') || item.endsWith('.formula')) {
+        try {
+          const content = fs.readFileSync(fullPath, 'utf8');
+          const lines = content.split('\n');
+          const relativePath = path.relative(rootDir, fullPath);
+          
+          lines.forEach((line, index) => {
+            // Look for function usage in various contexts
+            const patterns = [
+              new RegExp(`\\b${functionName}\\s*\\(`, 'gi'), // Function calls
+              new RegExp(`'[^']*\\b${functionName}\\s*\\([^']*'`, 'gi'), // In strings
+              new RegExp(`"[^"]*\\b${functionName}\\s*\\([^"]*"`, 'gi'), // In double quotes
+              new RegExp(`\`[^\`]*\\b${functionName}\\s*\\([^\`]*\``, 'gi') // In template literals
+            ];
             
-            lines.forEach((line, index) => {
-              // Look for function usage in various contexts
-              const patterns = [
-                new RegExp(`\\b${functionName}\\s*\\(`, 'gi'), // Function calls
-                new RegExp(`'[^']*\\b${functionName}\\s*\\([^']*'`, 'gi'), // In strings
-                new RegExp(`"[^"]*\\b${functionName}\\s*\\([^"]*"`, 'gi'), // In double quotes
-                new RegExp(`\`[^\`]*\\b${functionName}\\s*\\([^\`]*\``, 'gi') // In template literals
-              ];
-              
-              patterns.forEach(pattern => {
-                if (pattern.test(line)) {
-                  exampleReferences.push({
-                    file: relativePath,
-                    line: index + 1,
-                    content: line.trim(),
-                    url: `${relativePath}#L${index + 1}`
-                  });
-                }
-              });
+            patterns.forEach(pattern => {
+              if (pattern.test(line)) {
+                exampleReferences.push({
+                  file: relativePath,
+                  line: index + 1,
+                  content: line.trim(),
+                  url: `${relativePath}#L${index + 1}`
+                });
+              }
             });
-          } catch (error) {
-            console.warn(`Warning: Could not read example file ${fullPath}:`, error.message);
-          }
+          });
+        } catch (error) {
+          console.warn(`Warning: Could not read example file ${fullPath}:`, error.message);
         }
-      });
-    };
-    
-    searchFiles(dir);
-  });
+      }
+    });
+  };
+  
+  searchFiles(examplesDir);
   
   // Remove duplicates and sort by file then line
   const uniqueReferences = exampleReferences.filter((ref, index, arr) => 
@@ -740,7 +736,7 @@ No test references found for this function.
   const content = Object.entries(groupedByFile)
     .map(([file, refs]) => {
       const linksList = refs.map(ref => 
-        `  - [Line ${ref.line}](../../${ref.url}): \`${ref.content}\``
+        `  - [Line ${ref.line}](/${ref.url}): \`${ref.content}\``
       ).join('\n');
       
       return `- **${file}** (${refs.length} reference${refs.length > 1 ? 's' : ''})\n${linksList}`;
@@ -779,7 +775,7 @@ No usage examples found for this function.
   const content = Object.entries(groupedByFile)
     .map(([file, refs]) => {
       const linksList = refs.map(ref => 
-        `  - [Line ${ref.line}](../../${ref.url}): \`${ref.content}\``
+        `  - [Line ${ref.line}](/${ref.url}): \`${ref.content}\``
       ).join('\n');
       
       return `- **${file}** (${refs.length} reference${refs.length > 1 ? 's' : ''})\n${linksList}`;

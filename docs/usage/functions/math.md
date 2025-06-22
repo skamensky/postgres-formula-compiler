@@ -16,30 +16,48 @@
 <summary><strong>Test References</strong> (14 found)</summary>
 
 - **math-functions.test.js** (14 references)
-  - [Line 12](../../tests/math-functions.test.js#L12): `const result = evaluateFormula('ROUND(3.14159, 2)', testContext);`
-  - [Line 13](../../tests/math-functions.test.js#L13): `assertEqual(result, 'ROUND(3.14159, 2)');`
-  - [Line 18](../../tests/math-functions.test.js#L18): `const result = evaluateFormula('ROUND(revenue, 0)', testContext);`
-  - [Line 19](../../tests/math-functions.test.js#L19): `assertEqual(result, 'ROUND("s"."revenue", 0)');`
-  - [Line 96](../../tests/math-functions.test.js#L96): `const result = evaluateFormula('ROUND(ABS(revenue - cost) / MAX(revenue, cost) * 100, 2)', testContext);`
-  - [Line 97](../../tests/math-functions.test.js#L97): `assertEqual(result, 'ROUND(((ABS(("s"."revenue" - "s"."cost")) / GREATEST("s"."revenue", "s"."cost")) * 100), 2)');`
-  - [Line 102](../../tests/math-functions.test.js#L102): `const result = evaluateFormula('ROUND(revenue * 0.1, 2) + MIN(cost, 100)', testContext);`
-  - [Line 103](../../tests/math-functions.test.js#L103): `assertEqual(result, '(ROUND(("s"."revenue" * 0.1), 2) + LEAST("s"."cost", 100))');`
-  - [Line 108](../../tests/math-functions.test.js#L108): `const result = evaluateFormula('STRING(ROUND(revenue, 2)) & " (max with cost: " & STRING(MAX(revenue, cost)) & ")"', testContext);`
-  - [Line 109](../../tests/math-functions.test.js#L109): `assertEqual(result, '(((CAST(ROUND("s"."revenue", 2) AS TEXT) || \' (max with cost: \') || CAST(GREATEST("s"."revenue", "s"."cost") AS TEXT)) || \')\')');`
-  - [Line 115](../../tests/math-functions.test.js#L115): `() => evaluateFormula('ROUND(3.14, "world")', testContext),`
-  - [Line 160](../../tests/math-functions.test.js#L160): `() => evaluateFormula('ROUND(MIN("a", "b"), ABS("c"))', testContext),`
-  - [Line 171](../../tests/math-functions.test.js#L171): `() => evaluateFormula('ROUND(3.14)', testContext),`
-  - [Line 180](../../tests/math-functions.test.js#L180): `() => evaluateFormula('ROUND("hello", 2)', testContext),`
+  - [Line 12](/tests/math-functions.test.js#L12): `const result = evaluateFormula('ROUND(3.14159, 2)', testContext);`
+  - [Line 13](/tests/math-functions.test.js#L13): `assertEqual(result, 'ROUND(3.14159, 2)');`
+  - [Line 18](/tests/math-functions.test.js#L18): `const result = evaluateFormula('ROUND(revenue, 0)', testContext);`
+  - [Line 19](/tests/math-functions.test.js#L19): `assertEqual(result, 'ROUND("s"."revenue", 0)');`
+  - [Line 96](/tests/math-functions.test.js#L96): `const result = evaluateFormula('ROUND(ABS(revenue - cost) / MAX(revenue, cost) * 100, 2)', testContext);`
+  - [Line 97](/tests/math-functions.test.js#L97): `assertEqual(result, 'ROUND(((ABS(("s"."revenue" - "s"."cost")) / GREATEST("s"."revenue", "s"."cost")) * 100), 2)');`
+  - [Line 102](/tests/math-functions.test.js#L102): `const result = evaluateFormula('ROUND(revenue * 0.1, 2) + MIN(cost, 100)', testContext);`
+  - [Line 103](/tests/math-functions.test.js#L103): `assertEqual(result, '(ROUND(("s"."revenue" * 0.1), 2) + LEAST("s"."cost", 100))');`
+  - [Line 108](/tests/math-functions.test.js#L108): `const result = evaluateFormula('STRING(ROUND(revenue, 2)) & " (max with cost: " & STRING(MAX(revenue, cost)) & ")"', testContext);`
+  - [Line 109](/tests/math-functions.test.js#L109): `assertEqual(result, '(((CAST(ROUND("s"."revenue", 2) AS TEXT) || \' (max with cost: \') || CAST(GREATEST("s"."revenue", "s"."cost") AS TEXT)) || \')\')');`
+  - [Line 115](/tests/math-functions.test.js#L115): `() => evaluateFormula('ROUND(3.14, "world")', testContext),`
+  - [Line 160](/tests/math-functions.test.js#L160): `() => evaluateFormula('ROUND(MIN("a", "b"), ABS("c"))', testContext),`
+  - [Line 171](/tests/math-functions.test.js#L171): `() => evaluateFormula('ROUND(3.14)', testContext),`
+  - [Line 180](/tests/math-functions.test.js#L180): `() => evaluateFormula('ROUND("hello", 2)', testContext),`
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (8 found)</summary>
 
-- **src/sql-generator.js** (1 reference)
-  - [Line 740](../../src/sql-generator.js#L740): `return `ROUND(${roundNumSQL}, ${roundDecSQL})`;`
+- **examples/table/submission/advanced_math.formula** (1 reference)
+  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
 
-- **src/types-unified.js** (1 reference)
-  - [Line 200](../../src/types-unified.js#L200): `'Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.',`
+- **examples/table/submission/business_summary.formula** (1 reference)
+  - [Line 1](/examples/table/submission/business_summary.formula#L1): `merchant_rel.business_name & " - $" & STRING(ROUND(amount, 2)) & " - Commission: " & STRING_AGG(rep_links_submission, STRING(commission_percentage) & "%", ", ")`
+
+- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
+  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
+
+- **examples/table/submission/document_summary.formula** (1 reference)
+  - [Line 1](/examples/table/submission/document_summary.formula#L1): `"Status: " & UPPER(status) & " | Amount: $" & STRING(ROUND(amount, 0)) & " | Merchant: " & merchant_rel.business_name`
+
+- **examples/table/submission/financial_metrics.formula** (1 reference)
+  - [Line 1](/examples/table/submission/financial_metrics.formula#L1): `ROUND(amount * SUM_AGG(rep_links_submission, commission_percentage) / 100, 2)`
+
+- **examples/table/submission/funding_analysis.formula** (1 reference)
+  - [Line 1](/examples/table/submission/funding_analysis.formula#L1): `IF(amount > 500000, "JUMBO: $" & STRING(ROUND(amount/1000, 0)) & "K", IF(amount > 100000, "LARGE: $" & STRING(ROUND(amount/1000, 0)) & "K", "STANDARD: $" & STRING(amount))) & " - " & merchant_rel.industry`
+
+- **examples/table/submission/performance_score.formula** (1 reference)
+  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
+
+- **examples/table/submission/status_report.formula** (1 reference)
+  - [Line 1](/examples/table/submission/status_report.formula#L1): `IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " & UPPER(status))) & " | Days since creation: " & STRING(ROUND(DATEDIF(created_at, TODAY(), "days"),0))`
 </details>
 
 ---
@@ -58,29 +76,26 @@
 <summary><strong>Test References</strong> (11 found)</summary>
 
 - **if-function.test.js** (2 references)
-  - [Line 66](../../tests/if-function.test.js#L66): `const result = evaluateFormula('IF(ABS(revenue - cost) > 1000, "Large difference", "Small difference")', testContext);`
-  - [Line 67](../../tests/if-function.test.js#L67): `assertEqual(result, 'CASE WHEN (ABS(("s"."revenue" - "s"."cost")) > 1000) THEN \'Large difference\' ELSE \'Small difference\' END');`
+  - [Line 66](/tests/if-function.test.js#L66): `const result = evaluateFormula('IF(ABS(revenue - cost) > 1000, "Large difference", "Small difference")', testContext);`
+  - [Line 67](/tests/if-function.test.js#L67): `assertEqual(result, 'CASE WHEN (ABS(("s"."revenue" - "s"."cost")) > 1000) THEN \'Large difference\' ELSE \'Small difference\' END');`
 
 - **math-functions.test.js** (9 references)
-  - [Line 24](../../tests/math-functions.test.js#L24): `const result = evaluateFormula('ABS(-25.5)', testContext);`
-  - [Line 25](../../tests/math-functions.test.js#L25): `assertEqual(result, 'ABS(-25.5)');`
-  - [Line 30](../../tests/math-functions.test.js#L30): `const result = evaluateFormula('ABS(cost)', testContext);`
-  - [Line 31](../../tests/math-functions.test.js#L31): `assertEqual(result, 'ABS("s"."cost")');`
-  - [Line 96](../../tests/math-functions.test.js#L96): `const result = evaluateFormula('ROUND(ABS(revenue - cost) / MAX(revenue, cost) * 100, 2)', testContext);`
-  - [Line 97](../../tests/math-functions.test.js#L97): `assertEqual(result, 'ROUND(((ABS(("s"."revenue" - "s"."cost")) / GREATEST("s"."revenue", "s"."cost")) * 100), 2)');`
-  - [Line 160](../../tests/math-functions.test.js#L160): `() => evaluateFormula('ROUND(MIN("a", "b"), ABS("c"))', testContext),`
-  - [Line 189](../../tests/math-functions.test.js#L189): `() => evaluateFormula('ABS()', testContext),`
-  - [Line 198](../../tests/math-functions.test.js#L198): `() => evaluateFormula('ABS("hello")', testContext),`
+  - [Line 24](/tests/math-functions.test.js#L24): `const result = evaluateFormula('ABS(-25.5)', testContext);`
+  - [Line 25](/tests/math-functions.test.js#L25): `assertEqual(result, 'ABS(-25.5)');`
+  - [Line 30](/tests/math-functions.test.js#L30): `const result = evaluateFormula('ABS(cost)', testContext);`
+  - [Line 31](/tests/math-functions.test.js#L31): `assertEqual(result, 'ABS("s"."cost")');`
+  - [Line 96](/tests/math-functions.test.js#L96): `const result = evaluateFormula('ROUND(ABS(revenue - cost) / MAX(revenue, cost) * 100, 2)', testContext);`
+  - [Line 97](/tests/math-functions.test.js#L97): `assertEqual(result, 'ROUND(((ABS(("s"."revenue" - "s"."cost")) / GREATEST("s"."revenue", "s"."cost")) * 100), 2)');`
+  - [Line 160](/tests/math-functions.test.js#L160): `() => evaluateFormula('ROUND(MIN("a", "b"), ABS("c"))', testContext),`
+  - [Line 189](/tests/math-functions.test.js#L189): `() => evaluateFormula('ABS()', testContext),`
+  - [Line 198](/tests/math-functions.test.js#L198): `() => evaluateFormula('ABS("hello")', testContext),`
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (1 found)</summary>
 
-- **src/sql-generator.js** (1 reference)
-  - [Line 735](../../src/sql-generator.js#L735): `return `ABS(${absArgSQL})`;`
-
-- **src/types-unified.js** (1 reference)
-  - [Line 200](../../src/types-unified.js#L200): `'Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.',`
+- **examples/table/submission/advanced_math.formula** (1 reference)
+  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
 </details>
 
 ---
@@ -123,22 +138,25 @@ No usage examples found for this function.
 <summary><strong>Test References</strong> (6 found)</summary>
 
 - **math-functions.test.js** (6 references)
-  - [Line 72](../../tests/math-functions.test.js#L72): `const result = evaluateFormula('CEILING(3.2)', testContext);`
-  - [Line 73](../../tests/math-functions.test.js#L73): `assertEqual(result, 'CEILING(3.2)');`
-  - [Line 78](../../tests/math-functions.test.js#L78): `const result = evaluateFormula('CEILING(revenue)', testContext);`
-  - [Line 79](../../tests/math-functions.test.js#L79): `assertEqual(result, 'CEILING("s"."revenue")');`
-  - [Line 142](../../tests/math-functions.test.js#L142): `() => evaluateFormula('CEILING(3.2, 5)', testContext),`
-  - [Line 234](../../tests/math-functions.test.js#L234): `() => evaluateFormula('CEILING(TODAY())', testContext),`
+  - [Line 72](/tests/math-functions.test.js#L72): `const result = evaluateFormula('CEILING(3.2)', testContext);`
+  - [Line 73](/tests/math-functions.test.js#L73): `assertEqual(result, 'CEILING(3.2)');`
+  - [Line 78](/tests/math-functions.test.js#L78): `const result = evaluateFormula('CEILING(revenue)', testContext);`
+  - [Line 79](/tests/math-functions.test.js#L79): `assertEqual(result, 'CEILING("s"."revenue")');`
+  - [Line 142](/tests/math-functions.test.js#L142): `() => evaluateFormula('CEILING(3.2, 5)', testContext),`
+  - [Line 234](/tests/math-functions.test.js#L234): `() => evaluateFormula('CEILING(TODAY())', testContext),`
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (3 found)</summary>
 
-- **src/sql-generator.js** (1 reference)
-  - [Line 759](../../src/sql-generator.js#L759): `return `CEILING(${ceilingArgSQL})`;`
+- **examples/table/submission/advanced_math.formula** (1 reference)
+  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
 
-- **src/types-unified.js** (1 reference)
-  - [Line 200](../../src/types-unified.js#L200): `'Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.',`
+- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
+  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
+
+- **examples/table/submission/quarterly_report.formula** (1 reference)
+  - [Line 1](/examples/table/submission/quarterly_report.formula#L1): `"Q" & STRING(CEILING(MONTH(created_at) / 3)) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name & " | $" & STRING(amount)`
 </details>
 
 ---
@@ -157,21 +175,18 @@ No usage examples found for this function.
 <summary><strong>Test References</strong> (5 found)</summary>
 
 - **math-functions.test.js** (5 references)
-  - [Line 84](../../tests/math-functions.test.js#L84): `const result = evaluateFormula('FLOOR(8.9)', testContext);`
-  - [Line 85](../../tests/math-functions.test.js#L85): `assertEqual(result, 'FLOOR(8.9)');`
-  - [Line 90](../../tests/math-functions.test.js#L90): `const result = evaluateFormula('FLOOR(cost)', testContext);`
-  - [Line 91](../../tests/math-functions.test.js#L91): `assertEqual(result, 'FLOOR("s"."cost")');`
-  - [Line 151](../../tests/math-functions.test.js#L151): `() => evaluateFormula('FLOOR("text")', testContext),`
+  - [Line 84](/tests/math-functions.test.js#L84): `const result = evaluateFormula('FLOOR(8.9)', testContext);`
+  - [Line 85](/tests/math-functions.test.js#L85): `assertEqual(result, 'FLOOR(8.9)');`
+  - [Line 90](/tests/math-functions.test.js#L90): `const result = evaluateFormula('FLOOR(cost)', testContext);`
+  - [Line 91](/tests/math-functions.test.js#L91): `assertEqual(result, 'FLOOR("s"."cost")');`
+  - [Line 151](/tests/math-functions.test.js#L151): `() => evaluateFormula('FLOOR("text")', testContext),`
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (1 found)</summary>
 
-- **src/sql-generator.js** (1 reference)
-  - [Line 763](../../src/sql-generator.js#L763): `return `FLOOR(${floorArgSQL})`;`
-
-- **src/types-unified.js** (1 reference)
-  - [Line 200](../../src/types-unified.js#L200): `'Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.',`
+- **examples/table/submission/advanced_math.formula** (1 reference)
+  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
 </details>
 
 ---
@@ -239,83 +254,83 @@ No usage examples found for this function.
 <summary><strong>Test References</strong> (39 found)</summary>
 
 - **aggregate-functions.test.js** (12 references)
-  - [Line 10](../../tests/aggregate-functions.test.js#L10): `console.log('Running Aggregate Functions Tests...\n');`
-  - [Line 132](../../tests/aggregate-functions.test.js#L132): `console.log('  ✓ Multi-level aggregate parsing successful');`
-  - [Line 137](../../tests/aggregate-functions.test.js#L137): `console.log('  ℹ Multi-level parsing detected but context not available (expected)');`
-  - [Line 151](../../tests/aggregate-functions.test.js#L151): `console.log('  ℹ Multi-level COUNT_AGG parsing detected but context not available (expected)');`
-  - [Line 165](../../tests/aggregate-functions.test.js#L165): `console.log('  ℹ Multi-level SUM_AGG parsing detected but context not available (expected)');`
-  - [Line 184](../../tests/aggregate-functions.test.js#L184): `console.log('  ✓ Multi-level depth checking is working');`
-  - [Line 198](../../tests/aggregate-functions.test.js#L198): `console.log('  ℹ Multi-level complex expression parsing detected but context not available (expected)');`
-  - [Line 212](../../tests/aggregate-functions.test.js#L212): `console.log('  ℹ Multi-level three-level chain parsing detected but context not available (expected)');`
-  - [Line 282](../../tests/aggregate-functions.test.js#L282): `console.log('  ✓ Multi-level chain validation working');`
-  - [Line 316](../../tests/aggregate-functions.test.js#L316): `console.log('  ℹ Multi-level integration test detected but context not available (expected)');`
-  - [Line 330](../../tests/aggregate-functions.test.js#L330): `console.log('  ℹ Multi-level comparison test detected but context not available (expected)');`
-  - [Line 343](../../tests/aggregate-functions.test.js#L343): `console.log('  ℹ Multiple multi-level aggregates test detected but context not available (expected)');`
+  - [Line 10](/tests/aggregate-functions.test.js#L10): `console.log('Running Aggregate Functions Tests...\n');`
+  - [Line 132](/tests/aggregate-functions.test.js#L132): `console.log('  ✓ Multi-level aggregate parsing successful');`
+  - [Line 137](/tests/aggregate-functions.test.js#L137): `console.log('  ℹ Multi-level parsing detected but context not available (expected)');`
+  - [Line 151](/tests/aggregate-functions.test.js#L151): `console.log('  ℹ Multi-level COUNT_AGG parsing detected but context not available (expected)');`
+  - [Line 165](/tests/aggregate-functions.test.js#L165): `console.log('  ℹ Multi-level SUM_AGG parsing detected but context not available (expected)');`
+  - [Line 184](/tests/aggregate-functions.test.js#L184): `console.log('  ✓ Multi-level depth checking is working');`
+  - [Line 198](/tests/aggregate-functions.test.js#L198): `console.log('  ℹ Multi-level complex expression parsing detected but context not available (expected)');`
+  - [Line 212](/tests/aggregate-functions.test.js#L212): `console.log('  ℹ Multi-level three-level chain parsing detected but context not available (expected)');`
+  - [Line 282](/tests/aggregate-functions.test.js#L282): `console.log('  ✓ Multi-level chain validation working');`
+  - [Line 316](/tests/aggregate-functions.test.js#L316): `console.log('  ℹ Multi-level integration test detected but context not available (expected)');`
+  - [Line 330](/tests/aggregate-functions.test.js#L330): `console.log('  ℹ Multi-level comparison test detected but context not available (expected)');`
+  - [Line 343](/tests/aggregate-functions.test.js#L343): `console.log('  ℹ Multiple multi-level aggregates test detected but context not available (expected)');`
 
 - **basic-arithmetic-literals.test.js** (1 reference)
-  - [Line 8](../../tests/basic-arithmetic-literals.test.js#L8): `console.log('Running Basic Arithmetic & Literals Tests...\n');`
+  - [Line 8](/tests/basic-arithmetic-literals.test.js#L8): `console.log('Running Basic Arithmetic & Literals Tests...\n');`
 
 - **boolean-literals.test.js** (1 reference)
-  - [Line 8](../../tests/boolean-literals.test.js#L8): `console.log('Running Boolean Literals Tests...\n');`
+  - [Line 8](/tests/boolean-literals.test.js#L8): `console.log('Running Boolean Literals Tests...\n');`
 
 - **comments.test.js** (1 reference)
-  - [Line 8](../../tests/comments.test.js#L8): `console.log('Running Comments Tests...\n');`
+  - [Line 8](/tests/comments.test.js#L8): `console.log('Running Comments Tests...\n');`
 
 - **comparison-operators.test.js** (1 reference)
-  - [Line 8](../../tests/comparison-operators.test.js#L8): `console.log('Running Comparison Operators Tests...\n');`
+  - [Line 8](/tests/comparison-operators.test.js#L8): `console.log('Running Comparison Operators Tests...\n');`
 
 - **compiler-modularization.test.js** (9 references)
-  - [Line 11](../../tests/compiler-modularization.test.js#L11): `console.log(`✓ ${description}`);`
-  - [Line 14](../../tests/compiler-modularization.test.js#L14): `console.log(`✗ ${description}`);`
-  - [Line 15](../../tests/compiler-modularization.test.js#L15): `console.log(`  Error: ${error.message}`);`
-  - [Line 68](../../tests/compiler-modularization.test.js#L68): `console.log(`\n${name}`);`
-  - [Line 73](../../tests/compiler-modularization.test.js#L73): `console.log('=== Compiler Modularization with Hierarchical Semantic IDs ===');`
-  - [Line 272](../../tests/compiler-modularization.test.js#L272): `console.log(`\n=== Test Results ===`);`
-  - [Line 273](../../tests/compiler-modularization.test.js#L273): `console.log(`${passedTests}/${totalTests} tests passed`);`
-  - [Line 275](../../tests/compiler-modularization.test.js#L275): `console.log('🎉 All tests passed!');`
-  - [Line 277](../../tests/compiler-modularization.test.js#L277): `console.log(`❌ ${totalTests - passedTests} tests failed`);`
+  - [Line 11](/tests/compiler-modularization.test.js#L11): `console.log(`✓ ${description}`);`
+  - [Line 14](/tests/compiler-modularization.test.js#L14): `console.log(`✗ ${description}`);`
+  - [Line 15](/tests/compiler-modularization.test.js#L15): `console.log(`  Error: ${error.message}`);`
+  - [Line 68](/tests/compiler-modularization.test.js#L68): `console.log(`\n${name}`);`
+  - [Line 73](/tests/compiler-modularization.test.js#L73): `console.log('=== Compiler Modularization with Hierarchical Semantic IDs ===');`
+  - [Line 272](/tests/compiler-modularization.test.js#L272): `console.log(`\n=== Test Results ===`);`
+  - [Line 273](/tests/compiler-modularization.test.js#L273): `console.log(`${passedTests}/${totalTests} tests passed`);`
+  - [Line 275](/tests/compiler-modularization.test.js#L275): `console.log('🎉 All tests passed!');`
+  - [Line 277](/tests/compiler-modularization.test.js#L277): `console.log(`❌ ${totalTests - passedTests} tests failed`);`
 
 - **core-functions.test.js** (1 reference)
-  - [Line 8](../../tests/core-functions.test.js#L8): `console.log('Running Core Functions Tests...\n');`
+  - [Line 8](/tests/core-functions.test.js#L8): `console.log('Running Core Functions Tests...\n');`
 
 - **date-arithmetic.test.js** (1 reference)
-  - [Line 8](../../tests/date-arithmetic.test.js#L8): `console.log('Running Date Arithmetic Tests...\n');`
+  - [Line 8](/tests/date-arithmetic.test.js#L8): `console.log('Running Date Arithmetic Tests...\n');`
 
 - **date-functions.test.js** (1 reference)
-  - [Line 8](../../tests/date-functions.test.js#L8): `console.log('Running Date Functions Tests...\n');`
+  - [Line 8](/tests/date-functions.test.js#L8): `console.log('Running Date Functions Tests...\n');`
 
 - **error-handling-basic.test.js** (1 reference)
-  - [Line 8](../../tests/error-handling-basic.test.js#L8): `console.log('Running Basic Error Handling Tests...\n');`
+  - [Line 8](/tests/error-handling-basic.test.js#L8): `console.log('Running Basic Error Handling Tests...\n');`
 
 - **if-function.test.js** (1 reference)
-  - [Line 8](../../tests/if-function.test.js#L8): `console.log('Running IF Function Tests...\n');`
+  - [Line 8](/tests/if-function.test.js#L8): `console.log('Running IF Function Tests...\n');`
 
 - **logical-operators-functions.test.js** (1 reference)
-  - [Line 8](../../tests/logical-operators-functions.test.js#L8): `console.log('Running Logical Operator Functions Tests...\n');`
+  - [Line 8](/tests/logical-operators-functions.test.js#L8): `console.log('Running Logical Operator Functions Tests...\n');`
 
 - **math-functions.test.js** (1 reference)
-  - [Line 8](../../tests/math-functions.test.js#L8): `console.log('Running Math Functions Tests...\n');`
+  - [Line 8](/tests/math-functions.test.js#L8): `console.log('Running Math Functions Tests...\n');`
 
 - **multi-level-relationships.test.js** (1 reference)
-  - [Line 9](../../tests/multi-level-relationships.test.js#L9): `console.log('Running Multi-Level Relationships Tests...\n');`
+  - [Line 9](/tests/multi-level-relationships.test.js#L9): `console.log('Running Multi-Level Relationships Tests...\n');`
 
 - **multiplication-division.test.js** (1 reference)
-  - [Line 8](../../tests/multiplication-division.test.js#L8): `console.log('Running Multiplication & Division Tests...\n');`
+  - [Line 8](/tests/multiplication-division.test.js#L8): `console.log('Running Multiplication & Division Tests...\n');`
 
 - **null-handling.test.js** (1 reference)
-  - [Line 8](../../tests/null-handling.test.js#L8): `console.log('Running NULL Handling Tests...\n');`
+  - [Line 8](/tests/null-handling.test.js#L8): `console.log('Running NULL Handling Tests...\n');`
 
 - **parentheses-precedence.test.js** (1 reference)
-  - [Line 8](../../tests/parentheses-precedence.test.js#L8): `console.log('Running Parentheses & Precedence Tests...\n');`
+  - [Line 8](/tests/parentheses-precedence.test.js#L8): `console.log('Running Parentheses & Precedence Tests...\n');`
 
 - **relationships.test.js** (1 reference)
-  - [Line 8](../../tests/relationships.test.js#L8): `console.log('Running Relationships Tests...\n');`
+  - [Line 8](/tests/relationships.test.js#L8): `console.log('Running Relationships Tests...\n');`
 
 - **string-functions-concatenation.test.js** (1 reference)
-  - [Line 8](../../tests/string-functions-concatenation.test.js#L8): `console.log('Running String Functions & Concatenation Tests...\n');`
+  - [Line 8](/tests/string-functions-concatenation.test.js#L8): `console.log('Running String Functions & Concatenation Tests...\n');`
 
 - **text-functions.test.js** (1 reference)
-  - [Line 8](../../tests/text-functions.test.js#L8): `console.log('Running Text Functions Tests...\n');`
+  - [Line 8](/tests/text-functions.test.js#L8): `console.log('Running Text Functions Tests...\n');`
 </details>
 
 <details>
@@ -484,21 +499,19 @@ No usage examples found for this function.
 <summary><strong>Test References</strong> (6 found)</summary>
 
 - **math-functions.test.js** (6 references)
-  - [Line 36](../../tests/math-functions.test.js#L36): `const result = evaluateFormula('MIN(10, 20)', testContext);`
-  - [Line 42](../../tests/math-functions.test.js#L42): `const result = evaluateFormula('MIN(revenue, cost)', testContext);`
-  - [Line 102](../../tests/math-functions.test.js#L102): `const result = evaluateFormula('ROUND(revenue * 0.1, 2) + MIN(cost, 100)', testContext);`
-  - [Line 160](../../tests/math-functions.test.js#L160): `() => evaluateFormula('ROUND(MIN("a", "b"), ABS("c"))', testContext),`
-  - [Line 207](../../tests/math-functions.test.js#L207): `() => evaluateFormula('MIN(5)', testContext),`
-  - [Line 216](../../tests/math-functions.test.js#L216): `() => evaluateFormula('MIN("hello", "world")', testContext),`
+  - [Line 36](/tests/math-functions.test.js#L36): `const result = evaluateFormula('MIN(10, 20)', testContext);`
+  - [Line 42](/tests/math-functions.test.js#L42): `const result = evaluateFormula('MIN(revenue, cost)', testContext);`
+  - [Line 102](/tests/math-functions.test.js#L102): `const result = evaluateFormula('ROUND(revenue * 0.1, 2) + MIN(cost, 100)', testContext);`
+  - [Line 160](/tests/math-functions.test.js#L160): `() => evaluateFormula('ROUND(MIN("a", "b"), ABS("c"))', testContext),`
+  - [Line 207](/tests/math-functions.test.js#L207): `() => evaluateFormula('MIN(5)', testContext),`
+  - [Line 216](/tests/math-functions.test.js#L216): `() => evaluateFormula('MIN("hello", "world")', testContext),`
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (3 found)</summary>
+<summary><strong>Usage Examples</strong> (1 found)</summary>
 
-- **src/sql-generator.js** (3 references)
-  - [Line 305](../../src/sql-generator.js#L305): `aggSQL = `MIN(${exprSQL})`;`
-  - [Line 412](../../src/sql-generator.js#L412): `aggSQL = `MIN(${exprSQL})`;`
-  - [Line 486](../../src/sql-generator.js#L486): `aggSQL = `MIN(${exprSQL})`;`
+- **examples/table/submission/performance_score.formula** (1 reference)
+  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
 </details>
 
 ---
@@ -518,20 +531,18 @@ No usage examples found for this function.
 <summary><strong>Test References</strong> (5 found)</summary>
 
 - **math-functions.test.js** (5 references)
-  - [Line 48](../../tests/math-functions.test.js#L48): `const result = evaluateFormula('MAX(15, 8)', testContext);`
-  - [Line 54](../../tests/math-functions.test.js#L54): `const result = evaluateFormula('MAX(revenue, cost)', testContext);`
-  - [Line 96](../../tests/math-functions.test.js#L96): `const result = evaluateFormula('ROUND(ABS(revenue - cost) / MAX(revenue, cost) * 100, 2)', testContext);`
-  - [Line 108](../../tests/math-functions.test.js#L108): `const result = evaluateFormula('STRING(ROUND(revenue, 2)) & " (max with cost: " & STRING(MAX(revenue, cost)) & ")"', testContext);`
-  - [Line 124](../../tests/math-functions.test.js#L124): `() => evaluateFormula('MAX(10, TODAY())', testContext),`
+  - [Line 48](/tests/math-functions.test.js#L48): `const result = evaluateFormula('MAX(15, 8)', testContext);`
+  - [Line 54](/tests/math-functions.test.js#L54): `const result = evaluateFormula('MAX(revenue, cost)', testContext);`
+  - [Line 96](/tests/math-functions.test.js#L96): `const result = evaluateFormula('ROUND(ABS(revenue - cost) / MAX(revenue, cost) * 100, 2)', testContext);`
+  - [Line 108](/tests/math-functions.test.js#L108): `const result = evaluateFormula('STRING(ROUND(revenue, 2)) & " (max with cost: " & STRING(MAX(revenue, cost)) & ")"', testContext);`
+  - [Line 124](/tests/math-functions.test.js#L124): `() => evaluateFormula('MAX(10, TODAY())', testContext),`
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (3 found)</summary>
+<summary><strong>Usage Examples</strong> (1 found)</summary>
 
-- **src/sql-generator.js** (3 references)
-  - [Line 308](../../src/sql-generator.js#L308): `aggSQL = `MAX(${exprSQL})`;`
-  - [Line 415](../../src/sql-generator.js#L415): `aggSQL = `MAX(${exprSQL})`;`
-  - [Line 489](../../src/sql-generator.js#L489): `aggSQL = `MAX(${exprSQL})`;`
+- **examples/table/submission/performance_score.formula** (1 reference)
+  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
 </details>
 
 ---
@@ -551,19 +562,18 @@ No usage examples found for this function.
 <summary><strong>Test References</strong> (6 found)</summary>
 
 - **math-functions.test.js** (6 references)
-  - [Line 60](../../tests/math-functions.test.js#L60): `const result = evaluateFormula('MOD(17, 5)', testContext);`
-  - [Line 61](../../tests/math-functions.test.js#L61): `assertEqual(result, 'MOD(17, 5)');`
-  - [Line 66](../../tests/math-functions.test.js#L66): `const result = evaluateFormula('MOD(revenue, 10)', testContext);`
-  - [Line 67](../../tests/math-functions.test.js#L67): `assertEqual(result, 'MOD("s"."revenue", 10)');`
-  - [Line 133](../../tests/math-functions.test.js#L133): `() => evaluateFormula('MOD(revenue, "divisor")', testContext),`
-  - [Line 225](../../tests/math-functions.test.js#L225): `() => evaluateFormula('MOD(17, 5, 3)', testContext),`
+  - [Line 60](/tests/math-functions.test.js#L60): `const result = evaluateFormula('MOD(17, 5)', testContext);`
+  - [Line 61](/tests/math-functions.test.js#L61): `assertEqual(result, 'MOD(17, 5)');`
+  - [Line 66](/tests/math-functions.test.js#L66): `const result = evaluateFormula('MOD(revenue, 10)', testContext);`
+  - [Line 67](/tests/math-functions.test.js#L67): `assertEqual(result, 'MOD("s"."revenue", 10)');`
+  - [Line 133](/tests/math-functions.test.js#L133): `() => evaluateFormula('MOD(revenue, "divisor")', testContext),`
+  - [Line 225](/tests/math-functions.test.js#L225): `() => evaluateFormula('MOD(17, 5, 3)', testContext),`
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **src/sql-generator.js** (1 reference)
-  - [Line 755](../../src/sql-generator.js#L755): `return `MOD(${modArg1SQL}, ${modArg2SQL})`;`
+No usage examples found for this function.
 </details>
 
 ---
@@ -591,4 +601,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:40:56.890Z*
+*Documentation generated on 2025-06-22T21:44:21.795Z*
