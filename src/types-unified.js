@@ -4,6 +4,13 @@
  * Replaces the fragmented string-based type systems
  */
 
+// Literal value constants - centralized source for literal string values
+export const LITERAL_VALUE = {
+  TRUE: 'TRUE',
+  FALSE: 'FALSE',
+  NULL: 'NULL'
+};
+
 // Core unified type system using Symbols for performance and type safety
 export const TYPE = {
   // Literal/AST node types (what the parser creates)

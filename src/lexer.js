@@ -1,3 +1,5 @@
+import { LITERAL_VALUE } from './types-unified.js';
+
 // Token types
 const TokenType = {
   NUMBER: 'NUMBER',
@@ -137,12 +139,12 @@ class Lexer {
     
     // Check for boolean literals only - treat logical operators as regular identifiers
     switch (upperResult) {
-      case 'TRUE':
-        return { type: TokenType.IDENTIFIER, value: 'TRUE', position: startPos }; // Treat as special identifier for now
-      case 'FALSE':
-        return { type: TokenType.IDENTIFIER, value: 'FALSE', position: startPos }; // Treat as special identifier for now
-      case 'NULL':
-        return { type: TokenType.IDENTIFIER, value: 'NULL', position: startPos }; // Treat as special identifier for now
+      case LITERAL_VALUE.TRUE:
+        return { type: TokenType.IDENTIFIER, value: LITERAL_VALUE.TRUE, position: startPos }; // Treat as special identifier for now
+      case LITERAL_VALUE.FALSE:
+        return { type: TokenType.IDENTIFIER, value: LITERAL_VALUE.FALSE, position: startPos }; // Treat as special identifier for now
+      case LITERAL_VALUE.NULL:
+        return { type: TokenType.IDENTIFIER, value: LITERAL_VALUE.NULL, position: startPos }; // Treat as special identifier for now
       default:
         return {
           type: TokenType.IDENTIFIER,

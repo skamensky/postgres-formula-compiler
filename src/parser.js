@@ -1,5 +1,5 @@
 import { TokenType, TokenValue } from './lexer.js';
-import { TYPE } from './types-unified.js';
+import { TYPE, LITERAL_VALUE } from './types-unified.js';
 
 /**
  * Parser - converts tokens into AST
@@ -104,16 +104,16 @@ class Parser {
         };
       } else {
         // Special identifiers: TRUE, FALSE, NULL
-        if (identifier === 'TRUE' || identifier === 'FALSE') {
+        if (identifier === LITERAL_VALUE.TRUE || identifier === LITERAL_VALUE.FALSE) {
           return {
             type: TYPE.BOOLEAN_LITERAL,
             value: identifier,
             position: position
           };
-        } else if (identifier === 'NULL') {
+        } else if (identifier === LITERAL_VALUE.NULL) {
           return {
             type: TYPE.NULL_LITERAL,
-            value: 'NULL',
+            value: LITERAL_VALUE.NULL,
             position: position
           };
         } else {
