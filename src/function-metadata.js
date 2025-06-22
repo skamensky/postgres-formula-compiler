@@ -54,6 +54,10 @@ export const FUNCTIONS = {
   HOUR: 'HOUR',
   MINUTE: 'MINUTE',
   SECOND: 'SECOND',
+  WEEKDAY: 'WEEKDAY',
+  ADDMONTHS: 'ADDMONTHS',
+  ADDDAYS: 'ADDDAYS',
+  DATEDIF: 'DATEDIF',
   DATE_ADD: 'DATE_ADD',
   DATE_DIFF: 'DATE_DIFF',
   FORMAT_DATE: 'FORMAT_DATE',
@@ -72,6 +76,12 @@ export const FUNCTIONS = {
   MIN_AGG: 'MIN_AGG',
   MAX_AGG: 'MAX_AGG',
   STRING_AGG: 'STRING_AGG',
+  STRING_AGG_DISTINCT: 'STRING_AGG_DISTINCT',
+  SUM_AGG: 'SUM_AGG',
+  COUNT_AGG: 'COUNT_AGG',
+  AVG_AGG: 'AVG_AGG',
+  AND_AGG: 'AND_AGG',
+  OR_AGG: 'OR_AGG',
   
   // Core functions
   EVAL: 'EVAL'
@@ -467,6 +477,7 @@ export const FUNCTION_METADATA = {
     returnType: TYPE.NUMBER,
     minArgs: 1,
     maxArgs: 1,
+    specialHandling: 'date_extraction',
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to extract year from' }
     ]
@@ -479,6 +490,7 @@ export const FUNCTION_METADATA = {
     returnType: TYPE.NUMBER,
     minArgs: 1,
     maxArgs: 1,
+    specialHandling: 'date_extraction',
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to extract month from' }
     ]
@@ -491,6 +503,7 @@ export const FUNCTION_METADATA = {
     returnType: TYPE.NUMBER,
     minArgs: 1,
     maxArgs: 1,
+    specialHandling: 'date_extraction',
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to extract day from' }
     ]
@@ -570,6 +583,60 @@ export const FUNCTION_METADATA = {
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to format' },
       { name: 'format', type: TYPE.STRING_LITERAL, description: 'Format string' }
+    ]
+  },
+  
+  [FUNCTIONS.WEEKDAY]: {
+    name: FUNCTIONS.WEEKDAY,
+    category: CATEGORIES.DATE,
+    description: 'Returns the day of the week as a number (1=Sunday)',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    specialHandling: 'date_extraction',
+    arguments: [
+      { name: 'date', type: TYPE.DATE, description: 'Date to get weekday from' }
+    ]
+  },
+  
+  [FUNCTIONS.ADDMONTHS]: {
+    name: FUNCTIONS.ADDMONTHS,
+    category: CATEGORIES.DATE,
+    description: 'Adds months to a date',
+    returnType: TYPE.DATE,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'date', type: TYPE.DATE, description: 'Starting date' },
+      { name: 'months', type: TYPE.NUMBER, description: 'Number of months to add' }
+    ]
+  },
+  
+  [FUNCTIONS.ADDDAYS]: {
+    name: FUNCTIONS.ADDDAYS,
+    category: CATEGORIES.DATE,
+    description: 'Adds days to a date',
+    returnType: TYPE.DATE,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'date', type: TYPE.DATE, description: 'Starting date' },
+      { name: 'days', type: TYPE.NUMBER, description: 'Number of days to add' }
+    ]
+  },
+  
+  [FUNCTIONS.DATEDIF]: {
+    name: FUNCTIONS.DATEDIF,
+    category: CATEGORIES.DATE,
+    description: 'Returns the difference between two dates in specified units',
+    returnType: TYPE.NUMBER,
+    minArgs: 3,
+    maxArgs: 3,
+    specialHandling: 'datedif',
+    arguments: [
+      { name: 'date1', type: TYPE.DATE, description: 'First date' },
+      { name: 'date2', type: TYPE.DATE, description: 'Second date' },
+      { name: 'unit', type: TYPE.STRING_LITERAL, description: 'Time unit ("days", "months", or "years")' }
     ]
   },
   
@@ -699,6 +766,91 @@ export const FUNCTION_METADATA = {
       { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
       { name: 'value', type: TYPE.STRING, description: 'String expression to concatenate' },
       { name: 'separator', type: TYPE.STRING, description: 'Separator between values' }
+    ]
+  },
+  
+  [FUNCTIONS.STRING_AGG_DISTINCT]: {
+    name: FUNCTIONS.STRING_AGG_DISTINCT,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Concatenates unique string values with a separator',
+    returnType: TYPE.STRING,
+    minArgs: 3,
+    maxArgs: 3,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.STRING, description: 'String expression to concatenate' },
+      { name: 'separator', type: TYPE.STRING, description: 'Separator between values' }
+    ]
+  },
+  
+  [FUNCTIONS.SUM_AGG]: {
+    name: FUNCTIONS.SUM_AGG,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Sums numeric values',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.NUMBER, description: 'Numeric expression to sum' }
+    ]
+  },
+  
+  [FUNCTIONS.COUNT_AGG]: {
+    name: FUNCTIONS.COUNT_AGG,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Counts the number of non-null values',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Expression to count' }
+    ]
+  },
+  
+  [FUNCTIONS.AVG_AGG]: {
+    name: FUNCTIONS.AVG_AGG,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Calculates the average of numeric values',
+    returnType: TYPE.NUMBER,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.NUMBER, description: 'Numeric expression to average' }
+    ]
+  },
+  
+  [FUNCTIONS.AND_AGG]: {
+    name: FUNCTIONS.AND_AGG,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Returns true if all boolean values are true',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.BOOLEAN, description: 'Boolean expression to check' }
+    ]
+  },
+  
+  [FUNCTIONS.OR_AGG]: {
+    name: FUNCTIONS.OR_AGG,
+    category: CATEGORIES.AGGREGATE,
+    description: 'Returns true if any boolean value is true',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: 2,
+    aggregateFunction: true,
+    arguments: [
+      { name: 'relationship', type: TYPE.INVERSE_RELATIONSHIP, description: 'Inverse relationship to aggregate' },
+      { name: 'value', type: TYPE.BOOLEAN, description: 'Boolean expression to check' }
     ]
   },
   
