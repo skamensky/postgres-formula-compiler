@@ -1,0 +1,116 @@
+// Formula Language Syntax Highlighting Test
+// This file demonstrates all supported language elements
+
+/* Block comment example
+   Multiple lines of comments
+   showing different function categories */
+
+// Core Functions
+TODAY()
+ME()
+DATE("2024-01-15")
+STRING(amount)
+IF(amount > 1000, "High", "Low")
+
+// String Functions
+UPPER(merchant_rel.business_name)
+LOWER("HELLO WORLD")
+TRIM(notes)
+LEN(description)
+LEFT(merchant_rel.business_name, 10)
+RIGHT(status, 3)
+MID(reference_number, 2, 5)
+CONTAINS(description, "test")
+SUBSTITUTE(notes, "old", "new")
+
+// Null Handling Functions
+ISNULL(date_funded)
+NULLVALUE(commission_percentage, 0)
+ISBLANK(notes)
+
+// Logical Functions
+AND(amount > 1000, status = "approved")
+OR(priority = "high", amount > 50000)
+NOT(ISNULL(merchant_rel.business_name))
+
+// Math Functions
+ABS(balance)
+ROUND(commission_percentage, 2)
+MIN(amount, 5000)
+MAX(amount, 100)
+MOD(amount, 10)
+CEILING(commission_percentage)
+FLOOR(amount)
+
+// Date Functions
+YEAR(date_funded)
+MONTH(TODAY())
+DAY(date_submitted)
+WEEKDAY(date_funded)
+ADDMONTHS(TODAY(), 6)
+ADDDAYS(date_submitted, 30)
+DATEDIF(date_submitted, date_funded, "days")
+
+// Aggregate Functions
+STRING_AGG(rep_links_submission, rep_rel.name, ", ")
+SUM_AGG(rep_links_submission, commission_percentage)
+COUNT_AGG(rep_links_submission, rep_rel.id)
+AVG_AGG(rep_links_submission, commission_percentage)
+MIN_AGG(rep_links_submission, commission_percentage)
+MAX_AGG(rep_links_submission, commission_percentage)
+AND_AGG(rep_links_submission, rep_rel.active)
+OR_AGG(rep_links_submission, rep_rel.priority = "high")
+
+// Complex Expression Example
+IF(
+  AND(
+    amount > 1000,
+    status = "approved",
+    NOT(ISNULL(merchant_rel.business_name))
+  ),
+  "✅ " & UPPER(LEFT(merchant_rel.business_name, 20)) & 
+  " - $" & STRING(ROUND(amount, 2)) &
+  " | Funded: " & STRING(date_funded) &
+  " | Reps: " & STRING_AGG(rep_links_submission, rep_rel.name, ", ") &
+  " | Total Commission: " & STRING(SUM_AGG(rep_links_submission, commission_percentage)) & "%",
+  
+  "⏳ Pending: " & NULLVALUE(merchant_rel.business_name, "Unknown Business") &
+  " | Amount: $" & STRING(amount) &
+  " | Days Since Submit: " & STRING(DATEDIF(date_submitted, TODAY(), "days"))
+)
+
+// Literals and Operators
+TRUE
+FALSE
+NULL
+123
+45.67
+"String literal with spaces"
+amount + lender_fee
+amount * 1.05
+amount / 100
+amount - discount
+amount >= 1000
+amount <= 5000
+amount = 1000
+amount != 0
+amount <> 0
+amount < 500
+amount > 10000
+
+// Column and Relationship References
+amount
+status
+date_funded
+merchant_rel.business_name
+merchant_rel.main_rep_rel.name
+lender_rel.company_name
+
+// Parentheses and Complex Expressions
+(amount + lender_fee) * 1.05
+IF(status = "approved", amount * 0.95, amount)
+AND(amount > 1000, OR(status = "approved", priority = "high"))
+
+// Comments at end of lines
+amount + 100 // Adding processing fee
+status = "approved" /* Check approval status */

@@ -6,7 +6,9 @@
   "main": "formula-compiler.js",
   "scripts": {
     "test": "node tests/run-all-tests.js",
-    "exec-all": "./exec-formula --output markdown examples/table/submission/*.formula > exec-results.md"
+    "exec-all": "./exec-formula --output markdown examples/table/submission/*.formula > exec-results.md",
+    "vscode-extension": "node scripts/generate-vscode-grammar.js",
+    "install-vscode-extension": "npm run vscode-extension && scripts/install-vscode-extension.sh"
   },
   "dependencies": {
     "pg": "^8.11.0",

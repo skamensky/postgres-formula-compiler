@@ -1,0 +1,102 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Formula Language",
+  "scopeName": "source.formula",
+  "fileTypes": [
+    "formula"
+  ],
+  "patterns": [
+    {
+      "name": "comment.line.double-slash.formula",
+      "match": "//.*$"
+    },
+    {
+      "name": "comment.block.formula",
+      "begin": "/\\*",
+      "end": "\\*/"
+    },
+    {
+      "name": "string.quoted.double.formula",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.formula",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "constant.numeric.formula",
+      "match": "\\b\\d+(?:\\.\\d+)?\\b"
+    },
+    {
+      "name": "keyword.function.core.formula",
+      "match": "\\b(TODAY|ME|DATE|STRING|IF)\\b"
+    },
+    {
+      "name": "keyword.function.string.formula",
+      "match": "\\b(UPPER|LOWER|TRIM|LEN|LEFT|RIGHT|MID|CONTAINS|SUBSTITUTE)\\b"
+    },
+    {
+      "name": "keyword.function.null.formula",
+      "match": "\\b(ISNULL|NULLVALUE|ISBLANK)\\b"
+    },
+    {
+      "name": "keyword.function.logical.formula",
+      "match": "\\b(AND|OR|NOT)\\b"
+    },
+    {
+      "name": "keyword.function.math.formula",
+      "match": "\\b(ABS|ROUND|MIN|MAX|MOD|CEILING|FLOOR)\\b"
+    },
+    {
+      "name": "keyword.function.date.formula",
+      "match": "\\b(YEAR|MONTH|DAY|WEEKDAY|ADDMONTHS|ADDDAYS|DATEDIF)\\b"
+    },
+    {
+      "name": "keyword.function.aggregate.formula",
+      "match": "\\b(STRING_AGG|STRING_AGG_DISTINCT|SUM_AGG|COUNT_AGG|AVG_AGG|MIN_AGG|MAX_AGG|AND_AGG|OR_AGG)\\b"
+    },
+    {
+      "name": "constant.language.boolean.formula",
+      "match": "\\b(TRUE|FALSE)\\b"
+    },
+    {
+      "name": "constant.language.null.formula",
+      "match": "\\b(NULL)\\b"
+    },
+    {
+      "name": "keyword.operator.comparison.formula",
+      "match": "(>=|<=|<>|!=|>|<|=)"
+    },
+    {
+      "name": "keyword.operator.arithmetic.formula",
+      "match": "[+\\-*/]"
+    },
+    {
+      "name": "keyword.operator.concatenation.formula",
+      "match": "&"
+    },
+    {
+      "name": "variable.other.relationship.formula",
+      "match": "\\b[A-Za-z_]\\w*_rel\\.[A-Za-z_]\\w*\\b"
+    },
+    {
+      "name": "variable.other.column.formula",
+      "match": "\\b[A-Za-z_]\\w*\\b"
+    },
+    {
+      "name": "punctuation.parenthesis.formula",
+      "match": "[()]"
+    },
+    {
+      "name": "punctuation.separator.comma.formula",
+      "match": ","
+    },
+    {
+      "name": "punctuation.accessor.dot.formula",
+      "match": "\\."
+    }
+  ]
+}

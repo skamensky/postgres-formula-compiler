@@ -4,6 +4,173 @@
    */
 
 /**
+ * Structured token definitions with metadata for grammar generation
+ * Used by both lexer and VSCode grammar generator
+ */
+const TOKEN_DEFINITIONS = {
+  // Core Functions
+  CORE_FUNCTIONS: {
+    pattern: /\b(TODAY|ME|DATE|STRING|IF)\b/i,
+    textMateScope: 'keyword.function.core.formula',
+    description: 'Core formula functions',
+    functions: ['TODAY', 'ME', 'DATE', 'STRING', 'IF']
+  },
+  
+  // String Functions
+  STRING_FUNCTIONS: {
+    pattern: /\b(UPPER|LOWER|TRIM|LEN|LEFT|RIGHT|MID|CONTAINS|SUBSTITUTE)\b/i,
+    textMateScope: 'keyword.function.string.formula',
+    description: 'String manipulation functions',
+    functions: ['UPPER', 'LOWER', 'TRIM', 'LEN', 'LEFT', 'RIGHT', 'MID', 'CONTAINS', 'SUBSTITUTE']
+  },
+  
+  // Null Handling Functions
+  NULL_FUNCTIONS: {
+    pattern: /\b(ISNULL|NULLVALUE|ISBLANK)\b/i,
+    textMateScope: 'keyword.function.null.formula',
+    description: 'Null handling functions',
+    functions: ['ISNULL', 'NULLVALUE', 'ISBLANK']
+  },
+  
+  // Logical Functions
+  LOGICAL_FUNCTIONS: {
+    pattern: /\b(AND|OR|NOT)\b/i,
+    textMateScope: 'keyword.function.logical.formula',
+    description: 'Logical operation functions',
+    functions: ['AND', 'OR', 'NOT']
+  },
+  
+  // Math Functions
+  MATH_FUNCTIONS: {
+    pattern: /\b(ABS|ROUND|MIN|MAX|MOD|CEILING|FLOOR)\b/i,
+    textMateScope: 'keyword.function.math.formula',
+    description: 'Mathematical functions',
+    functions: ['ABS', 'ROUND', 'MIN', 'MAX', 'MOD', 'CEILING', 'FLOOR']
+  },
+  
+  // Date Functions
+  DATE_FUNCTIONS: {
+    pattern: /\b(YEAR|MONTH|DAY|WEEKDAY|ADDMONTHS|ADDDAYS|DATEDIF)\b/i,
+    textMateScope: 'keyword.function.date.formula',
+    description: 'Date manipulation functions',
+    functions: ['YEAR', 'MONTH', 'DAY', 'WEEKDAY', 'ADDMONTHS', 'ADDDAYS', 'DATEDIF']
+  },
+  
+  // Aggregate Functions
+  AGGREGATE_FUNCTIONS: {
+    pattern: /\b(STRING_AGG|STRING_AGG_DISTINCT|SUM_AGG|COUNT_AGG|AVG_AGG|MIN_AGG|MAX_AGG|AND_AGG|OR_AGG)\b/i,
+    textMateScope: 'keyword.function.aggregate.formula',
+    description: 'Aggregate functions for relationships',
+    functions: ['STRING_AGG', 'STRING_AGG_DISTINCT', 'SUM_AGG', 'COUNT_AGG', 'AVG_AGG', 'MIN_AGG', 'MAX_AGG', 'AND_AGG', 'OR_AGG']
+  },
+  
+  // Special Keywords
+  BOOLEAN_LITERALS: {
+    pattern: /\b(TRUE|FALSE)\b/i,
+    textMateScope: 'constant.language.boolean.formula',
+    description: 'Boolean literal values',
+    keywords: ['TRUE', 'FALSE']
+  },
+  
+  NULL_LITERAL: {
+    pattern: /\bNULL\b/i,
+    textMateScope: 'constant.language.null.formula',
+    description: 'NULL literal value',
+    keywords: ['NULL']
+  },
+  
+  // Literals
+  NUMBER: {
+    pattern: /\d+(\.\d+)?/,
+    textMateScope: 'constant.numeric.formula',
+    description: 'Numeric literals'
+  },
+  
+  STRING_LITERAL: {
+    pattern: /"[^"]*"/,
+    textMateScope: 'string.quoted.double.formula',
+    description: 'String literals in double quotes'
+  },
+  
+  // Operators
+  COMPARISON_OPERATORS: {
+    pattern: /(>=|<=|<>|!=|>|<|=)/,
+    textMateScope: 'keyword.operator.comparison.formula',
+    description: 'Comparison operators',
+    tokens: ['>=', '<=', '<>', '!=', '>', '<', '=']
+  },
+  
+  ARITHMETIC_OPERATORS: {
+    pattern: /[+\-*/]/,
+    textMateScope: 'keyword.operator.arithmetic.formula',
+    description: 'Arithmetic operators',
+    tokens: ['+', '-', '*', '/']
+  },
+  
+  CONCATENATION_OPERATOR: {
+    pattern: /&/,
+    textMateScope: 'keyword.operator.concatenation.formula',
+    description: 'String concatenation operator',
+    tokens: ['&']
+  },
+  
+  // Punctuation
+  PARENTHESES: {
+    pattern: /[()]/,
+    textMateScope: 'punctuation.parenthesis.formula',
+    description: 'Parentheses for grouping',
+    tokens: ['(', ')']
+  },
+  
+  COMMA: {
+    pattern: /,/,
+    textMateScope: 'punctuation.separator.comma.formula',
+    description: 'Comma separator',
+    tokens: [',']
+  },
+  
+  DOT: {
+    pattern: /\./,
+    textMateScope: 'punctuation.accessor.dot.formula',
+    description: 'Dot for relationship field access',
+    tokens: ['.']
+  },
+  
+  // Identifiers (Column references and relationship fields)
+  RELATIONSHIP_REFERENCE: {
+    pattern: /\b[A-Za-z_]\w*_rel\.[A-Za-z_]\w*/i,
+    textMateScope: 'variable.other.relationship.formula',
+    description: 'Relationship field references'
+  },
+  
+  IDENTIFIER: {
+    pattern: /\b[A-Za-z_]\w*/,
+    textMateScope: 'variable.other.column.formula',
+    description: 'Column references and identifiers'
+  },
+  
+  // Comments
+  LINE_COMMENT: {
+    pattern: /\/\/.*$/m,
+    textMateScope: 'comment.line.double-slash.formula',
+    description: 'Line comments starting with //'
+  },
+  
+  BLOCK_COMMENT: {
+    pattern: /\/\*[\s\S]*?\*\//,
+    textMateScope: 'comment.block.formula',
+    description: 'Block comments /* */'
+  },
+  
+  // Whitespace
+  WHITESPACE: {
+    pattern: /\s+/,
+    textMateScope: null, // Not highlighted
+    description: 'Whitespace characters'
+  }
+};
+
+/**
  * Map PostgreSQL data types to formula compiler types
  */
 function mapPostgresType(pgType) {
@@ -82,6 +249,30 @@ class Lexer {
       message: `Lexer error: ${message}`,
       position: this.position
     };
+  }
+
+  /**
+   * Get structured token definitions for grammar generation
+   * @returns {Object} TOKEN_DEFINITIONS object with metadata
+   */
+  static getTokenDefinitions() {
+    return TOKEN_DEFINITIONS;
+  }
+
+  /**
+   * Get all function names organized by category
+   * @returns {Object} Object with function categories and their function names
+   */
+  static getFunctionNames() {
+    const functions = {};
+    
+    Object.entries(TOKEN_DEFINITIONS).forEach(([key, def]) => {
+      if (def.functions) {
+        functions[key] = def.functions;
+      }
+    });
+    
+    return functions;
   }
 
   advance() {

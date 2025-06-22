@@ -1,0 +1,205 @@
+{
+  "name": "Formula Dark",
+  "type": "dark",
+  "colors": {
+    "editor.background": "#1e1e1e",
+    "editor.foreground": "#d4d4d4",
+    "editorLineNumber.foreground": "#858585",
+    "editorLineNumber.activeForeground": "#c6c6c6"
+  },
+  "tokenColors": [
+    {
+      "name": "Comment",
+      "scope": [
+        "comment.line.double-slash.formula",
+        "comment.block.formula"
+      ],
+      "settings": {
+        "foreground": "#6A9955",
+        "fontStyle": "italic"
+      }
+    },
+    {
+      "name": "String",
+      "scope": [
+        "string.quoted.double.formula"
+      ],
+      "settings": {
+        "foreground": "#CE9178"
+      }
+    },
+    {
+      "name": "Number",
+      "scope": [
+        "constant.numeric.formula"
+      ],
+      "settings": {
+        "foreground": "#B5CEA8"
+      }
+    },
+    {
+      "name": "Boolean Literals",
+      "scope": [
+        "constant.language.boolean.formula"
+      ],
+      "settings": {
+        "foreground": "#569CD6",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "NULL Literal",
+      "scope": [
+        "constant.language.null.formula"
+      ],
+      "settings": {
+        "foreground": "#569CD6",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Core Functions",
+      "scope": [
+        "keyword.function.core.formula"
+      ],
+      "settings": {
+        "foreground": "#DCDCAA",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "String Functions",
+      "scope": [
+        "keyword.function.string.formula"
+      ],
+      "settings": {
+        "foreground": "#4EC9B0",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Null Functions",
+      "scope": [
+        "keyword.function.null.formula"
+      ],
+      "settings": {
+        "foreground": "#C586C0",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Logical Functions",
+      "scope": [
+        "keyword.function.logical.formula"
+      ],
+      "settings": {
+        "foreground": "#FF8C00",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Math Functions",
+      "scope": [
+        "keyword.function.math.formula"
+      ],
+      "settings": {
+        "foreground": "#9CDCFE",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Date Functions",
+      "scope": [
+        "keyword.function.date.formula"
+      ],
+      "settings": {
+        "foreground": "#F44747",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Aggregate Functions",
+      "scope": [
+        "keyword.function.aggregate.formula"
+      ],
+      "settings": {
+        "foreground": "#B267E6",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Comparison Operators",
+      "scope": [
+        "keyword.operator.comparison.formula"
+      ],
+      "settings": {
+        "foreground": "#D7BA7D"
+      }
+    },
+    {
+      "name": "Arithmetic Operators",
+      "scope": [
+        "keyword.operator.arithmetic.formula"
+      ],
+      "settings": {
+        "foreground": "#D7BA7D"
+      }
+    },
+    {
+      "name": "Concatenation Operator",
+      "scope": [
+        "keyword.operator.concatenation.formula"
+      ],
+      "settings": {
+        "foreground": "#D7BA7D",
+        "fontStyle": "bold"
+      }
+    },
+    {
+      "name": "Relationship References",
+      "scope": [
+        "variable.other.relationship.formula"
+      ],
+      "settings": {
+        "foreground": "#4FC1FF",
+        "fontStyle": "italic"
+      }
+    },
+    {
+      "name": "Column References",
+      "scope": [
+        "variable.other.column.formula"
+      ],
+      "settings": {
+        "foreground": "#9CDCFE"
+      }
+    },
+    {
+      "name": "Parentheses",
+      "scope": [
+        "punctuation.parenthesis.formula"
+      ],
+      "settings": {
+        "foreground": "#808080"
+      }
+    },
+    {
+      "name": "Comma",
+      "scope": [
+        "punctuation.separator.comma.formula"
+      ],
+      "settings": {
+        "foreground": "#808080"
+      }
+    },
+    {
+      "name": "Dot Accessor",
+      "scope": [
+        "punctuation.accessor.dot.formula"
+      ],
+      "settings": {
+        "foreground": "#C8C8C8"
+      }
+    }
+  ]
+}
