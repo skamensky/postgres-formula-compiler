@@ -1,0 +1,1 @@
+name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), opportunity_rel.listing_rel.listing_price * commission_rate, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))

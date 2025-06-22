@@ -1,0 +1,1 @@
+address & " - Listed by " & listing_agent_rel.name & " (" & listing_agent_rel.region & ") | " & IF(status = "active", "🟢 ACTIVE", IF(status = "pending", "🟡 PENDING", IF(status = "sold", "🔴 SOLD", "⚪ " & UPPER(status))))

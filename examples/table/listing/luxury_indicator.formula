@@ -1,0 +1,1 @@
+IF(listing_price > 800000, "💎 LUXURY", IF(listing_price > 500000, "⭐ PREMIUM", IF(listing_price > 300000, "🏠 STANDARD", "💰 AFFORDABLE"))) & " | " & STRING(bedrooms) & "BR " & STRING(bathrooms) & "BA | " & STRING(ROUND(square_feet/1000, 1)) & "K sqft"

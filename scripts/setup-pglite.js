@@ -29,8 +29,8 @@ async function setupDatabase() {
     
     // Verify setup by running a simple query
     console.log('✅ Verifying setup...');
-    const result = await db.query('SELECT COUNT(*) as count FROM submission');
-    console.log(`📊 Found ${result.rows[0].count} submissions in database`);
+    const result = await db.query('SELECT COUNT(*) as count FROM listing');
+    console.log(`📊 Found ${result.rows[0].count} listings in database`);
     
     // Test schema using standard introspection
     const tableCount = await db.query(`

@@ -1,0 +1,1 @@
+address & " | Built: " & STRING(year_built) & " | Lot: " & STRING(lot_size) & " acres | Features: " & STRING(ARRAY_LENGTH(features, 1)) & " premium amenities | " & IF(ARRAY_LENGTH(features, 1) > 4, "🌟 LUXURY FEATURES", IF(ARRAY_LENGTH(features, 1) > 2, "✨ NICE FEATURES", "🏠 BASIC"))
