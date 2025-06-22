@@ -31,8 +31,8 @@ This document describes all the data types used in the formula language.
 - [`CONTAINS()`](./functions/string.md#contains) - Checks if a string contains a substring
 - [`ENDS_WITH()`](./functions/string.md#ends_with) - Checks if a string ends with a substring
 - [`IF()`](./functions/core.md#if) - Returns one value if condition is true, another if false
-- [`ISBLANK()`](./functions/null handling.md#isblank) - Returns true if the value is null or empty string
-- [`ISNULL()`](./functions/null handling.md#isnull) - Returns true if the value is null
+- [`ISBLANK()`](./functions/null-handling.md#isblank) - Returns true if the value is null or empty string
+- [`ISNULL()`](./functions/null-handling.md#isnull) - Returns true if the value is null
 - [`NOT()`](./functions/logical.md#not) - Returns the opposite of a boolean value
 - [`OR()`](./functions/logical.md#or) - Returns true if any argument is true
 - [`OR_AGG()`](./functions/aggregate.md#or_agg) - Returns true if any boolean value is true
@@ -273,16 +273,16 @@ Used in function parameters that accept any type of expression, such as:
 <details>
 <summary><strong>Functions that use this type</strong> (11 functions)</summary>
 
-- [`COALESCE()`](./functions/null handling.md#coalesce) - Returns the first non-null value from a list of expressions
+- [`COALESCE()`](./functions/null-handling.md#coalesce) - Returns the first non-null value from a list of expressions
 - [`COUNT()`](./functions/aggregate.md#count) - Counts the number of non-null values
 - [`COUNT_AGG()`](./functions/aggregate.md#count_agg) - Counts the number of non-null values
 - [`EVAL()`](./functions/core.md#eval) - Evaluates an expression from another table
 - [`IF()`](./functions/core.md#if) - Returns one value if condition is true, another if false
-- [`ISBLANK()`](./functions/null handling.md#isblank) - Returns true if the value is null or empty string
-- [`ISNULL()`](./functions/null handling.md#isnull) - Returns true if the value is null
+- [`ISBLANK()`](./functions/null-handling.md#isblank) - Returns true if the value is null or empty string
+- [`ISNULL()`](./functions/null-handling.md#isnull) - Returns true if the value is null
 - [`MAX_AGG()`](./functions/aggregate.md#max_agg) - Finds the maximum value
 - [`MIN_AGG()`](./functions/aggregate.md#min_agg) - Finds the minimum value
-- [`NULLVALUE()`](./functions/null handling.md#nullvalue) - Returns the first value if not null, otherwise returns the second value
+- [`NULLVALUE()`](./functions/null-handling.md#nullvalue) - Returns the first value if not null, otherwise returns the second value
 - [`STRING()`](./functions/core.md#string) - Converts a value to a string
 </details>
 
@@ -332,4 +332,4 @@ The formula language supports automatic type conversion in many contexts:
 - `STRING(expression)` - converts any value to string
 - Date parsing through `DATE(string)` function
 
-*Documentation generated on 2025-06-22T21:46:18.090Z*
+*Documentation generated on 2025-06-22T21:49:57.871Z*

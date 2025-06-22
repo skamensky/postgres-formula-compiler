@@ -80,4 +80,4 @@ export function compileFunction(compiler, node) {
 5. **Reduced Duplication** - No magic strings scattered throughout code
 6. **Type Safety** - Consistent type checking logic
 
-*Documentation generated on 2025-06-22T21:46:18.204Z*
+*Documentation generated on 2025-06-22T21:49:57.985Z*

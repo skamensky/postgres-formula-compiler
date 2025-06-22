@@ -175,7 +175,7 @@ ${compatibility.map(comp => `- ${comp}`).join('\n')}
 ${functionsUsingType.length > 0 ? 
   functionsUsingType.map(funcName => {
     const funcMetadata = FUNCTION_METADATA[funcName];
-    const category = funcMetadata.category.toLowerCase().replace(/\\s+/g, '-');
+    const category = funcMetadata.category.toLowerCase().replace(/\s+/g, '-');
     return `- [\`${funcName}()\`](./functions/${category}.md#${funcName.toLowerCase()}) - ${funcMetadata.description}`;
   }).join('\n') : 
   'No functions currently use this type.'
@@ -211,7 +211,7 @@ ${compatibility.map(comp => `- ${comp}`).join('\n')}
 ${functionsUsingType.length > 0 ? 
   functionsUsingType.map(funcName => {
     const funcMetadata = FUNCTION_METADATA[funcName];
-    const category = funcMetadata.category.toLowerCase().replace(/\\s+/g, '-');
+    const category = funcMetadata.category.toLowerCase().replace(/\s+/g, '-');
     return `- [\`${funcName}()\`](./functions/${category}.md#${funcName.toLowerCase()}) - ${funcMetadata.description}`;
   }).join('\n') : 
   'No functions currently use this type.'
