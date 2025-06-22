@@ -556,7 +556,6 @@ export const FUNCTION_METADATA = {
     returnType: TYPE.NUMBER,
     minArgs: 1,
     maxArgs: 1,
-    specialHandling: 'date_extraction',
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to extract year from' }
     ]
@@ -569,7 +568,6 @@ export const FUNCTION_METADATA = {
     returnType: TYPE.NUMBER,
     minArgs: 1,
     maxArgs: 1,
-    specialHandling: 'date_extraction',
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to extract month from' }
     ]
@@ -582,7 +580,6 @@ export const FUNCTION_METADATA = {
     returnType: TYPE.NUMBER,
     minArgs: 1,
     maxArgs: 1,
-    specialHandling: 'date_extraction',
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to extract day from' }
     ]
@@ -672,7 +669,6 @@ export const FUNCTION_METADATA = {
     returnType: TYPE.NUMBER,
     minArgs: 1,
     maxArgs: 1,
-    specialHandling: 'date_extraction',
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to get weekday from' }
     ]

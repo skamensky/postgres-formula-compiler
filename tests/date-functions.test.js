@@ -136,7 +136,7 @@ test('Error - YEAR with wrong argument count', () => {
 test('Error - YEAR with non-date argument', () => {
   assertError(
     () => evaluateFormula('YEAR(revenue)', testContext),
-    /YEAR\(\) requires date argument, got number/,
+    /YEAR\(\) date must be date, got number/,
     'Should throw error when YEAR has non-date argument'
   );
 });
@@ -145,7 +145,7 @@ test('Error - YEAR with non-date argument', () => {
 test('Error - ADDMONTHS with wrong argument count', () => {
   assertError(
     () => evaluateFormula('ADDMONTHS(created_date)', testContext),
-    /ADDMONTHS\(\) takes exactly two arguments: ADDMONTHS\(date, months\)/,
+    /ADDMONTHS\(\) takes exactly 2 arguments/,
     'Should throw error when ADDMONTHS has wrong argument count'
   );
 });
@@ -154,7 +154,7 @@ test('Error - ADDMONTHS with wrong argument count', () => {
 test('Error - ADDMONTHS with non-date first argument', () => {
   assertError(
     () => evaluateFormula('ADDMONTHS(revenue, 6)', testContext),
-    /ADDMONTHS\(\) first argument must be date, got number/,
+    /ADDMONTHS\(\) date must be date, got number/,
     'Should throw error when ADDMONTHS first argument is not date'
   );
 });
@@ -190,7 +190,7 @@ test('Error - DATEDIF with invalid unit', () => {
 test('Error - MONTH with non-date argument', () => {
   assertError(
     () => evaluateFormula('MONTH("hello")', testContext),
-    /MONTH\(\) requires date argument, got string/,
+    /MONTH\(\) date must be date, got string/,
     'Should throw error when MONTH has non-date argument'
   );
 });
@@ -208,7 +208,7 @@ test('Error - DAY with wrong argument count', () => {
 test('Error - WEEKDAY with non-date argument', () => {
   assertError(
     () => evaluateFormula('WEEKDAY(cost)', testContext),
-    /WEEKDAY\(\) requires date argument, got number/,
+    /WEEKDAY\(\) date must be date, got number/,
     'Should throw error when WEEKDAY has non-date argument'
   );
 });
@@ -217,7 +217,7 @@ test('Error - WEEKDAY with non-date argument', () => {
 test('Error - ADDMONTHS with non-number second argument', () => {
   assertError(
     () => evaluateFormula('ADDMONTHS(created_date, "six")', testContext),
-    /ADDMONTHS\(\) second argument must be number, got string/,
+    /ADDMONTHS\(\) months must be number, got string/,
     'Should throw error when ADDMONTHS second argument is not number'
   );
 });
@@ -226,7 +226,7 @@ test('Error - ADDMONTHS with non-number second argument', () => {
 test('Error - ADDDAYS with wrong argument count', () => {
   assertError(
     () => evaluateFormula('ADDDAYS(created_date, 30, 15)', testContext),
-    /ADDDAYS\(\) takes exactly two arguments: ADDDAYS\(date, days\)/,
+    /ADDDAYS\(\) takes exactly 2 arguments/,
     'Should throw error when ADDDAYS has wrong argument count'
   );
 });
@@ -235,7 +235,7 @@ test('Error - ADDDAYS with wrong argument count', () => {
 test('Error - ADDDAYS with wrong argument types', () => {
   assertError(
     () => evaluateFormula('ADDDAYS("hello", created_date)', testContext),
-    /ADDDAYS\(\) first argument must be date, got string/,
+    /ADDDAYS\(\) date must be date, got string/,
     'Should throw error when ADDDAYS has wrong argument types'
   );
 });
@@ -262,7 +262,7 @@ test('Error - DATEDIF with non-date second argument', () => {
 test('Error - Mixed date function errors', () => {
   assertError(
     () => evaluateFormula('YEAR(MONTH(created_date))', testContext),
-    /YEAR\(\) requires date argument, got number/,
+    /YEAR\(\) date must be date, got number/,
     'Should throw error when nested date functions have wrong types'
   );
 });

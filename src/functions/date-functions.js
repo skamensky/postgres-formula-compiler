@@ -32,14 +32,6 @@ export function compileDateFunction(compiler, node) {
     return compileDatedifFunction(compiler, node, metadata);
   }
   
-  if (funcName === FUNCTIONS.ADDMONTHS || funcName === FUNCTIONS.ADDDAYS) {
-    return compileAddDateFunction(compiler, node, metadata);
-  }
-  
-  if (metadata.specialHandling === 'date_extraction') {
-    return compileDateExtractionFunction(compiler, node, metadata);
-  }
-  
   // Compile arguments
   const compiledArgs = node.args.map(arg => compiler.compile(arg));
   
@@ -60,78 +52,7 @@ export function compileDateFunction(compiler, node) {
   };
 }
 
-/**
- * Compile date extraction functions (YEAR, MONTH, DAY, WEEKDAY) with custom error messages
- * @param {Object} compiler - Compiler instance
- * @param {Object} node - Function call AST node
- * @param {Object} metadata - Function metadata
- * @returns {Object} Compiled date extraction function
- */
-function compileDateExtractionFunction(compiler, node, metadata) {
-  const funcName = metadata.name;
-  
-  // Custom argument count validation
-  if (node.args.length !== 1) {
-    compiler.error(`${funcName}() takes exactly one argument`, node.position);
-  }
-  
-  // Compile argument
-  const arg = compiler.compile(node.args[0]);
-  
-  // Custom type validation
-  if (arg.returnType !== TYPE.DATE) {
-    compiler.error(`${funcName}() requires date argument, got ${typeToString(arg.returnType)}`, node.position);
-  }
-  
-  return {
-    type: TYPE.FUNCTION_CALL,
-    semanticId: compiler.generateSemanticId('function', funcName, [arg.semanticId]),
-    dependentJoins: arg.dependentJoins,
-    returnType: TYPE.NUMBER,
-    compilationContext: compiler.compilationContext,
-    value: { name: funcName },
-    children: [arg]
-  };
-}
 
-/**
- * Compile ADDMONTHS/ADDDAYS functions with custom error messages
- * @param {Object} compiler - Compiler instance
- * @param {Object} node - Function call AST node
- * @param {Object} metadata - Function metadata
- * @returns {Object} Compiled add date function
- */
-function compileAddDateFunction(compiler, node, metadata) {
-  const funcName = metadata.name;
-  
-  // Custom argument count validation
-  if (node.args.length !== 2) {
-    const signature = funcName === FUNCTIONS.ADDMONTHS ? 'ADDMONTHS(date, months)' : 'ADDDAYS(date, days)';
-    compiler.error(`${funcName}() takes exactly two arguments: ${signature}`, node.position);
-  }
-  
-  // Compile arguments
-  const arg1 = compiler.compile(node.args[0]);
-  const arg2 = compiler.compile(node.args[1]);
-  
-  // Custom type validation
-  if (arg1.returnType !== TYPE.DATE) {
-    compiler.error(`${funcName}() first argument must be date, got ${typeToString(arg1.returnType)}`, node.position);
-  }
-  if (arg2.returnType !== TYPE.NUMBER) {
-    compiler.error(`${funcName}() second argument must be number, got ${typeToString(arg2.returnType)}`, node.position);
-  }
-  
-  return {
-    type: TYPE.FUNCTION_CALL,
-    semanticId: compiler.generateSemanticId('function', funcName, [arg1.semanticId, arg2.semanticId]),
-    dependentJoins: [...arg1.dependentJoins, ...arg2.dependentJoins],
-    returnType: TYPE.DATE,
-    compilationContext: compiler.compilationContext,
-    value: { name: funcName },
-    children: [arg1, arg2]
-  };
-}
 
 /**
  * Compile DATEDIF function with special string literal validation
