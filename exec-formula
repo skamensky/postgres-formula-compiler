@@ -530,7 +530,20 @@ async function main() {
     if (outputFormat === 'console') {
       console.log('🔗 Loading inverse relationship metadata...');
     }
-    const inverseRelationshipInfo = await getInverseRelationshipsForTable(tableName, client);
+    
+    // For multi-level aggregates, we need inverse relationships for all tables that could be traversed
+    // Start with the main table, then add tables from direct inverse relationships
+    const tablesToLoadInverseRels = new Set([tableName]);
+    
+    // Add tables from direct inverse relationships (these become intermediate tables in multi-level chains)
+    const directInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
+    for (const rel of directInverseRels) {
+      tablesToLoadInverseRels.add(rel.fromTable);
+    }
+    
+    // Get inverse relationships for all these tables in bulk
+    const allInverseRelationships = await getInverseRelationshipsForTables([...tablesToLoadInverseRels], client);
+    const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
     
     // Build context with BOTH new flat structure AND old structure for backward compatibility
     const context = {
@@ -541,7 +554,9 @@ async function main() {
       // OLD structure for backward compatibility (needed for aggregates)
       columnList: columnList,
       relationshipInfo: {}, // Will be populated below for backward compatibility
-      inverseRelationshipInfo: inverseRelationshipInfo
+      inverseRelationshipInfo: inverseRelationshipInfo,
+      // Multi-level aggregate support: expanded inverse relationships for all intermediate tables
+      allInverseRelationships: allInverseRelationships
     };
     
     // Build old-style relationshipInfo for backward compatibility with aggregates

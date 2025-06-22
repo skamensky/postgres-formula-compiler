@@ -87,12 +87,15 @@ function resolveMultiLevelChain(compiler, relationshipChain, position) {
     // For multi-level chains, we need to build the context for the next level
     if (i < relationshipChain.length - 1) {
       // We're not at the final level yet, so we need to build context for the next hop
-      // This would require loading additional metadata - for now, we'll use a simplified approach
+      // Use the expanded inverse relationships from the main context
+      const nextLevelInverseRels = (compiler.context.allInverseRelationships && 
+                                   compiler.context.allInverseRelationships[currentTableName]) || {};
+      
       currentContext = {
         tableName: currentTableName,
         columnList: inverseRelInfo.columnList,
         relationshipInfo: inverseRelInfo.relationshipInfo || {},
-        inverseRelationshipInfo: {} // This would need to be populated for deeper chains
+        inverseRelationshipInfo: nextLevelInverseRels
       };
     }
   }
