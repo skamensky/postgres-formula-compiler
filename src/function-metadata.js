@@ -15,6 +15,24 @@ export const TYPES = {
   STRING_LITERAL: 'string_literal'
 };
 
+// AST Node Type constants (to eliminate magic strings in validation)
+export const AST_TYPES = {
+  STRING_LITERAL: 'STRING_LITERAL',
+  IDENTIFIER: 'IDENTIFIER',
+  FUNCTION_CALL: 'FUNCTION_CALL',
+  BINARY_OP: 'BINARY_OP',
+  // etc.
+};
+
+// Return Type constants (these happen to match TYPES but make intent clearer)
+export const RETURN_TYPES = {
+  STRING: 'string',
+  NUMBER: 'number',
+  BOOLEAN: 'boolean',
+  DATE: 'date',
+  NULL: 'null'
+};
+
 // Function name constants to eliminate magic strings
 export const FUNCTIONS = {
   // Core functions
@@ -725,15 +743,15 @@ export function validateFunctionArgs(functionName, args, compiler, node) {
     }
     
     // Type checking based on expected argument type
-    if (expectedArg.type === TYPES.STRING_LITERAL && arg.type !== 'STRING_LITERAL') {
+    if (expectedArg.type === TYPES.STRING_LITERAL && arg.type !== AST_TYPES.STRING_LITERAL) {
       compiler.error(`${functionName}() ${expectedArg.name} must be a string literal, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.BOOLEAN && arg.returnType !== 'boolean') {
+    } else if (expectedArg.type === TYPES.BOOLEAN && arg.returnType !== RETURN_TYPES.BOOLEAN) {
       compiler.error(`${functionName}() ${expectedArg.name} must be boolean, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.NUMBER && arg.returnType !== 'number') {
+    } else if (expectedArg.type === TYPES.NUMBER && arg.returnType !== RETURN_TYPES.NUMBER) {
       compiler.error(`${functionName}() ${expectedArg.name} must be number, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.STRING && arg.returnType !== 'string') {
+    } else if (expectedArg.type === TYPES.STRING && arg.returnType !== RETURN_TYPES.STRING) {
       compiler.error(`${functionName}() ${expectedArg.name} must be string, got ${arg.returnType}`, node.position);
-    } else if (expectedArg.type === TYPES.DATE && arg.returnType !== 'date') {
+    } else if (expectedArg.type === TYPES.DATE && arg.returnType !== RETURN_TYPES.DATE) {
       compiler.error(`${functionName}() ${expectedArg.name} must be date, got ${arg.returnType}`, node.position);
     }
     // TYPES.EXPRESSION accepts any type
