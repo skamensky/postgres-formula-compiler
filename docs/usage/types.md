@@ -10,7 +10,9 @@ This document describes all the data types used in the formula language.
 
 **Description:** Logical data type representing true or false values.
 
-**Operations:**
+<details>
+<summary><strong>Operations</strong> (8 operations)</summary>
+
 - Logical functions: `AND()`, `OR()`, `NOT()`
 - Conditional functions: `IF()` conditions
 - `boolean = boolean` → `boolean`
@@ -19,6 +21,8 @@ This document describes all the data types used in the formula language.
 - `boolean != null` → `boolean`
 - `null = boolean` → `boolean`
 - `null != boolean` → `boolean`
+</details>
+
 
 **Literals:** Boolean literals are the keywords `TRUE` and `FALSE`
 
@@ -45,7 +49,9 @@ This document describes all the data types used in the formula language.
 
 **Description:** Date data type for representing calendar dates and timestamps.
 
-**Operations:**
+<details>
+<summary><strong>Operations</strong> (14 operations)</summary>
+
 - Date functions: `YEAR()`, `MONTH()`, `DAY()`, `WEEKDAY()`, `DATEDIF()`, etc.
 - `date + number` → `date` (adds days)
 - `date - number` → `date` (subtracts days)
@@ -60,6 +66,8 @@ This document describes all the data types used in the formula language.
 - `date <= date` → `boolean`
 - `null = date` → `boolean`
 - `null != date` → `boolean`
+</details>
+
 
 **Literals:** Date literals are created using the `DATE()` function: `DATE("2023-12-25")`
 
@@ -91,7 +99,9 @@ This document describes all the data types used in the formula language.
 
 **Description:** Special type representing the absence of a value.
 
-**Operations:**
+<details>
+<summary><strong>Operations</strong> (21 operations)</summary>
+
 - Null checking: `ISNULL()`, `ISBLANK()`
 - Null handling: `NULLVALUE()`, `COALESCE()`
 - Any operation with null typically results in null
@@ -113,6 +123,8 @@ This document describes all the data types used in the formula language.
 - `number != null` → `boolean`
 - `boolean != null` → `boolean`
 - `date != null` → `boolean`
+</details>
+
 
 **Literals:** The null literal is the keyword `NULL`
 
@@ -133,7 +145,9 @@ No functions currently use this type.
 
 **Description:** Numeric data type for representing integers and decimal numbers.
 
-**Operations:**
+<details>
+<summary><strong>Operations</strong> (17 operations)</summary>
+
 - Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.
 - `number + number` → `number`
 - `number - number` → `number`
@@ -151,6 +165,8 @@ No functions currently use this type.
 - `date - number` → `date` (subtracts days)
 - `null = number` → `boolean`
 - `null != number` → `boolean`
+</details>
+
 
 **Literals:** Numeric literals can be integers or decimals: `123`, `45.67`
 
@@ -208,7 +224,9 @@ No functions currently use this type.
 
 **Description:** Text data type for representing textual information.
 
-**Operations:**
+<details>
+<summary><strong>Operations</strong> (13 operations)</summary>
+
 - String functions: `UPPER()`, `LOWER()`, `TRIM()`, `LEN()`, etc.
 - `string & string` → `string` (concatenation)
 - `string = string` → `boolean`
@@ -222,6 +240,8 @@ No functions currently use this type.
 - `null = string` → `boolean`
 - `null != string` → `boolean`
 - Implicit string conversion: numbers and booleans convert to strings in string contexts
+</details>
+
 
 **Literals:** String literals are enclosed in double quotes: `"text content"`
 
@@ -332,4 +352,4 @@ The formula language supports automatic type conversion in many contexts:
 - `STRING(expression)` - converts any value to string
 - Date parsing through `DATE(string)` function
 
-*Documentation generated on 2025-06-22T21:49:57.871Z*
+*Documentation generated on 2025-06-22T21:51:19.566Z*

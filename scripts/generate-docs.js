@@ -161,8 +161,12 @@ ${basicTypes.map(([typeSymbol, metadata]) => {
 
 **Description:** ${metadata.description}
 
-${operations.length > 0 ? `**Operations:**
+${operations.length > 0 ? `<details>
+<summary><strong>Operations</strong> (${operations.length} operations)</summary>
+
 ${operations.map(op => `- ${op}`).join('\n')}
+</details>
+
 ` : ''}
 **Literals:** ${metadata.literals}
 
