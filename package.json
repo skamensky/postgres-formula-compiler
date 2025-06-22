@@ -5,7 +5,8 @@
   "type": "module",
   "main": "formula-compiler.js",
   "scripts": {
-    "test": "node tests/run-all-tests.js"
+    "test": "node tests/run-all-tests.js",
+    "exec-all": "./exec-formula --output markdown examples/table/submission/*.formula > exec-results.md"
   },
   "dependencies": {
     "pg": "^8.11.0",

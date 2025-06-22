@@ -4,8 +4,8 @@
 For each feature below, follow these steps:
 1. **Modify formula-compiler.js** - Add tokens, AST nodes, parsing, and compilation
 2. **Add comprehensive tests** - Update tests or add new ones in tests folder with positive and negative test cases. Add new tests to run-all-tests.js
-3. **Run test suite** - Verify all tests pass with `node test-formula-compiler.js`
-4. **Live database test** - Update formula.txt and test with `./exec-formula`
+3. **Run test suite** - Verify all tests pass with `npm run test`
+4. **Live database test** - If needed, add any new formulas, or correct existing formulas. In `examples/table/submission`. Either way, run `npm run exec-all` to do live tests. This will output a `exec-results.md` file which you can inspect.
 
 ---
 
