@@ -118,6 +118,88 @@ STRING_AGG(submissions_merchant.rep_links_submission,rep_rel.name,",")
 - Display available relationships for the current table context
 - Provide clear indication of expected vs. actual relationship names
 
+## Data Structure Requirements
+
+### Context Information Architecture
+
+Multi-level aggregation requires well-structured table and relationship metadata. The experimental implementation identified optimal data structures that should be reused.
+
+#### tableInfos Format
+**Structure**: Array of table information objects
+```javascript
+[
+  {
+    tableName: 'merchant',
+    columnList: {
+      id: 'number',
+      name: 'string', 
+      created_at: 'date'
+      // ... all columns with their types
+    }
+  },
+  {
+    tableName: 'submission',
+    columnList: {
+      id: 'number',
+      merchant: 'number',
+      status: 'string',
+      amount: 'number'
+      // ... all columns with their types  
+    }
+  }
+  // ... additional tables
+]
+```
+
+**Required Tables for Multi-Level Aggregation**:
+- **Base table** (e.g., `merchant`)
+- **All directly related tables** (tables that base table has forward relationships to)
+- **All inverse relationship source tables** (tables that have foreign keys pointing to base table)
+- **All tables reachable in relationship graph** (tables that could be part of multi-level chains)
+
+**Loading Strategy**: For a base table, load `tableInfos` for all tables within N degrees of relationship separation (where N = maximum allowed chain depth).
+
+#### relationshipInfos Format  
+**Structure**: Array of relationship objects representing ALL relationships in the system
+```javascript
+[
+  {
+    name: 'merchant',           // relationship name (foreign key without _id suffix)
+    fromTable: 'submission',    // source table (has the foreign key)
+    toTable: 'merchant',        // target table (referenced by foreign key)
+    joinColumn: 'merchant'      // foreign key column name
+  },
+  {
+    name: 'rep_rel', 
+    fromTable: 'rep_link',
+    toTable: 'rep',
+    joinColumn: 'rep_rel'
+  }
+  // ... all relationships in database
+]
+```
+
+**Required Relationships for Multi-Level Aggregation**:
+- **All forward relationships** originating from any table in `tableInfos`
+- **All inverse relationships** targeting any table in `tableInfos` 
+- **Complete relationship graph** to enable chain validation and traversal
+
+**Key Insight**: Relationship data should be **comprehensive** rather than filtered by base table, as multi-level chains can traverse through multiple relationship types.
+
+#### Inverse Relationship Naming Convention
+**Pattern**: `{source_table_plural}_{foreign_key_column}`
+
+**Examples**:
+- `submission.merchant → merchant.id` becomes inverse relationship `submissions_merchant`
+- `rep_link.submission → submission.id` becomes inverse relationship `rep_links_submission`
+
+**Requirement**: This naming pattern must be predictable and consistently applied for relationship discovery.
+
+#### Context Loading Performance Considerations
+- **Bulk Loading**: Load all required `tableInfos` and `relationshipInfos` in single database queries
+- **Caching Strategy**: Cache relationship metadata across multiple formula compilations
+- **Lazy Loading**: Consider loading additional table metadata on-demand for deeper chains
+
 ## Database Schema Considerations
 
 ### 1. Inverse Relationship Discovery
