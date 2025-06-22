@@ -7,7 +7,8 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 - **No Dependencies**: Pure JavaScript implementation
 - **Three-Stage Compilation**: Lexer → Parser → Compiler
 - **Comprehensive Function Library**: 36+ functions including math, text, date, and logical operations
-- **SQL Optimization**: Consolidates aggregate subqueries into efficient JOINs
+- **Multi-Level Relationships**: Navigate up to 3 levels deep with automatic JOIN generation
+- **SQL Optimization**: Consolidates aggregate subqueries into efficient JOINs with JOIN deduplication
 - **Relationship Support**: Handles table relationships with proper alias generation
 - **Type Safety**: Validates column types and operations at compile time
 - **Precise Error Reporting**: Errors include exact character positions
@@ -94,7 +95,57 @@ node tests/math-functions.test.js
 - `ME()` - Current user ID
 - `STRING(value)` - Convert to string
 
-## 🔧 SQL Optimization
+## � Multi-Level Relationships
+
+The compiler supports navigating complex table relationships up to 3 levels deep with automatic JOIN generation:
+
+### Basic Relationship Navigation
+```javascript
+// Single level: submission → merchant → name
+merchant_rel.name
+
+// Multi-level: submission → merchant → main_rep → name  
+merchant_rel.main_rep_rel.name
+
+// Deep relationships: submission → merchant → main_rep → app_user → email
+merchant_rel.main_rep_rel.app_user_rel.email
+```
+
+### Generated SQL
+```sql
+-- For: merchant_rel.main_rep_rel.app_user_rel.name
+SELECT "rel_merchant_main_rep_app_user"."name" AS field_name
+FROM submission s
+  LEFT JOIN merchant rel_merchant ON s.merchant = rel_merchant.id
+  LEFT JOIN rep rel_merchant_main_rep ON rel_merchant.main_rep = rel_merchant_main_rep.id
+  LEFT JOIN app_user rel_merchant_main_rep_app_user ON rel_merchant_main_rep.app_user = rel_merchant_main_rep_app_user.id
+```
+
+### Relationship Configuration
+Configure maximum relationship depth:
+```javascript
+const result = evaluateFormula('merchant_rel.main_rep_rel.name', context, {
+  maxRelationshipDepth: 5  // Default is 3
+});
+```
+
+### Multi-Level Aggregates
+Combine multi-level relationships with aggregate functions:
+```javascript
+// Count submissions by merchant's main rep
+STRING_AGG(merchant_rel.main_rep_rel.name, ", ")
+
+// Average across deep relationships
+AVG_AGG(merchant_rel.main_rep_rel.performance_score)
+```
+
+### Performance Optimization
+- **JOIN Deduplication**: Shared relationship paths are consolidated
+- **Bulkified Metadata Loading**: All table schemas loaded in single queries
+- **Intelligent Alias Generation**: Hierarchical aliases prevent conflicts
+- **Context Structure**: Flat relationship format for improved startup performance
+
+## �🔧 SQL Optimization
 
 The compiler includes intelligent SQL optimization:
 
