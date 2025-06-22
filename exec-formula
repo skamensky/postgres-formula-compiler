@@ -10,22 +10,7 @@
 import { readFileSync } from 'fs';
 import { evaluateFormula, generateSQL, mapPostgresType } from './formula-compiler.js';
 import { basename, dirname } from 'path';
-import pkg from 'pg';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
-
-const { Client } = pkg;
-
-// Database connection string from environment
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  console.error('❌ Error: DATABASE_URL environment variable is not set');
-  console.error('   Please create a .env file with: DATABASE_URL=your_connection_string');
-  process.exit(1);
-}
+import { createDatabaseClient } from './src/db-client.js';
 
 // Parse command line arguments
 function parseArguments() {
@@ -481,9 +466,9 @@ async function main() {
     
     // Connect to database for metadata lookup
     if (outputFormat === 'console') {
-      console.log('\n🔌 Connecting to PostgreSQL database...');
+      console.log('\n🔌 Connecting to database...');
     }
-    const client = new Client({ connectionString });
+    const client = createDatabaseClient();
     await client.connect();
     
     // Build context for the table using metadata system (NEW FLAT STRUCTURE + BACKWARD COMPATIBILITY)
@@ -695,7 +680,7 @@ async function main() {
       console.log('  ✓ Single query execution for multiple formula results');
     }
     
-    await client.end();
+    await client.close();
     
     // For non-console formats, prepare and output structured data
     if (outputFormat !== 'console') {
