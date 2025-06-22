@@ -98,21 +98,21 @@ function generateSQL(namedResults, baseTableName) {
     
     aggIntents.forEach((aggIntent, index) => {
       let columnAlias;
-      if (aggIntent.aggregateFunction.startsWith('STRING_AGG')) {
+      if (aggIntent.aggregateFunction.startsWith(FUNCTIONS.STRING_AGG)) {
         columnAlias = `rep_names`;
-      } else if (aggIntent.aggregateFunction === 'COUNT_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.COUNT_AGG) {
         columnAlias = `rep_count`;
-      } else if (aggIntent.aggregateFunction === 'SUM_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.SUM_AGG) {
         columnAlias = `sum_value`;
-      } else if (aggIntent.aggregateFunction === 'AVG_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.AVG_AGG) {
         columnAlias = `avg_value`;
-      } else if (aggIntent.aggregateFunction === 'MIN_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.MIN_AGG) {
         columnAlias = `min_value`;
-      } else if (aggIntent.aggregateFunction === 'MAX_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.MAX_AGG) {
         columnAlias = `max_value`;
-      } else if (aggIntent.aggregateFunction === 'AND_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.AND_AGG) {
         columnAlias = `and_value`;
-      } else if (aggIntent.aggregateFunction === 'OR_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.OR_AGG) {
         columnAlias = `or_value`;
       } else {
         columnAlias = `agg_col_${index + 1}`;
