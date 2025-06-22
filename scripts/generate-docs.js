@@ -239,7 +239,11 @@ The formula language supports automatic type conversion in many contexts:
 *Documentation generated on ${new Date().toISOString()}*
 `;
 
-  fs.writeFileSync(path.join(usageDir, 'types.md'), typesContent);
+  const typesPath = path.join(usageDir, 'types.md');
+  const typesUpdated = writeFileIfChanged(typesPath, typesContent);
+  if (typesUpdated) {
+    console.log('   📝 Updated types.md');
+  }
 }
 
 /**
@@ -294,7 +298,11 @@ ${generateOperatorsSection()}
 *Documentation generated on ${new Date().toISOString()}*
 `;
 
-  fs.writeFileSync(path.join(usageDir, 'README.md'), overviewContent);
+  const overviewPath = path.join(usageDir, 'README.md');
+  const overviewUpdated = writeFileIfChanged(overviewPath, overviewContent);
+  if (overviewUpdated) {
+    console.log('   📝 Updated README.md');
+  }
   
   // Generate category-specific function documentation
   const functionsDir = path.join(usageDir, 'functions');
@@ -332,7 +340,11 @@ ${generateExampleReferencesMarkdown(exampleRefs)}
 *Documentation generated on ${new Date().toISOString()}*
 `;
     
-    fs.writeFileSync(path.join(functionsDir, `${category}.md`), categoryContent);
+    const categoryPath = path.join(functionsDir, `${category}.md`);
+    const categoryUpdated = writeFileIfChanged(categoryPath, categoryContent);
+    if (categoryUpdated) {
+      console.log(`   📝 Updated functions/${category}.md`);
+    }
   });
 }
 
@@ -398,7 +410,11 @@ ${JSON.stringify(FUNCTION_METADATA, null, 2)}
 *Documentation generated on ${new Date().toISOString()}*
 `;
 
-  fs.writeFileSync(path.join(langDir, 'metadata.md'), metadataContent);
+  const metadataPath = path.join(langDir, 'metadata.md');
+  const metadataUpdated = writeFileIfChanged(metadataPath, metadataContent);
+  if (metadataUpdated) {
+    console.log('   📝 Updated lang/metadata.md');
+  }
   
   // Generate compiler integration guide
   const integrationContent = `# Compiler Integration Guide
@@ -486,7 +502,11 @@ export function compileFunction(compiler, node) {
 *Documentation generated on ${new Date().toISOString()}*
 `;
 
-  fs.writeFileSync(path.join(langDir, 'integration.md'), integrationContent);
+  const integrationPath = path.join(langDir, 'integration.md');
+  const integrationUpdated = writeFileIfChanged(integrationPath, integrationContent);
+  if (integrationUpdated) {
+    console.log('   📝 Updated lang/integration.md');
+  }
 }
 
 /**
@@ -796,21 +816,68 @@ ${content}
 }
 
 /**
+ * Check if file content has changed, ignoring timestamp differences
+ * @param {string} filePath - Path to the file
+ * @param {string} newContent - New content to compare
+ * @returns {boolean} True if content has changed (excluding timestamp)
+ */
+function hasContentChanged(filePath, newContent) {
+  if (!fs.existsSync(filePath)) {
+    return true; // File doesn't exist, so it's a change
+  }
+  
+  try {
+    const existingContent = fs.readFileSync(filePath, 'utf8');
+    
+    // Remove timestamp lines from both contents for comparison
+    const normalizeContent = (content) => {
+      return content
+        .replace(/\*Documentation generated on .*\*/g, '') // Remove timestamp lines
+        .replace(/\n\s*\n/g, '\n') // Normalize multiple newlines
+        .trim();
+    };
+    
+    const normalizedExisting = normalizeContent(existingContent);
+    const normalizedNew = normalizeContent(newContent);
+    
+    return normalizedExisting !== normalizedNew;
+  } catch (error) {
+    // If we can't read existing file, assume it's changed
+    return true;
+  }
+}
+
+/**
+ * Write file only if content has changed (ignoring timestamps)
+ * @param {string} filePath - Path to write to
+ * @param {string} content - Content to write
+ * @returns {boolean} True if file was written
+ */
+function writeFileIfChanged(filePath, content) {
+  if (hasContentChanged(filePath, content)) {
+    fs.writeFileSync(filePath, content);
+    return true;
+  }
+  return false;
+}
+
+/**
  * Main documentation generation
  */
 function main() {
   console.log('🏗️  Generating Formula Language Documentation...');
   
   try {
+    console.log('📄 Checking usage documentation...');
     generateUsageDocs();
-    console.log('✅ Generated usage documentation (including types.md)');
     
+    console.log('📄 Checking language/technical documentation...');
     generateLangDocs();
-    console.log('✅ Generated language/technical documentation');
     
-    console.log(`\n📚 Documentation generated successfully!`);
+    console.log(`\n📚 Documentation generation completed!`);
     console.log(`   Usage docs: ${usageDir}`);
     console.log(`   Language docs: ${langDir}`);
+    console.log(`\n💡 Only files with actual content changes were updated.`);
     
   } catch (error) {
     console.error('❌ Documentation generation failed:', error);
