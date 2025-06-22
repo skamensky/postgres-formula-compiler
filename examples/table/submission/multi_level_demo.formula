@@ -1,0 +1,1 @@
+"Submission " & STRING(amount) & " with " & STRING(COUNT_AGG(rep_links_submission, commission_percentage)) & " rep commissions"

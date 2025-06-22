@@ -224,31 +224,51 @@ function generateFieldName(filePath) {
   return fileName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
 }
 
-// Build column list for any table using metadata system
-async function getColumnListForTable(tableName, client) {
+// Build column lists for multiple tables using metadata system (BULKIFIED)
+async function getColumnListForTables(tableNames, client) {
+  if (tableNames.length === 0) {
+    return {};
+  }
+  
   const query = `
-    SELECT tf.name, tf.data_type
+    SELECT ti.table_name, tf.name, tf.data_type
     FROM table_field tf
     JOIN table_info ti ON tf.table_info = ti.id
-    WHERE ti.table_name = $1
-    ORDER BY tf.name
+    WHERE ti.table_name = ANY($1)
+    ORDER BY ti.table_name, tf.name
   `;
   
-  const result = await client.query(query, [tableName]);
+  const result = await client.query(query, [tableNames]);
   
-  if (result.rows.length === 0) {
-    throw new Error(`Table '${tableName}' not found in metadata system`);
+  const columnLists = {};
+  
+  // Initialize empty objects for all requested tables
+  for (const tableName of tableNames) {
+    columnLists[tableName] = {};
   }
   
-  const columnList = {};
+  // Populate column lists from results
   for (const row of result.rows) {
-    columnList[row.name] = mapPostgresType(row.data_type);
+    columnLists[row.table_name][row.name] = mapPostgresType(row.data_type);
   }
   
-  return columnList;
+  // Check if any tables were not found
+  for (const tableName of tableNames) {
+    if (Object.keys(columnLists[tableName]).length === 0) {
+      throw new Error(`Table '${tableName}' not found in metadata system`);
+    }
+  }
+  
+  return columnLists;
 }
 
-// Build relationship info for a table using metadata system
+// Build column list for a single table (compatibility wrapper)
+async function getColumnListForTable(tableName, client) {
+  const columnLists = await getColumnListForTables([tableName], client);
+  return columnLists[tableName];
+}
+
+// Build relationship info for a table using metadata system (NEW FLAT STRUCTURE)
 async function getRelationshipsForTable(tableName, client) {
   const query = `
     SELECT rl.col_name, rl.target_table_name
@@ -257,50 +277,147 @@ async function getRelationshipsForTable(tableName, client) {
   `;
   
   const result = await client.query(query, [tableName]);
-  const relationships = {};
+  const relationships = [];
   
   for (const row of result.rows) {
-    const targetColumnList = await getColumnListForTable(row.target_table_name, client);
+    // Use the base name (without _id suffix) as the relationship name
+    const relationshipName = row.col_name.replace(/_id$/, '');
     
-    // Use the base name (without _id suffix) as the key
-    const relationshipKey = row.col_name.replace(/_id$/, '');
-    
-    relationships[relationshipKey] = {
-      joinColumn: row.col_name,
-      columnList: targetColumnList
-    };
+    relationships.push({
+      name: relationshipName,
+      fromTable: tableName,
+      toTable: row.target_table_name,
+      joinColumn: row.col_name
+    });
   }
   
   return relationships;
 }
 
-// Build inverse relationship info for a table using metadata system
-async function getInverseRelationshipsForTable(tableName, client) {
+// Build all relationship infos from database (NEW FLAT STRUCTURE)
+async function getAllRelationshipInfos(client) {
   const query = `
     SELECT rl.source_table_name, rl.col_name, rl.target_table_name
     FROM relationship_lookups rl
-    WHERE rl.target_table_name = $1
+    ORDER BY rl.source_table_name, rl.col_name
   `;
   
-  const result = await client.query(query, [tableName]);
-  const inverseRelationships = {};
+  const result = await client.query(query);
+  const relationships = [];
   
   for (const row of result.rows) {
+    // Use the base name (without _id suffix) as the relationship name
+    const relationshipName = row.col_name.replace(/_id$/, '');
+    
+    relationships.push({
+      name: relationshipName,
+      fromTable: row.source_table_name,
+      toTable: row.target_table_name,
+      joinColumn: row.col_name
+    });
+  }
+  
+  return relationships;
+}
+
+
+
+// Build inverse relationship info for multiple tables using metadata system (BULKIFIED)
+async function getInverseRelationshipsForTables(tableNames, client) {
+  if (tableNames.length === 0) {
+    return {};
+  }
+  
+  // Get all inverse relationships for the given tables
+  const inverseQuery = `
+    SELECT rl.source_table_name, rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    WHERE rl.target_table_name = ANY($1)
+  `;
+  
+  const inverseResult = await client.query(inverseQuery, [tableNames]);
+  
+  // Collect all unique source tables that need column information
+  const sourceTableNames = [...new Set(inverseResult.rows.map(row => row.source_table_name))];
+  
+  // Get all forward relationships for source tables
+  const forwardQuery = `
+    SELECT rl.source_table_name, rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    WHERE rl.source_table_name = ANY($1)
+  `;
+  
+  const forwardResult = await client.query(forwardQuery, [sourceTableNames]);
+  
+  // Collect all unique tables that need column information
+  const allTablesNeeded = new Set([
+    ...sourceTableNames,
+    ...forwardResult.rows.map(row => row.target_table_name)
+  ]);
+  
+  // Get column lists for all tables in one call
+  const columnLists = await getColumnListForTables([...allTablesNeeded], client);
+  
+  // Build relationship maps
+  const sourceRelationshipsMap = new Map();
+  for (const row of forwardResult.rows) {
+    const sourceTable = row.source_table_name;
+    if (!sourceRelationshipsMap.has(sourceTable)) {
+      sourceRelationshipsMap.set(sourceTable, []);
+    }
+    
+    const relationshipName = row.col_name.replace(/_id$/, '');
+    sourceRelationshipsMap.get(sourceTable).push({
+      name: relationshipName,
+      fromTable: sourceTable,
+      toTable: row.target_table_name,
+      joinColumn: row.col_name
+    });
+  }
+  
+  // Build inverse relationships for all requested tables
+  const allInverseRelationships = {};
+  for (const tableName of tableNames) {
+    allInverseRelationships[tableName] = {};
+  }
+  
+  for (const row of inverseResult.rows) {
+    const targetTable = row.target_table_name;
+    const sourceTable = row.source_table_name;
+    
     // Use naming pattern: {source_table_name}s_{col_name}
-    const relationshipName = `${row.source_table_name}s_${row.col_name}`;
+    const relationshipName = `${sourceTable}s_${row.col_name}`;
     
-    const sourceColumnList = await getColumnListForTable(row.source_table_name, client);
-    const sourceRelationships = await getRelationshipsForTable(row.source_table_name, client);
+    const sourceColumnList = columnLists[sourceTable];
+    const sourceRelationships = sourceRelationshipsMap.get(sourceTable) || [];
     
-    inverseRelationships[relationshipName] = {
-      tableName: row.source_table_name,
+    // Convert flat relationships to old nested format for backward compatibility
+    const nestedRelationshipInfo = {};
+    for (const rel of sourceRelationships) {
+      const targetColumnList = columnLists[rel.toTable];
+      if (targetColumnList) {
+        nestedRelationshipInfo[rel.name] = {
+          joinColumn: rel.joinColumn,
+          columnList: targetColumnList
+        };
+      }
+    }
+    
+    allInverseRelationships[targetTable][relationshipName] = {
+      tableName: sourceTable,
       columnList: sourceColumnList,
       joinColumn: row.col_name,
-      relationshipInfo: sourceRelationships
+      relationshipInfo: nestedRelationshipInfo
     };
   }
   
-  return inverseRelationships;
+  return allInverseRelationships;
+}
+
+// Build inverse relationship info for a single table (compatibility wrapper)
+async function getInverseRelationshipsForTable(tableName, client) {
+  const allInverseRelationships = await getInverseRelationshipsForTables([tableName], client);
+  return allInverseRelationships[tableName] || {};
 }
 
 async function main() {
@@ -369,28 +486,75 @@ async function main() {
     const client = new Client({ connectionString });
     await client.connect();
     
-    // Build context for the table using metadata system
+    // Build context for the table using metadata system (NEW FLAT STRUCTURE + BACKWARD COMPATIBILITY)
     if (outputFormat === 'console') {
       console.log('📋 Loading table metadata...');
     }
-    const columnList = await getColumnListForTable(tableName, client);
     
     if (outputFormat === 'console') {
       console.log('🔗 Loading relationship metadata...');
     }
-    const relationshipInfo = await getRelationshipsForTable(tableName, client);
+    
+    // NEW: Get all relationships from database for multi-level support
+    const allRelationships = await getAllRelationshipInfos(client);
+    
+    // Collect all unique table names needed for bulkified column loading
+    const allTableNames = new Set([tableName]);
+    const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRels) {
+      allTableNames.add(rel.toTable);
+    }
+    
+    // Bulkified: Get column lists for all tables in one call
+    const allColumnLists = await getColumnListForTables([...allTableNames], client);
+    const columnList = allColumnLists[tableName];
+    
+    // Build table infos using bulkified results
+    const tableInfos = [
+      {
+        tableName: tableName,
+        columnList: columnList
+      }
+    ];
+    
+    // Add table infos for direct relationships from this table
+    for (const rel of directRels) {
+      if (allColumnLists[rel.toTable]) {
+        tableInfos.push({
+          tableName: rel.toTable,
+          columnList: allColumnLists[rel.toTable]
+        });
+      }
+    }
     
     if (outputFormat === 'console') {
       console.log('🔗 Loading inverse relationship metadata...');
     }
     const inverseRelationshipInfo = await getInverseRelationshipsForTable(tableName, client);
     
+    // Build context with BOTH new flat structure AND old structure for backward compatibility
     const context = {
       tableName: tableName,
+      // NEW flat structure
+      tableInfos: tableInfos,
+      relationshipInfos: allRelationships,
+      // OLD structure for backward compatibility (needed for aggregates)
       columnList: columnList,
-      relationshipInfo: relationshipInfo,
+      relationshipInfo: {}, // Will be populated below for backward compatibility
       inverseRelationshipInfo: inverseRelationshipInfo
     };
+    
+    // Build old-style relationshipInfo for backward compatibility with aggregates
+    const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRelationships) {
+      const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+      if (targetTable) {
+        context.relationshipInfo[rel.name] = {
+          joinColumn: rel.joinColumn,
+          columnList: targetTable.columnList
+        };
+      }
+    }
     
     if (outputFormat === 'console') {
       console.log('\n🔄 Compiling formulas to intents...');

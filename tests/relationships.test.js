@@ -37,7 +37,7 @@ test('Multiple relationships', () => {
 test('Unknown relationship error', () => {
   assertError(
     () => evaluateFormula('unknown_rel.field', relationshipContext),
-    /Unknown relationship: unknown\. Available relationships:/,
+    /Unknown relationship: unknown\. Available relationships from submission:/,
     'Should throw error for unknown relationship'
   );
 });
@@ -46,7 +46,7 @@ test('Unknown relationship error', () => {
 test('Unknown field in relationship error', () => {
   assertError(
     () => evaluateFormula('merchant_rel.unknown_field', relationshipContext),
-    /Unknown field UNKNOWN_FIELD in relationship merchant\. Available fields:/,
+    /Unknown field UNKNOWN_FIELD in relationship chain merchant\.UNKNOWN_FIELD\. Available fields:/,
     'Should throw error for unknown field in relationship'
   );
 });
