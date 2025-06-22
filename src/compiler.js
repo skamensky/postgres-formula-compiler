@@ -12,10 +12,10 @@ import { compileFunction } from './function-dispatcher.js';
 
 /**
  * @typedef {Object} ExpressionIntent
- * @property {string} type - Expression type (maps to NodeType)
+ * @property {Symbol} type - Expression type (from unified TYPE system)
  * @property {string} semanticId - Hierarchical human-readable identifier
  * @property {Array<string>} dependentJoins - Required join semanticIds
- * @property {string} returnType - Result type ('string'|'number'|'boolean'|'date'|'null')
+ * @property {Symbol} returnType - Result type (from unified TYPE system)
  * @property {string} compilationContext - Context where this was compiled ('main'|'agg:...')
  * @property {*} value - Type-specific value
  * @property {Array<ExpressionIntent>} [children] - Sub-expressions for complex types
@@ -39,7 +39,7 @@ import { compileFunction } from './function-dispatcher.js';
  * @property {ExpressionIntent} expression - Expression to aggregate
  * @property {ExpressionIntent} [delimiter] - Delimiter for STRING_AGG
  * @property {Array<JoinIntent>} internalJoins - Joins needed within subquery
- * @property {string} returnType - Result type of aggregate
+ * @property {Symbol} returnType - Result type of aggregate (from unified TYPE system)
  */
 
 /**
@@ -47,7 +47,7 @@ import { compileFunction } from './function-dispatcher.js';
  * @property {ExpressionIntent} expression - Root expression intent
  * @property {Array<JoinIntent>} joinIntents - Required joins
  * @property {Array<AggregateIntent>} aggregateIntents - Required aggregates
- * @property {string} returnType - Overall result type
+ * @property {Symbol} returnType - Overall result type (from unified TYPE system)
  */
 
 class Compiler {
@@ -263,7 +263,7 @@ class Compiler {
             this.error(`Invalid operand types for +: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
           }
         } else if (left.returnType === TYPE.DATE && right.returnType === TYPE.DATE) {
-          this.error('Invalid operand types for +: date and date', node.position);
+          this.error(`Invalid operand types for +: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
         } else if (left.returnType !== TYPE.NUMBER || right.returnType !== TYPE.NUMBER) {
           this.error(`Invalid operand types for +: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
         } else {
