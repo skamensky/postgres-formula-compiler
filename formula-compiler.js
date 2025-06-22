@@ -154,7 +154,7 @@ class Lexer {
     let result = '';
     const startPos = this.position;
     
-    while (this.currentChar !== null && /[a-zA-Z_]\w*/.test(this.currentChar)) {
+    while (this.currentChar !== null && /[a-zA-Z0-9_]/.test(this.currentChar)) {
       result += this.currentChar;
       this.advance();
     }

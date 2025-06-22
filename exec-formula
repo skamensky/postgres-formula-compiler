@@ -355,8 +355,18 @@ async function getInverseRelationshipsForTables(tableNames, client) {
     ...forwardResult.rows.map(row => row.target_table_name)
   ]);
   
-  // Get column lists for all tables in one call
-  const columnLists = await getColumnListForTables([...allTablesNeeded], client);
+  // Filter to only include tables that exist in the metadata system
+  // First, check which tables exist by querying table_infos
+  const existingTablesQuery = `
+    SELECT table_name 
+    FROM table_infos 
+    WHERE table_name = ANY($1)
+  `;
+  const existingTablesResult = await client.query(existingTablesQuery, [[...allTablesNeeded]]);
+  const existingTables = existingTablesResult.rows.map(row => row.table_name);
+  
+  // Get column lists only for tables that actually exist
+  const columnLists = await getColumnListForTables(existingTables, client);
   
   // Build relationship maps
   const sourceRelationshipsMap = new Map();
@@ -530,7 +540,30 @@ async function main() {
     if (outputFormat === 'console') {
       console.log('🔗 Loading inverse relationship metadata...');
     }
-    const inverseRelationshipInfo = await getInverseRelationshipsForTable(tableName, client);
+    
+    // For multi-level aggregation support, we need inverse relationships for all tables
+    // that could be part of multi-level chains, not just the base table
+    const allTablesForInverse = new Set([tableName]);
+    
+    // Add all tables that are directly related to this table
+    for (const rel of directRels) {
+      allTablesForInverse.add(rel.toTable);
+    }
+    
+    // Add all tables that have inverse relationships with this table
+    const baseInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
+    for (const rel of baseInverseRels) {
+      allTablesForInverse.add(rel.fromTable);
+    }
+    
+    // Get inverse relationships for all relevant tables
+    const inverseRelationshipInfo = await getInverseRelationshipsForTables([...allTablesForInverse], client);
+    
+    // Merge all inverse relationships into a single object for the base table
+    const mergedInverseRelationshipInfo = {};
+    for (const tableInverseRels of Object.values(inverseRelationshipInfo)) {
+      Object.assign(mergedInverseRelationshipInfo, tableInverseRels);
+    }
     
     // Build context with BOTH new flat structure AND old structure for backward compatibility
     const context = {
@@ -541,7 +574,7 @@ async function main() {
       // OLD structure for backward compatibility (needed for aggregates)
       columnList: columnList,
       relationshipInfo: {}, // Will be populated below for backward compatibility
-      inverseRelationshipInfo: inverseRelationshipInfo
+      inverseRelationshipInfo: mergedInverseRelationshipInfo
     };
     
     // Build old-style relationshipInfo for backward compatibility with aggregates
