@@ -6,7 +6,8 @@
   "main": "formula-compiler.js",
   "scripts": {
     "test": "node tests/run-all-tests.js",
-    "exec-all": "for dir in examples/table/*/; do table=$(basename \"$dir\"); echo \"Processing $table table...\"; ./exec-formula --output markdown \"$dir\"*.formula > \"${table}-exec-results.md\"; done"
+    "exec-all": "for dir in examples/table/*/; do table=$(basename \"$dir\"); echo \"Processing $table table...\"; ./exec-formula --output markdown \"$dir\"*.formula > \"${table}-exec-results.md\"; done",
+    "generate-docs": "node scripts/generate-docs.js"
   },
   "dependencies": {
     "pg": "^8.11.0",

@@ -2,7 +2,15 @@
  * Aggregate Functions
  * Handles STRING_AGG, STRING_AGG_DISTINCT, SUM_AGG, COUNT_AGG, AVG_AGG, MIN_AGG, MAX_AGG, AND_AGG, OR_AGG functions
  * Now supports multi-level aggregate functions with chained inverse relationships
+ * Uses metadata-driven approach with function constants to eliminate magic strings
  */
+
+import { 
+  FUNCTIONS, 
+  FUNCTION_CATEGORIES, 
+  CATEGORIES,
+  getFunctionMetadata
+} from '../function-metadata.js';
 
 /**
  * Parse multi-level relationship chain from aggregate function first argument
@@ -158,12 +166,12 @@ export function compileAggregateFunction(compiler, node) {
   const funcName = node.name;
   
   // Check if this is an aggregate function
-  if (!['STRING_AGG', 'STRING_AGG_DISTINCT', 'SUM_AGG', 'COUNT_AGG', 'AVG_AGG', 'MIN_AGG', 'MAX_AGG', 'AND_AGG', 'OR_AGG'].includes(funcName)) {
+  if (!FUNCTION_CATEGORIES[CATEGORIES.AGGREGATE].includes(funcName)) {
     return null; // Not handled by this module
   }
   
   let expectedArgCount = 2; // Most aggregate functions take 2 args
-  if (funcName === 'STRING_AGG' || funcName === 'STRING_AGG_DISTINCT') {
+  if (funcName === FUNCTIONS.STRING_AGG || funcName === FUNCTIONS.STRING_AGG_DISTINCT) {
     expectedArgCount = 3; // STRING_AGG takes delimiter as 3rd arg
   }
   
@@ -283,27 +291,21 @@ export function compileAggregateFunction(compiler, node) {
   
   // Handle delimiter for STRING_AGG functions
   let delimiterResult = null;
-  if (funcName === 'STRING_AGG' || funcName === 'STRING_AGG_DISTINCT') {
+  if (funcName === FUNCTIONS.STRING_AGG || funcName === FUNCTIONS.STRING_AGG_DISTINCT) {
     delimiterResult = compiler.compile(node.args[2]); // Compile in main context
     if (delimiterResult.returnType !== 'string') {
       compiler.error(`${funcName}() delimiter must be string, got ${delimiterResult.returnType}`, node.position);
     }
   }
   
-  // Determine return type
-  let returnType;
-  if (funcName.startsWith('STRING_AGG')) {
-    returnType = 'string';
-  } else if (['AND_AGG', 'OR_AGG'].includes(funcName)) {
-    returnType = 'boolean';
-  } else {
-    returnType = 'number';
-  }
+  // Determine return type using metadata
+  const metadata = getFunctionMetadata(funcName);
+  const returnType = metadata.returnType;
   
   // Generate aggregate intent
   // For COUNT_AGG, use the same semantic ID regardless of column since SQL is always COUNT(*)
   let semanticDetails;
-  if (funcName === 'COUNT_AGG') {
+  if (funcName === FUNCTIONS.COUNT_AGG) {
     semanticDetails = `${funcName}[${subCompiler.compilationContext}]`;
   } else {
     semanticDetails = `${funcName}[${expressionResult.semanticId}]`;
