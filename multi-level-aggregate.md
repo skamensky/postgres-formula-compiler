@@ -200,6 +200,21 @@ Multi-level aggregation requires well-structured table and relationship metadata
 - **Caching Strategy**: Cache relationship metadata across multiple formula compilations
 - **Lazy Loading**: Consider loading additional table metadata on-demand for deeper chains
 
+## Configuration Requirements
+
+### Safety Limits
+Multi-level aggregation requires safety mechanisms to prevent performance issues and infinite loops.
+
+**Required Configuration Parameters:**
+```javascript
+maxChainDepth: 5,    // Prevent runaway chains
+detectCycles: true   // Prevent infinite loops in relationships
+```
+
+**maxChainDepth**: Maximum number of relationship levels allowed in a chain (e.g., `table1.table2.table3` = depth 2). Prevents accidentally expensive queries and provides clear bounds for relationship traversal.
+
+**detectCycles**: Enable detection of circular relationship paths during chain resolution. Essential for preventing infinite loops when relationships form cycles in the database schema.
+
 ## Database Schema Considerations
 
 ### 1. Inverse Relationship Discovery
