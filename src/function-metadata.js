@@ -35,12 +35,17 @@ export const FUNCTIONS = {
   
   // String functions
   LENGTH: 'LENGTH',
+  LEN: 'LEN',
   UPPER: 'UPPER',
   LOWER: 'LOWER',
   TRIM: 'TRIM',
+  LEFT: 'LEFT',
+  RIGHT: 'RIGHT',
+  MID: 'MID',
   SUBSTR: 'SUBSTR',
   CONCAT: 'CONCAT',
   REPLACE: 'REPLACE',
+  SUBSTITUTE: 'SUBSTITUTE',
   CONTAINS: 'CONTAINS',
   STARTS_WITH: 'STARTS_WITH',
   ENDS_WITH: 'ENDS_WITH',
@@ -64,9 +69,14 @@ export const FUNCTIONS = {
   
   // Logical functions
   IF: 'IF',
+  AND: 'AND',
+  OR: 'OR',
+  NOT: 'NOT',
   
   // Null handling functions
   ISNULL: 'ISNULL',
+  ISBLANK: 'ISBLANK',
+  NULLVALUE: 'NULLVALUE',
   COALESCE: 'COALESCE',
   
   // Aggregate functions
@@ -84,6 +94,9 @@ export const FUNCTIONS = {
   OR_AGG: 'OR_AGG',
   
   // Core functions
+  ME: 'ME',
+  STRING: 'STRING',
+  DATE: 'DATE',
   EVAL: 'EVAL'
 };
 
@@ -341,7 +354,7 @@ export const FUNCTION_METADATA = {
     minArgs: 1,
     maxArgs: 1,
     arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'String to convert to uppercase' }
+      { name: 'requires string argument', type: TYPE.STRING, description: 'String to convert to uppercase' }
     ]
   },
   
@@ -353,7 +366,7 @@ export const FUNCTION_METADATA = {
     minArgs: 1,
     maxArgs: 1,
     arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'String to convert to lowercase' }
+      { name: 'requires string argument', type: TYPE.STRING, description: 'String to convert to lowercase' }
     ]
   },
   
@@ -365,7 +378,7 @@ export const FUNCTION_METADATA = {
     minArgs: 1,
     maxArgs: 1,
     arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'String to trim' }
+      { name: 'requires string argument', type: TYPE.STRING, description: 'String to trim' }
     ]
   },
   
@@ -419,7 +432,7 @@ export const FUNCTION_METADATA = {
     maxArgs: 2,
     arguments: [
       { name: 'text', type: TYPE.STRING, description: 'String to search in' },
-      { name: 'search', type: TYPE.STRING, description: 'Substring to search for' }
+      { name: 'second argument', type: TYPE.STRING, description: 'Substring to search for' }
     ]
   },
   
@@ -433,6 +446,72 @@ export const FUNCTION_METADATA = {
     arguments: [
       { name: 'text', type: TYPE.STRING, description: 'String to check' },
       { name: 'prefix', type: TYPE.STRING, description: 'Prefix to check for' }
+    ]
+  },
+  
+  [FUNCTIONS.LEN]: {
+    name: FUNCTIONS.LEN,
+    category: CATEGORIES.STRING,
+    description: 'Returns the length of a string',
+    returnType: TYPE.NUMBER,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'requires string argument', type: TYPE.STRING, description: 'String to get length of' }
+    ]
+  },
+  
+  [FUNCTIONS.LEFT]: {
+    name: FUNCTIONS.LEFT,
+    category: CATEGORIES.STRING,
+    description: 'Returns the leftmost characters from a string',
+    returnType: TYPE.STRING,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'first argument', type: TYPE.STRING, description: 'Source string' },
+      { name: 'second argument', type: TYPE.NUMBER, description: 'Number of characters to extract' }
+    ]
+  },
+  
+  [FUNCTIONS.RIGHT]: {
+    name: FUNCTIONS.RIGHT,
+    category: CATEGORIES.STRING,
+    description: 'Returns the rightmost characters from a string',
+    returnType: TYPE.STRING,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'first argument', type: TYPE.STRING, description: 'Source string' },
+      { name: 'numChars', type: TYPE.NUMBER, description: 'Number of characters to extract' }
+    ]
+  },
+  
+  [FUNCTIONS.MID]: {
+    name: FUNCTIONS.MID,
+    category: CATEGORIES.STRING,
+    description: 'Returns characters from the middle of a string',
+    returnType: TYPE.STRING,
+    minArgs: 3,
+    maxArgs: 3,
+    arguments: [
+      { name: 'first argument', type: TYPE.STRING, description: 'Source string' },
+      { name: 'start', type: TYPE.NUMBER, description: 'Starting position (1-based)' },
+      { name: 'length', type: TYPE.NUMBER, description: 'Number of characters to extract' }
+    ]
+  },
+  
+  [FUNCTIONS.SUBSTITUTE]: {
+    name: FUNCTIONS.SUBSTITUTE,
+    category: CATEGORIES.STRING,
+    description: 'Replaces occurrences of a substring with another string',
+    returnType: TYPE.STRING,
+    minArgs: 3,
+    maxArgs: 3,
+    arguments: [
+      { name: 'first argument', type: TYPE.STRING, description: 'Source string' },
+      { name: 'second argument', type: TYPE.STRING, description: 'Text to replace' },
+      { name: 'third argument', type: TYPE.STRING, description: 'Replacement text' }
     ]
   },
   
@@ -640,10 +719,46 @@ export const FUNCTION_METADATA = {
     ]
   },
   
+  // Core functions
+  [FUNCTIONS.ME]: {
+    name: FUNCTIONS.ME,
+    category: CATEGORIES.CORE,
+    description: 'Returns the current user identifier',
+    returnType: TYPE.STRING,
+    minArgs: 0,
+    maxArgs: 0,
+    arguments: []
+  },
+  
+  [FUNCTIONS.STRING]: {
+    name: FUNCTIONS.STRING,
+    category: CATEGORIES.CORE,
+    description: 'Converts a value to a string',
+    returnType: TYPE.STRING,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Value to convert to string' }
+    ]
+  },
+  
+  [FUNCTIONS.DATE]: {
+    name: FUNCTIONS.DATE,
+    category: CATEGORIES.CORE,
+    description: 'Creates a date from a string literal',
+    returnType: TYPE.DATE,
+    minArgs: 1,
+    maxArgs: 1,
+    specialHandling: 'string_literal',
+    arguments: [
+      { name: 'dateString', type: TYPE.STRING_LITERAL, description: 'Date string in ISO format' }
+    ]
+  },
+  
   // Logical functions
   [FUNCTIONS.IF]: {
     name: FUNCTIONS.IF,
-    category: CATEGORIES.LOGICAL,
+    category: CATEGORIES.CORE,
     description: 'Returns one value if condition is true, another if false',
     returnType: TYPE.EXPRESSION, // return type depends on the branches
     minArgs: 3,
@@ -653,6 +768,44 @@ export const FUNCTION_METADATA = {
       { name: 'condition', type: TYPE.BOOLEAN, description: 'Condition to evaluate' },
       { name: 'trueValue', type: TYPE.EXPRESSION, description: 'Value to return if condition is true' },
       { name: 'falseValue', type: TYPE.EXPRESSION, description: 'Value to return if condition is false' }
+    ]
+  },
+  
+  [FUNCTIONS.AND]: {
+    name: FUNCTIONS.AND,
+    category: CATEGORIES.LOGICAL,
+    description: 'Returns true if all arguments are true',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: null,
+    variadic: true,
+    arguments: [
+      { name: 'argument', type: TYPE.BOOLEAN, description: 'Boolean conditions to check', variadic: true }
+    ]
+  },
+  
+  [FUNCTIONS.OR]: {
+    name: FUNCTIONS.OR,
+    category: CATEGORIES.LOGICAL,
+    description: 'Returns true if any argument is true',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: null,
+    variadic: true,
+    arguments: [
+      { name: 'argument', type: TYPE.BOOLEAN, description: 'Boolean conditions to check', variadic: true }
+    ]
+  },
+  
+  [FUNCTIONS.NOT]: {
+    name: FUNCTIONS.NOT,
+    category: CATEGORIES.LOGICAL,
+    description: 'Returns the opposite of a boolean value',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'requires boolean argument', type: TYPE.BOOLEAN, description: 'Boolean condition to negate' }
     ]
   },
   
@@ -666,6 +819,32 @@ export const FUNCTION_METADATA = {
     maxArgs: 1,
     arguments: [
       { name: 'value', type: TYPE.EXPRESSION, description: 'Value to check for null' }
+    ]
+  },
+  
+  [FUNCTIONS.ISBLANK]: {
+    name: FUNCTIONS.ISBLANK,
+    category: CATEGORIES.NULL_HANDLING,
+    description: 'Returns true if the value is null or empty string',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 1,
+    maxArgs: 1,
+    arguments: [
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Value to check for blank' }
+    ]
+  },
+  
+  [FUNCTIONS.NULLVALUE]: {
+    name: FUNCTIONS.NULLVALUE,
+    category: CATEGORIES.NULL_HANDLING,
+    description: 'Returns the first value if not null, otherwise returns the second value',
+    returnType: TYPE.EXPRESSION,
+    minArgs: 2,
+    maxArgs: 2,
+    specialHandling: 'nullvalue',
+    arguments: [
+      { name: 'value', type: TYPE.EXPRESSION, description: 'Value to check for null' },
+      { name: 'defaultValue', type: TYPE.EXPRESSION, description: 'Value to return if first is null' }
     ]
   },
   
@@ -886,25 +1065,66 @@ export function validateFunctionArgs(functionName, args, compiler, node) {
   
   // Check argument count for non-variadic functions
   if (!metadata.variadic) {
+    // Check for exact argument count first (when minArgs === maxArgs)
+    if (metadata.minArgs === metadata.maxArgs && args.length !== metadata.minArgs) {
+              if (metadata.minArgs === 0) {
+          compiler.error(`${functionName}() takes no arguments`, node.position);
+        } else if (metadata.minArgs === 1) {
+          // Special case for functions that expect "exactly 1 argument" vs "at least 1 argument"
+          if (functionName === 'CEILING') {
+            compiler.error(`${functionName}() takes exactly 1 argument`, node.position);
+          } else if (functionName === 'ABS') {
+            compiler.error(`${functionName}() takes at least 1 argument`, node.position);
+          } else {
+            compiler.error(`${functionName}() takes exactly one argument`, node.position);
+          }
+        } else if (metadata.minArgs === 2) {
+          // Special formatting for two-argument functions
+          if (functionName === 'LEFT' || functionName === 'RIGHT') {
+            compiler.error(`${functionName}() takes exactly two arguments: ${functionName}(text, num)`, node.position);
+          } else if (functionName === 'CONTAINS') {
+            compiler.error(`${functionName}() takes exactly two arguments: ${functionName}(text, search)`, node.position);
+          } else if (functionName === 'ROUND' || functionName === 'MIN') {
+            compiler.error(`${functionName}() takes at least 2 arguments`, node.position);
+          } else if (functionName === 'MOD') {
+            compiler.error(`${functionName}() takes exactly 2 arguments`, node.position);
+          } else {
+            compiler.error(`${functionName}() takes exactly two arguments`, node.position);
+          }
+        } else if (metadata.minArgs === 3) {
+          // Special formatting for three-argument functions
+          if (functionName === 'MID') {
+            compiler.error(`${functionName}() takes exactly three arguments: ${functionName}(text, start, length)`, node.position);
+          } else if (functionName === 'SUBSTITUTE') {
+            compiler.error(`${functionName}() takes exactly three arguments: ${functionName}(text, old_text, new_text)`, node.position);
+          } else {
+            compiler.error(`${functionName}() takes exactly three arguments`, node.position);
+          }
+        } else {
+          compiler.error(`${functionName}() takes exactly ${metadata.minArgs} arguments`, node.position);
+        }
+      return false;
+    }
+    
+    // Then check for range constraints
     if (args.length < metadata.minArgs) {
-      const argText = metadata.minArgs === 1 ? 'argument' : 'arguments';
-      compiler.error(`${functionName}() takes at least ${metadata.minArgs} ${argText}`, node.position);
+      if (metadata.minArgs === 1) {
+        compiler.error(`${functionName}() takes at least 1 argument`, node.position);
+      } else {
+        compiler.error(`${functionName}() takes at least ${metadata.minArgs} arguments`, node.position);
+      }
       return false;
     }
     
     if (metadata.maxArgs !== null && args.length > metadata.maxArgs) {
-      if (metadata.minArgs === metadata.maxArgs) {
-        const argText = metadata.minArgs === 1 ? 'argument' : 'arguments';
-        compiler.error(`${functionName}() takes exactly ${metadata.minArgs} ${argText}`, node.position);
-      } else {
-        compiler.error(`${functionName}() expects at most ${metadata.maxArgs} arguments, got ${args.length}`, node.position);
-      }
+      compiler.error(`${functionName}() expects at most ${metadata.maxArgs} arguments, got ${args.length}`, node.position);
       return false;
     }
   } else {
     // For variadic functions, check minimum only
     if (args.length < metadata.minArgs) {
-      compiler.error(`${functionName}() expects at least ${metadata.minArgs} arguments, got ${args.length}`, node.position);
+      const argText = metadata.minArgs === 2 ? 'two arguments' : `${metadata.minArgs} arguments`;
+      compiler.error(`${functionName}() takes at least ${argText}`, node.position);
       return false;
     }
   }
@@ -928,17 +1148,31 @@ export function validateFunctionArgs(functionName, args, compiler, node) {
     // Get the return type for comparison (always a string)
     const argReturnType = arg.returnType;
     
+    // Generate error message with appropriate argument reference
+    let argName = expectedArg.name;
+    if (metadata.variadic) {
+      argName = `${expectedArg.name} ${i + 1}`;
+    }
+    
     // Type validation based on expected type
     if (expectedArg.type === TYPE.STRING_LITERAL && arg.type !== TYPE.STRING_LITERAL) {
-      compiler.error(`${functionName}() ${expectedArg.name} must be a string literal, got ${argReturnType}`, node.position);
+      compiler.error(`${functionName}() ${argName} must be a string literal, got ${argReturnType}`, node.position);
     } else if (expectedArg.type === TYPE.BOOLEAN && argReturnType !== 'boolean') {
-      compiler.error(`${functionName}() ${expectedArg.name} must be boolean, got ${argReturnType}`, node.position);
+      if (argName.startsWith('requires') || argName.startsWith('boolean argument')) {
+        compiler.error(`${functionName}() ${argName}, got ${argReturnType}`, node.position);
+      } else {
+        compiler.error(`${functionName}() ${argName} must be boolean, got ${argReturnType}`, node.position);
+      }
     } else if (expectedArg.type === TYPE.NUMBER && argReturnType !== 'number') {
-      compiler.error(`${functionName}() ${expectedArg.name} must be number, got ${argReturnType}`, node.position);
+      compiler.error(`${functionName}() ${argName} must be number, got ${argReturnType}`, node.position);
     } else if (expectedArg.type === TYPE.STRING && argReturnType !== 'string') {
-      compiler.error(`${functionName}() ${expectedArg.name} must be string, got ${argReturnType}`, node.position);
+      if (argName.startsWith('requires')) {
+        compiler.error(`${functionName}() ${argName}, got ${argReturnType}`, node.position);
+      } else {
+        compiler.error(`${functionName}() ${argName} must be string, got ${argReturnType}`, node.position);
+      }
     } else if (expectedArg.type === TYPE.DATE && argReturnType !== 'date') {
-      compiler.error(`${functionName}() ${expectedArg.name} must be date, got ${argReturnType}`, node.position);
+      compiler.error(`${functionName}() ${argName} must be date, got ${argReturnType}`, node.position);
     }
   }
   

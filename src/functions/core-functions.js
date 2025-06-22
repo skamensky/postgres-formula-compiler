@@ -1,8 +1,15 @@
 /**
  * Core/Special Functions
  * Handles TODAY, ME, DATE, STRING, and IF functions
+ * Now uses metadata-driven approach where possible
  */
 
+import { 
+  validateFunctionArgs, 
+  FUNCTIONS, 
+  CATEGORIES,
+  FUNCTION_METADATA
+} from '../function-metadata.js';
 import { TYPE } from '../types-unified.js';
 
 /**
@@ -14,75 +21,90 @@ import { TYPE } from '../types-unified.js';
 export function compileCoreFunction(compiler, node) {
   const funcName = node.name;
   
-  switch (funcName) {
-    case 'TODAY':
-      if (node.args.length !== 0) {
-        compiler.error('TODAY() takes no arguments', node.position);
-      }
-      return {
-        type: 'FUNCTION_CALL',
-        semanticId: compiler.generateSemanticId('function', 'TODAY'),
-        dependentJoins: [],
-        returnType: 'date',
-        compilationContext: compiler.compilationContext,
-        value: { name: 'TODAY', args: [] }
-      };
-
-    case 'ME':
-      if (node.args.length !== 0) {
-        compiler.error('ME() takes no arguments', node.position);
-      }
-      return {
-        type: 'FUNCTION_CALL',
-        semanticId: compiler.generateSemanticId('function', 'ME'),
-        dependentJoins: [],
-        returnType: 'string',
-        compilationContext: compiler.compilationContext,
-        value: { name: 'ME', args: [] }
-      };
-
-    case 'DATE':
-      if (node.args.length !== 1) {
-        compiler.error('DATE() takes exactly one argument', node.position);
-      }
-      
-      const dateArg = compiler.compile(node.args[0]);
-      if (dateArg.type !== 'STRING_LITERAL') {
-        compiler.error('DATE() function requires a string literal', node.position);
-      }
-      
-      return {
-        type: 'FUNCTION_CALL',
-        semanticId: compiler.generateSemanticId('function', 'DATE', [dateArg.semanticId]),
-        dependentJoins: [],
-        returnType: 'date',
-        compilationContext: compiler.compilationContext,
-        value: { name: 'DATE', stringValue: dateArg.value },
-        children: [dateArg]
-      };
-
-    case 'STRING':
-      if (node.args.length !== 1) {
-        compiler.error('STRING() takes exactly one argument', node.position);
-      }
-      
-      const stringArg = compiler.compile(node.args[0]);
-      return {
-        type: 'FUNCTION_CALL',
-        semanticId: compiler.generateSemanticId('function', 'STRING', [stringArg.semanticId]),
-        dependentJoins: stringArg.dependentJoins,
-        returnType: 'string',
-        compilationContext: compiler.compilationContext,
-        value: { name: 'STRING' },
-        children: [stringArg]
-      };
-
-    case 'IF':
-      return compileIfFunction(compiler, node);
-
-    default:
-      return null; // Not handled by this module
+  // Check if this function exists and belongs to core category
+  const metadata = FUNCTION_METADATA[funcName];
+  if (!metadata || metadata.category !== CATEGORIES.CORE) {
+    return null; // Not handled by this module
   }
+  
+  // Handle functions that need special processing
+  if (funcName === FUNCTIONS.DATE) {
+    return compileDateFunction(compiler, node, metadata);
+  }
+  
+  if (funcName === FUNCTIONS.IF) {
+    return compileIfFunction(compiler, node);
+  }
+  
+  // Handle standard core functions (TODAY, ME, STRING)
+  const compiledArgs = node.args.map(arg => compiler.compile(arg));
+  
+  // Validate using metadata
+  if (!validateFunctionArgs(funcName, compiledArgs, compiler, node)) {
+    return; // Validation failed, error already reported
+  }
+  
+  // Convert Symbol return type to string for consistency
+  const returnTypeString = metadata.returnType === TYPE.NUMBER ? 'number' : 
+                          metadata.returnType === TYPE.STRING ? 'string' :
+                          metadata.returnType === TYPE.BOOLEAN ? 'boolean' :
+                          metadata.returnType === TYPE.DATE ? 'date' : 'unknown';
+  
+  // Special handling for different core functions
+  switch (funcName) {
+    case FUNCTIONS.TODAY:
+    case FUNCTIONS.ME:
+      return {
+        type: 'FUNCTION_CALL',
+        semanticId: compiler.generateSemanticId('function', funcName),
+        dependentJoins: [],
+        returnType: returnTypeString,
+        compilationContext: compiler.compilationContext,
+        value: { name: funcName, args: [] }
+      };
+      
+    case FUNCTIONS.STRING:
+      return {
+        type: 'FUNCTION_CALL',
+        semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
+        dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
+        returnType: returnTypeString,
+        compilationContext: compiler.compilationContext,
+        value: { name: funcName },
+        children: compiledArgs
+      };
+      
+    default:
+      return null;
+  }
+}
+
+/**
+ * Compile DATE function with string literal validation
+ * @param {Object} compiler - Compiler instance
+ * @param {Object} node - Function call AST node
+ * @param {Object} metadata - Function metadata
+ * @returns {Object} Compiled DATE function
+ */
+function compileDateFunction(compiler, node, metadata) {
+  if (node.args.length !== 1) {
+    compiler.error('DATE() takes exactly one argument', node.position);
+  }
+  
+  const dateArg = compiler.compile(node.args[0]);
+  if (dateArg.type !== 'STRING_LITERAL') {
+    compiler.error('DATE() function requires a string literal', node.position);
+  }
+  
+  return {
+    type: 'FUNCTION_CALL',
+    semanticId: compiler.generateSemanticId('function', 'DATE', [dateArg.semanticId]),
+    dependentJoins: [],
+    returnType: 'date',
+    compilationContext: compiler.compilationContext,
+    value: { name: 'DATE', stringValue: dateArg.value },
+    children: [dateArg]
+  };
 }
 
 /**
