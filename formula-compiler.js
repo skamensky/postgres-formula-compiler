@@ -399,10 +399,20 @@ class Parser {
         const args = [];
         
         if (this.currentToken.type !== TokenType.RPAREN) {
-          args.push(this.comparison());
+          // Check if this is an aggregate function that might have dot-separated first argument
+          const isAggregateFunction = ['STRING_AGG', 'STRING_AGG_DISTINCT', 'COUNT_AGG', 'SUM_AGG', 'AVG_AGG', 'MIN_AGG', 'MAX_AGG', 'AND_AGG', 'OR_AGG'].includes(identifier);
+          
+          if (isAggregateFunction) {
+            // First argument might be a dot-separated identifier for aggregate functions
+            args.push(this.parseFirstFunctionArgument());
+          } else {
+            // Regular function - parse first argument normally
+            args.push(this.comparison());
+          }
           
           while (this.currentToken.type === TokenType.COMMA) {
             this.eat(TokenType.COMMA);
+            // Subsequent arguments are regular expressions
             args.push(this.comparison());
           }
         }
@@ -562,6 +572,53 @@ class Parser {
     }
 
     return node;
+  }
+
+  /**
+   * Parse the first function argument that can be a dot-separated identifier for aggregate functions
+   * @returns {Object} Parsed argument AST node
+   */
+  parseFirstFunctionArgument() {
+    // Special case: if we have an identifier that could be part of a dot-separated chain, handle it
+    if (this.currentToken.type === TokenType.IDENTIFIER) {
+      const startPosition = this.currentToken.position;
+      const firstIdentifier = this.currentToken.value;
+      
+      // Consume the first identifier
+      this.eat(TokenType.IDENTIFIER);
+      
+      // If followed by a dot, this is a dot-separated identifier
+      if (this.currentToken.type === TokenType.DOT) {
+        let fullIdentifier = firstIdentifier;
+        
+        while (this.currentToken.type === TokenType.DOT) {
+          this.eat(TokenType.DOT);
+          
+          if (this.currentToken.type !== TokenType.IDENTIFIER) {
+            this.error('Expected identifier after dot', this.currentToken.position);
+          }
+          
+          fullIdentifier += '.' + this.currentToken.value;
+          this.eat(TokenType.IDENTIFIER);
+        }
+        
+        return {
+          type: NodeType.IDENTIFIER,
+          value: fullIdentifier,
+          position: startPosition
+        };
+      } else {
+        // Not a dot-separated identifier, create a simple identifier node and continue
+        return {
+          type: NodeType.IDENTIFIER,
+          value: firstIdentifier,
+          position: startPosition
+        };
+      }
+    }
+    
+    // For all other cases (non-identifiers), parse as comparison
+    return this.comparison();
   }
 
   /**
@@ -1857,7 +1914,8 @@ class Compiler {
     }
 
     const relationshipName = relationshipArg.value.toLowerCase();
-    const originalRelationshipName = relationshipArg.value; // Keep original case for error messages
+    // For dot-separated relationships, preserve the dot notation in lowercase
+    const originalRelationshipName = relationshipArg.value.includes('.') ? relationshipArg.value.toLowerCase() : relationshipArg.value;
     
     // Pre-validate potential depth limit before parsing
     const maxDepth = this.maxInverseAggregateDepth || 2;
@@ -1919,7 +1977,7 @@ class Compiler {
     const aggregateIntent = {
       semanticId: aggSemanticId,
       aggregateFunction: funcName,
-      sourceRelation: relationshipName,
+      sourceRelation: originalRelationshipName,  // Use original case to preserve dot notation
       relationshipChain: relationshipChain.length > 1 ? relationshipChain : undefined,
       expression: expressionResult,
       delimiter: delimiterResult,
@@ -1958,69 +2016,34 @@ class Compiler {
   parseInverseRelationshipChain(relationshipName, originalRelationshipName, position) {
     const availableInverseRels = Object.keys(this.context.inverseRelationshipInfo || {});
     
-    // Strategy 1: Try direct match (single-level)
-    if (availableInverseRels.includes(relationshipName)) {
-      const relInfo = this.context.inverseRelationshipInfo[relationshipName];
-      return [{
-        inverseTable: relInfo.tableName,
-        joinFieldBase: relInfo.joinColumn,
-        joinField: relInfo.joinColumn,
-        originalName: relationshipName
-      }];
-    }
-    
-    // Strategy 2: Try to parse as multi-level by matching suffixes
+    // Split on dots for multi-level relationships
+    const relationshipParts = relationshipName.split('.');
     const relationshipChain = [];
-    let remainingName = relationshipName;
     
-    // Keep trying to extract relationships from the end
-    while (remainingName.length > 0) {
-      let foundMatch = false;
+    // Parse each part as a separate inverse relationship
+    for (let i = 0; i < relationshipParts.length; i++) {
+      const partName = relationshipParts[i];
       
-      // Try to find a suffix that matches a known inverse relationship
-      for (const inverseRel of availableInverseRels) {
-        if (remainingName.endsWith(inverseRel)) {
-          // Found a match - this is a relationship segment
-          const relInfo = this.context.inverseRelationshipInfo[inverseRel];
-          
-          relationshipChain.unshift({
-            inverseTable: relInfo.tableName,
-            joinFieldBase: relInfo.joinColumn,
-            joinField: relInfo.joinColumn,
-            originalName: inverseRel
-          });
-          
-          // Remove this segment from the remaining name
-          const prefixLength = remainingName.length - inverseRel.length;
-          if (prefixLength > 0 && remainingName[prefixLength - 1] === '_') {
-            // Remove the relationship and the preceding underscore
-            remainingName = remainingName.substring(0, prefixLength - 1);
-          } else if (prefixLength === 0) {
-            // This was the entire remaining string
-            remainingName = '';
-          } else {
-            // No underscore separator - this shouldn't happen for valid names
-            this.error(`Invalid multi-level relationship pattern: ${relationshipName}`, position);
-          }
-          
-          foundMatch = true;
-          break;
+      if (!availableInverseRels.includes(partName)) {
+        const availableRelationships = availableInverseRels.slice(0, 10);
+        const suggestionText = availableRelationships.length > 0 
+          ? ` Available inverse relationships: ${availableRelationships.join(', ')}${availableInverseRels.length > 10 ? ' (and ' + (availableInverseRels.length - 10) + ' more)' : ''}`
+          : '';
+        
+        if (relationshipChain.length === 0) {
+          this.error(`Unknown inverse relationship: ${originalRelationshipName}.${suggestionText}`, position);
+        } else {
+          this.error(`Unknown inverse relationship in chain: ${partName} (in ${originalRelationshipName})`, position);
         }
       }
       
-      if (!foundMatch) {
-                 // If we haven't found any relationships yet, this is an unknown inverse relationship
-         if (relationshipChain.length === 0) {
-           const availableRelationships = availableInverseRels.slice(0, 10);
-           const suggestionText = availableRelationships.length > 0 
-             ? ` Available inverse relationships: ${availableRelationships.join(', ')}${availableInverseRels.length > 10 ? ' (and ' + (availableInverseRels.length - 10) + ' more)' : ''}`
-             : '';
-           this.error(`Unknown inverse relationship: ${originalRelationshipName}.${suggestionText}`, position);
-         } else {
-           // This is a multi-level relationship with an unknown segment
-           this.error(`Unknown inverse relationship in chain: ${remainingName}`, position);
-         }
-      }
+      const relInfo = this.context.inverseRelationshipInfo[partName];
+      relationshipChain.push({
+        inverseTable: relInfo.tableName,
+        joinFieldBase: relInfo.joinColumn,
+        joinField: relInfo.joinColumn,
+        originalName: partName
+      });
     }
     
     return relationshipChain;

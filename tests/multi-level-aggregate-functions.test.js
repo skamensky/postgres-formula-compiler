@@ -103,8 +103,8 @@ const multiLevelAggregateContext = {
 };
 
 // Basic multi-level aggregate tests
-test('Multi-level STRING_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('STRING_AGG(submissions_merchant_rep_links_submission, commission_percentage, ",")', multiLevelAggregateContext);
+test('Multi-level STRING_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('STRING_AGG(submissions_merchant.rep_links_submission, commission_percentage, ",")', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'STRING_AGG');
@@ -112,64 +112,64 @@ test('Multi-level STRING_AGG: submissions_merchant_rep_links_submission', () => 
   assertEqual(result.aggregateIntents[0].relationshipChain.length, 2);
 });
 
-test('Multi-level COUNT_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('COUNT_AGG(submissions_merchant_rep_links_submission, rep)', multiLevelAggregateContext);
+test('Multi-level COUNT_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('COUNT_AGG(submissions_merchant.rep_links_submission, rep)', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'COUNT_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
-test('Multi-level SUM_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage)', multiLevelAggregateContext);
+test('Multi-level SUM_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage)', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
-test('Multi-level AVG_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('AVG_AGG(submissions_merchant_rep_links_submission, commission_percentage)', multiLevelAggregateContext);
+test('Multi-level AVG_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('AVG_AGG(submissions_merchant.rep_links_submission, commission_percentage)', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'AVG_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
-test('Multi-level MIN_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('MIN_AGG(submissions_merchant_rep_links_submission, commission_percentage)', multiLevelAggregateContext);
+test('Multi-level MIN_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('MIN_AGG(submissions_merchant.rep_links_submission, commission_percentage)', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'MIN_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
-test('Multi-level MAX_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('MAX_AGG(submissions_merchant_rep_links_submission, commission_percentage)', multiLevelAggregateContext);
+test('Multi-level MAX_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('MAX_AGG(submissions_merchant.rep_links_submission, commission_percentage)', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'MAX_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
-test('Multi-level AND_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('AND_AGG(submissions_merchant_rep_links_submission, commission_percentage > 0)', multiLevelAggregateContext);
+test('Multi-level AND_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('AND_AGG(submissions_merchant.rep_links_submission, commission_percentage > 0)', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'AND_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
-test('Multi-level OR_AGG: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('OR_AGG(submissions_merchant_rep_links_submission, commission_percentage > 10)', multiLevelAggregateContext);
+test('Multi-level OR_AGG: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('OR_AGG(submissions_merchant.rep_links_submission, commission_percentage > 10)', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'OR_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
-test('Multi-level STRING_AGG_DISTINCT: submissions_merchant_rep_links_submission', () => {
-  const result = evaluateFormula('STRING_AGG_DISTINCT(submissions_merchant_rep_links_submission, STRING(commission_percentage), "|")', multiLevelAggregateContext);
+test('Multi-level STRING_AGG_DISTINCT: submissions_merchant.rep_links_submission', () => {
+  const result = evaluateFormula('STRING_AGG_DISTINCT(submissions_merchant.rep_links_submission, STRING(commission_percentage), "|")', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'STRING_AGG_DISTINCT');
@@ -178,7 +178,7 @@ test('Multi-level STRING_AGG_DISTINCT: submissions_merchant_rep_links_submission
 
 // Multi-level with nested relationships
 test('Multi-level aggregate with nested relationship: rep_rel.name', () => {
-  const result = evaluateFormula('STRING_AGG(submissions_merchant_rep_links_submission, rep_rel.name, ",")', multiLevelAggregateContext);
+  const result = evaluateFormula('STRING_AGG(submissions_merchant.rep_links_submission, rep_rel.name, ",")', multiLevelAggregateContext);
   assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].multiLevel, true);
@@ -187,24 +187,24 @@ test('Multi-level aggregate with nested relationship: rep_rel.name', () => {
 
 // Multiple multi-level aggregates on same relationship chain
 test('Multiple multi-level aggregates on same relationship chain', () => {
-  const result = evaluateFormula('SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage) + COUNT_AGG(submissions_merchant_rep_links_submission, rep)', multiLevelAggregateContext);
+  const result = evaluateFormula('SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage) + COUNT_AGG(submissions_merchant.rep_links_submission, rep)', multiLevelAggregateContext);
   assertEqual(result.aggregateIntents.length, 2);
-  assertEqual(result.aggregateIntents[0].sourceRelation, 'submissions_merchant_rep_links_submission');
-  assertEqual(result.aggregateIntents[1].sourceRelation, 'submissions_merchant_rep_links_submission');
+  assertEqual(result.aggregateIntents[0].sourceRelation, 'submissions_merchant.rep_links_submission');
+  assertEqual(result.aggregateIntents[1].sourceRelation, 'submissions_merchant.rep_links_submission');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
   assertEqual(result.aggregateIntents[1].multiLevel, true);
 });
 
 // Complex expressions with multi-level aggregates
 test('Complex expression with multi-level aggregate', () => {
-  const result = evaluateFormula('IF(SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage) > 100, "High Commission", "Low Commission")', multiLevelAggregateContext);
+  const result = evaluateFormula('IF(SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage) > 100, "High Commission", "Low Commission")', multiLevelAggregateContext);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
 test('Multi-level aggregate in string concatenation', () => {
-  const result = evaluateFormula('"Total reps: " & STRING(COUNT_AGG(submissions_merchant_rep_links_submission, rep))', multiLevelAggregateContext);
+  const result = evaluateFormula('"Total reps: " & STRING(COUNT_AGG(submissions_merchant.rep_links_submission, rep))', multiLevelAggregateContext);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'COUNT_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
@@ -233,7 +233,7 @@ test('Error: Multi-level relationship exceeding depth limit', () => {
   };
   
   assertError(
-    () => evaluateFormula('STRING_AGG(submissions_merchant_rep_links_submission_payments_rep_link_docs_payment, amount, ",")', limitedContext, { maxInverseAggregateDepth: 2 }),
+    () => evaluateFormula('STRING_AGG(submissions_merchant.rep_links_submission.payments_rep_link.docs_payment, amount, ",")', limitedContext, { maxInverseAggregateDepth: 2 }),
     /Multi-level aggregate chain too deep \(max 2 levels\)/,
     'Should throw error for exceeding depth limit'
   );
@@ -241,15 +241,15 @@ test('Error: Multi-level relationship exceeding depth limit', () => {
 
 test('Error: Unknown inverse relationship in chain', () => {
   assertError(
-    () => evaluateFormula('STRING_AGG(unknown_table_rep_links_submission, commission_percentage, ",")', multiLevelAggregateContext),
-    /Unknown inverse relationship in chain/,
+    () => evaluateFormula('STRING_AGG(unknown_table.rep_links_submission, commission_percentage, ",")', multiLevelAggregateContext),
+    /Unknown inverse relationship in chain: unknown_table/,
     'Should throw error for unknown inverse relationship'
   );
 });
 
 test('Error: Multi-level STRING_AGG wrong argument count', () => {
   assertError(
-    () => evaluateFormula('STRING_AGG(submissions_merchant_rep_links_submission, commission_percentage)', multiLevelAggregateContext),
+    () => evaluateFormula('STRING_AGG(submissions_merchant.rep_links_submission, commission_percentage)', multiLevelAggregateContext),
     /STRING_AGG\(\) takes exactly 3 arguments/,
     'Should throw error for wrong argument count'
   );
@@ -257,7 +257,7 @@ test('Error: Multi-level STRING_AGG wrong argument count', () => {
 
 test('Error: Multi-level aggregate with non-string delimiter', () => {
   assertError(
-    () => evaluateFormula('STRING_AGG(submissions_merchant_rep_links_submission, commission_percentage, 123)', multiLevelAggregateContext),
+    () => evaluateFormula('STRING_AGG(submissions_merchant.rep_links_submission, commission_percentage, 123)', multiLevelAggregateContext),
     /STRING_AGG\(\) delimiter must be string/,
     'Should throw error for non-string delimiter'
   );
@@ -274,14 +274,14 @@ test('Backward compatibility: Single-level aggregates still work', () => {
 
 // Integration with other features
 test('Multi-level aggregate with comparison operators', () => {
-  const result = evaluateFormula('SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage) > 50', multiLevelAggregateContext);
+  const result = evaluateFormula('SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage) > 50', multiLevelAggregateContext);
   assertEqual(result.aggregateIntents.length, 1);
   assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
   assertEqual(result.aggregateIntents[0].multiLevel, true);
 });
 
 test('Multi-level aggregate with logical functions', () => {
-  const result = evaluateFormula('AND(SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage) > 0, COUNT_AGG(submissions_merchant_rep_links_submission, rep) > 1)', multiLevelAggregateContext);
+  const result = evaluateFormula('AND(SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage) > 0, COUNT_AGG(submissions_merchant.rep_links_submission, rep) > 1)', multiLevelAggregateContext);
   assertEqual(result.aggregateIntents.length, 2);
   assertEqual(result.aggregateIntents[0].multiLevel, true);
   assertEqual(result.aggregateIntents[1].multiLevel, true);
