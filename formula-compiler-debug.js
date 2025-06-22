@@ -2011,14 +2011,9 @@ class Compiler {
       if (!foundMatch) {
                  // If we haven't found any relationships yet, this is an unknown single-level relationship
          if (relationshipChain.length === 0) {
-           // For multi-level aggregate context, pattern names should get pattern error
-           // Exception: clearly single-level names like "unknown_relationship" get standard error
+           // Check if this looks like a multi-level pattern attempt
            const parts = relationshipName.split('_');
-           const isLikelyMultiLevelAttempt = parts.length >= 2 && 
-             !relationshipName.startsWith('unknown_') && // Exception for test names starting with "unknown_"
-             !relationshipName.endsWith('_relationship'); // Exception for names ending with "_relationship"
-           
-           if (isLikelyMultiLevelAttempt) {
+           if (parts.length >= 2 && parts.length <= 4) {
              this.error(`Multi-level aggregate relationship must follow pattern: {inverse1}_{inverse2}[_{inverse3}]`, position);
            }
            
@@ -2076,7 +2071,7 @@ class Compiler {
         }
       }
       
-      const subContext = {
+      console.log("DEBUG: finalTable:", finalTable); console.log("DEBUG: finalTableInfo:", finalTableInfo); console.log("DEBUG: finalRelationshipInfos:", finalRelationshipInfos); console.log("DEBUG: subTableInfos:", subTableInfos); const subContext = {
         tableName: relInfo.tableName,
         tableInfos: subTableInfos,
         relationshipInfos: subRelationshipInfos
@@ -2108,26 +2103,23 @@ class Compiler {
       let finalTableInfo = null;
       let finalRelationshipInfos = [];
       
-             // Try to find table info from various sources
-       if (this.context.tableInfos) {
-         finalTableInfo = this.context.tableInfos.find(t => t.tableName === finalTable);
-       }
-       
-       // Always extract relationships from the last relationship in chain (regardless of whether finalTableInfo was found)
-       if (relationshipChain.length > 0) {
+      // Try to find table info from various sources
+      if (this.context.tableInfos) {
+        finalTableInfo = this.context.tableInfos.find(t => t.tableName === finalTable);
+      }
+      
+             // If not found in flat structure, try to build from last relationship in chain
+       if (!finalTableInfo && relationshipChain.length > 0) {
          const lastRelName = relationshipChain[relationshipChain.length - 1].originalName;
          const lastRelInfo = this.context.inverseRelationshipInfo[lastRelName];
          
          if (lastRelInfo && lastRelInfo.tableName === finalTable) {
-           // If finalTableInfo wasn't found, build it from the inverse relationship
-           if (!finalTableInfo) {
-             finalTableInfo = {
-               tableName: finalTable,
-               columnList: lastRelInfo.columnList || {}
-             };
-           }
+           finalTableInfo = {
+             tableName: finalTable,
+             columnList: lastRelInfo.columnList || {}
+           };
            
-           // Always extract nested relationships from this inverse relationship
+           // Also extract relationships from this inverse relationship
            if (lastRelInfo.relationshipInfo) {
              for (const [subRelName, subRelInfo] of Object.entries(lastRelInfo.relationshipInfo)) {
                finalRelationshipInfos.push({
@@ -2136,6 +2128,12 @@ class Compiler {
                  toTable: subRelInfo.tableName || subRelName,
                  joinColumn: subRelInfo.joinColumn
                });
+               
+               // Add target table info to the tableInfos array (not relationshipInfos)
+               if (!this.context.tableInfos || !this.context.tableInfos.find(t => t.tableName === (subRelInfo.tableName || subRelName))) {
+                 // This should be added to subContext.tableInfos, not finalRelationshipInfos
+                 // We'll add it later when building the final subContext
+               }
              }
            }
          }
