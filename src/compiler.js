@@ -1,5 +1,6 @@
 import { NodeType } from './types.js';
 import { compileRelationshipRef } from './relationship-compiler.js';
+import { compileFunction } from './function-dispatcher.js';
 
 /**
  * Intent-based Formula Compiler
@@ -176,7 +177,7 @@ class Compiler {
         return this.compileBinaryOp(node);
 
       case NodeType.FUNCTION_CALL:
-        return this.compileFunction(node);
+        return compileFunction(this, node);
 
       case NodeType.RELATIONSHIP_REF:
         return compileRelationshipRef(this, node);

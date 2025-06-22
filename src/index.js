@@ -3,7 +3,6 @@ import { TokenType, NodeType } from './types.js';
 import { Lexer } from './lexer.js';
 import { Parser } from './parser.js';
 import { Compiler } from './compiler.js';
-import './function-compiler.js'; // This extends Compiler prototype with function methods
 import { generateSQL } from './sql-generator.js';
 
 /**
