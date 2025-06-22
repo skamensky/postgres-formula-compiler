@@ -56,7 +56,7 @@ export function compileDateFunction(compiler, node) {
   
   // All date functions use standard compilation (except DATEDIF which is handled separately)
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
     dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
     returnType: returnTypeString,
@@ -90,7 +90,7 @@ function compileDateExtractionFunction(compiler, node, metadata) {
   }
   
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, [arg.semanticId]),
     dependentJoins: arg.dependentJoins,
     returnType: 'number',
@@ -129,7 +129,7 @@ function compileAddDateFunction(compiler, node, metadata) {
   }
   
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, [arg1.semanticId, arg2.semanticId]),
     dependentJoins: [...arg1.dependentJoins, ...arg2.dependentJoins],
     returnType: 'date',
@@ -175,7 +175,7 @@ function compileDatedifFunction(compiler, node, metadata) {
   }
   
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', 'DATEDIF', [datedifArg1.semanticId, datedifArg2.semanticId, unit]),
     dependentJoins: [...datedifArg1.dependentJoins, ...datedifArg2.dependentJoins],
     returnType: 'number',

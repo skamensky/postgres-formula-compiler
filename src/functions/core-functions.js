@@ -55,7 +55,7 @@ export function compileCoreFunction(compiler, node) {
     case FUNCTIONS.TODAY:
     case FUNCTIONS.ME:
       return {
-        type: 'FUNCTION_CALL',
+        type: TYPE.FUNCTION_CALL,
         semanticId: compiler.generateSemanticId('function', funcName),
         dependentJoins: [],
         returnType: returnTypeString,
@@ -65,7 +65,7 @@ export function compileCoreFunction(compiler, node) {
       
     case FUNCTIONS.STRING:
       return {
-        type: 'FUNCTION_CALL',
+        type: TYPE.FUNCTION_CALL,
         semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
         dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
         returnType: returnTypeString,
@@ -92,12 +92,12 @@ function compileDateFunction(compiler, node, metadata) {
   }
   
   const dateArg = compiler.compile(node.args[0]);
-  if (dateArg.type !== 'STRING_LITERAL') {
+  if (dateArg.type !== TYPE.STRING_LITERAL) {
     compiler.error('DATE() function requires a string literal', node.position);
   }
   
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', 'DATE', [dateArg.semanticId]),
     dependentJoins: [],
     returnType: 'date',
@@ -139,7 +139,7 @@ export function compileIfFunction(compiler, node) {
   const dependentJoins = children.flatMap(child => child.dependentJoins);
   
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', 'IF', childIds),
     dependentJoins: dependentJoins,
     returnType: trueValue.returnType,

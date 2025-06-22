@@ -1,3 +1,5 @@
+import { TYPE } from './types-unified.js';
+
 /**
  * Relationship compilation utilities
  * Handles multi-level relationship chains, join intent generation, and field validation
@@ -119,7 +121,7 @@ export function compileMultiLevelRelationship(compiler, relationshipChain, field
         );
         
         return {
-          type: 'RELATIONSHIP_REF',
+          type: TYPE.RELATIONSHIP_REF,
           semanticId: relationshipRefSemanticId,
           dependentJoins: allJoinSemanticIds,
           returnType: fieldType,
@@ -153,7 +155,7 @@ export function compileMultiLevelRelationship(compiler, relationshipChain, field
   );
   
   return {
-    type: 'RELATIONSHIP_REF',
+    type: TYPE.RELATIONSHIP_REF,
     semanticId: relationshipRefSemanticId,
     dependentJoins: allJoinSemanticIds,
     returnType: fieldType,

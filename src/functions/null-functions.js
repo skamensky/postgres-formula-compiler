@@ -45,7 +45,7 @@ export function compileNullFunction(compiler, node) {
   
   // Standard null functions (ISNULL, ISBLANK) use standard compilation
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
     dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
     returnType: returnTypeString,
@@ -79,7 +79,7 @@ function compileNullValueFunction(compiler, node) {
   const nullvalueReturnType = nullvalueArg1.returnType !== 'null' ? nullvalueArg1.returnType : nullvalueArg2.returnType;
   
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', 'NULLVALUE', [nullvalueArg1.semanticId, nullvalueArg2.semanticId]),
     dependentJoins: [...nullvalueArg1.dependentJoins, ...nullvalueArg2.dependentJoins],
     returnType: nullvalueReturnType,

@@ -119,7 +119,7 @@ class Compiler {
     switch (node.type) {
       case TYPE.NUMBER_LITERAL:
         return {
-          type: 'NUMBER',
+          type: TYPE.NUMBER_LITERAL,
           semanticId: this.generateSemanticId('number', node.value.toString()),
           dependentJoins: [],
           returnType: 'number',
@@ -132,7 +132,7 @@ class Compiler {
 
       case TYPE.BOOLEAN_LITERAL:
         return {
-          type: 'BOOLEAN_LITERAL',
+          type: TYPE.BOOLEAN_LITERAL,
           semanticId: this.generateSemanticId('boolean', node.value),
           dependentJoins: [],
           returnType: 'boolean',
@@ -142,7 +142,7 @@ class Compiler {
 
       case TYPE.NULL_LITERAL:
         return {
-          type: 'NULL_LITERAL',
+          type: TYPE.NULL_LITERAL,
           semanticId: this.generateSemanticId('null', 'NULL'),
           dependentJoins: [],
           returnType: 'null',
@@ -152,7 +152,7 @@ class Compiler {
 
       case TYPE.STRING_LITERAL:
         return {
-          type: 'STRING_LITERAL',
+          type: TYPE.STRING_LITERAL,
           semanticId: this.generateSemanticId('string', `'${node.value}'`),
           dependentJoins: [],
           returnType: 'string',
@@ -162,7 +162,7 @@ class Compiler {
 
       case TYPE.DATE_LITERAL:
         return {
-          type: 'DATE_LITERAL',
+          type: TYPE.DATE_LITERAL,
           semanticId: this.generateSemanticId('date', node.value),
           dependentJoins: [],
           returnType: 'date',
@@ -198,7 +198,7 @@ class Compiler {
     }
 
     return {
-      type: 'IDENTIFIER',
+      type: TYPE.IDENTIFIER,
       semanticId: this.generateSemanticId('column', `${this.tableName}.${node.value.toLowerCase()}`),
       dependentJoins: [],
       returnType: columnType,
@@ -215,7 +215,7 @@ class Compiler {
     }
 
     return {
-      type: 'UNARY_OP',
+      type: TYPE.UNARY_OP,
       semanticId: this.generateSemanticId('unary_op', node.op, [operand.semanticId]),
       dependentJoins: operand.dependentJoins,
       returnType: 'number',
@@ -286,7 +286,7 @@ class Compiler {
     }
     
     return {
-      type: 'BINARY_OP',
+      type: TYPE.BINARY_OP,
       semanticId: this.generateSemanticId('binary_op', node.op, [left.semanticId, right.semanticId]),
       dependentJoins: dependentJoins,
       returnType: resultType,

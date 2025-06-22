@@ -1,3 +1,5 @@
+import { TYPE, typeToString } from './types-unified.js';
+
 /**
  * @typedef {Object} SQLResult
  * @property {string} sql - Generated SQL query
@@ -511,25 +513,25 @@ function generateAggregateSubquery(aggIntent, joinAliases, baseTableName) {
  */
 function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseTableName) {
   switch (expr.type) {
-    case 'NUMBER':
+    case TYPE.NUMBER_LITERAL:
       return expr.value.toString();
       
-    case 'STRING_LITERAL':
+    case TYPE.STRING_LITERAL:
       return `'${expr.value.replace(/'/g, "''")}'`; // Escape single quotes
       
-    case 'BOOLEAN_LITERAL':
+    case TYPE.BOOLEAN_LITERAL:
       return expr.value === 'TRUE' ? 'TRUE' : 'FALSE';
       
-    case 'NULL_LITERAL':
+    case TYPE.NULL_LITERAL:
       return 'NULL';
       
-    case 'DATE_LITERAL':
+    case TYPE.DATE_LITERAL:
       return `'${expr.value}'::date`;
       
-    case 'IDENTIFIER':
+    case TYPE.IDENTIFIER:
       return `"${baseTableName}"."${expr.value.toLowerCase()}"`;
       
-    case 'RELATIONSHIP_REF':
+    case TYPE.RELATIONSHIP_REF:
       // For multi-level relationships, use the final table alias
       // The last join in dependentJoins represents the final table in the chain
       const finalJoinSemanticId = expr.dependentJoins[expr.dependentJoins.length - 1];
@@ -539,15 +541,15 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
       }
       return `"${finalJoinAlias}"."${expr.value.fieldName}"`;
       
-    case 'UNARY_OP':
+    case TYPE.UNARY_OP:
       const operandSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `${expr.value.op}${operandSQL}`;
       
-    case 'BINARY_OP':
+    case TYPE.BINARY_OP:
       const leftSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const rightSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
-      const leftType = expr.children[0].returnType;
-      const rightType = expr.children[1].returnType;
+      const leftType = typeToString(expr.children[0].returnType);
+      const rightType = typeToString(expr.children[1].returnType);
       
       if (expr.value.op === '&') {
         return `(${leftSQL} || ${rightSQL})`;
@@ -575,10 +577,10 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
         return `(${leftSQL} ${expr.value.op} ${rightSQL})`;
       }
       
-    case 'FUNCTION_CALL':
+    case TYPE.FUNCTION_CALL:
       return generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTableName);
       
-    case 'AGGREGATE_FUNCTION':
+    case TYPE.AGGREGATE_FUNCTION:
       // For aggregate functions, reference the consolidated JOIN column
       const aggMapping = aggregateColumnMappings.get(expr.semanticId);
       if (!aggMapping) {
@@ -593,11 +595,12 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
 
 /**
  * Get default value for aggregate return type when result is NULL
- * @param {string} returnType - The return type (string, number, boolean)
+ * @param {Symbol} returnType - The return type (from unified type system)
  * @returns {string} Default SQL value
  */
 function getDefaultValueForAggregateType(returnType) {
-  switch (returnType) {
+  const typeString = typeToString(returnType);
+  switch (typeString) {
     case 'string':
       return "''";
     case 'number':

@@ -43,7 +43,7 @@ export function compileStringFunction(compiler, node) {
   
   // All string functions use standard compilation
   return {
-    type: 'FUNCTION_CALL',
+    type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
     dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
     returnType: returnTypeString,
