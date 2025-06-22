@@ -9,7 +9,13 @@ import express from 'express';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { evaluateFormula, generateSQL } from '../formula-compiler.js';
-import { createDatabaseClient } from '../src/db-client.js';
+import { createDatabaseClient } from './db-client.js';
+import {
+  getTableNames,
+  getColumnListsForTables,
+  getAllRelationships,
+  mapPostgresType
+} from './db-introspection.js';
 import { readFileSync, readdirSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -30,11 +36,11 @@ async function initializeDatabase() {
   console.log('🔌 Database connected');
 }
 
-// Get available tables from metadata
+// Get available tables from database introspection
 app.get('/api/tables', async (req, res) => {
   try {
-    const result = await dbClient.query('SELECT table_name FROM table_info ORDER BY table_name');
-    res.json({ tables: result.rows.map(row => row.table_name) });
+    const tables = await getTableNames(dbClient);
+    res.json({ tables });
   } catch (error) {
     console.error('Error fetching tables:', error);
     res.status(500).json({ error: 'Failed to fetch tables' });
@@ -46,26 +52,25 @@ app.get('/api/tables/:tableName/schema', async (req, res) => {
   try {
     const { tableName } = req.params;
     
-    // Get columns
-    const columnsResult = await dbClient.query(`
-      SELECT tf.name, tf.data_type
-      FROM table_field tf
-      JOIN table_info ti ON tf.table_info = ti.id
-      WHERE ti.table_name = $1
-      ORDER BY tf.name
-    `, [tableName]);
+    // Get columns using introspection
+    const columnLists = await getColumnListsForTables([tableName], dbClient);
+    const columns = Object.entries(columnLists[tableName] || {}).map(([name, type]) => ({
+      column_name: name,
+      data_type: type
+    }));
     
-    // Get relationships
-    const relationshipsResult = await dbClient.query(`
-      SELECT col_name, target_table_name
-      FROM relationship_lookups
-      WHERE source_table_name = $1
-      ORDER BY col_name
-    `, [tableName]);
+    // Get relationships using introspection  
+    const allRelationships = await getAllRelationships(dbClient);
+    const relationships = allRelationships
+      .filter(rel => rel.fromTable === tableName)
+      .map(rel => ({
+        col_name: rel.joinColumn,
+        target_table_name: rel.toTable
+      }));
     
     res.json({
-      columns: columnsResult.rows,
-      relationships: relationshipsResult.rows
+      columns: columns,
+      relationships: relationships
     });
   } catch (error) {
     console.error('Error fetching table schema:', error);
@@ -96,64 +101,12 @@ app.post('/api/execute', async (req, res) => {
       return res.status(400).json({ error: 'Formula and table name are required' });
     }
     
-    // Get column lists for all tables in one call
-    const allTablesResult = await dbClient.query('SELECT table_name FROM table_info');
-    const allTableNames = allTablesResult.rows.map(row => row.table_name);
+    // Get column lists for all tables using introspection
+    const allTableNames = await getTableNames(dbClient);
+    const columnLists = await getColumnListsForTables(allTableNames, dbClient);
     
-    const columnListsQuery = `
-      SELECT ti.table_name, tf.name, tf.data_type
-      FROM table_field tf
-      JOIN table_info ti ON tf.table_info = ti.id
-      WHERE ti.table_name = ANY($1)
-      ORDER BY ti.table_name, tf.name
-    `;
-    
-    const columnListsResult = await dbClient.query(columnListsQuery, [allTableNames]);
-    
-    const columnLists = {};
-    for (const tableName of allTableNames) {
-      columnLists[tableName] = {};
-    }
-    
-    for (const row of columnListsResult.rows) {
-      const jsType = mapPostgresType(row.data_type);
-      columnLists[row.table_name][row.name] = jsType;
-    }
-    
-    function mapPostgresType(pgType) {
-      if (['numeric', 'integer', 'bigint', 'smallint', 'decimal', 'real', 'double precision'].includes(pgType)) {
-        return 'number';
-      }
-      
-      if (['timestamp', 'timestamp with time zone', 'timestamptz', 'date'].includes(pgType)) {
-        return 'date';
-      }
-      
-      if (pgType === 'boolean') {
-        return 'boolean';
-      }
-      
-      return 'string';
-    }
-    
-    // Get all relationships
-    const allRelationshipsResult = await dbClient.query(`
-      SELECT source_table_name, col_name, target_table_name
-      FROM relationship_lookups
-      ORDER BY source_table_name, col_name
-    `);
-    
-    const allRelationships = [];
-    for (const row of allRelationshipsResult.rows) {
-      const relationshipName = row.col_name.replace(/_id$/, '');
-      
-      allRelationships.push({
-        name: relationshipName,
-        fromTable: row.source_table_name,
-        toTable: row.target_table_name,
-        joinColumn: row.col_name
-      });
-    }
+    // Get all relationships using introspection
+    const allRelationships = await getAllRelationships(dbClient);
     
     // Build context
     const context = {

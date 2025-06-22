@@ -612,13 +612,13 @@
                 let html = `
                     <div class="schema-section">
                         <h4>📋 Columns (${schema.columns.length})</h4>
-                        <div class="columns-grid">
-                            ${schema.columns.map(col => `
-                                <div class="column-item">
-                                    <div class="column-name">${col.name}</div>
-                                    <div class="column-type">${col.data_type}</div>
-                                </div>
-                            `).join('')}
+                                                 <div class="columns-grid">
+                             ${schema.columns.map(col => `
+                                 <div class="column-item">
+                                     <div class="column-name">${col.column_name}</div>
+                                     <div class="column-type">${col.data_type}</div>
+                                 </div>
+                             `).join('')}
                         </div>
                     </div>
                 `;

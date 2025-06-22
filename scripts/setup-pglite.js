@@ -32,12 +32,20 @@ async function setupDatabase() {
     const result = await db.query('SELECT COUNT(*) as count FROM submission');
     console.log(`📊 Found ${result.rows[0].count} submissions in database`);
     
-    // Test metadata tables
-    const tableCount = await db.query('SELECT COUNT(*) as count FROM table_info');
-    console.log(`🏗️  Found ${tableCount.rows[0].count} tables in metadata system`);
+    // Test schema using standard introspection
+    const tableCount = await db.query(`
+      SELECT COUNT(*) as count 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+    `);
+    console.log(`🏗️  Found ${tableCount.rows[0].count} tables in database`);
     
-    const relationshipCount = await db.query('SELECT COUNT(*) as count FROM relationship_lookups');
-    console.log(`🔗 Found ${relationshipCount.rows[0].count} relationships in lookup system`);
+    const relationshipCount = await db.query(`
+      SELECT COUNT(*) as count 
+      FROM information_schema.table_constraints 
+      WHERE constraint_type = 'FOREIGN KEY' AND table_schema = 'public'
+    `);
+    console.log(`🔗 Found ${relationshipCount.rows[0].count} foreign key relationships`);
     
     await db.close();
     console.log('🎉 PGlite database setup complete!');

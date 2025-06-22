@@ -30,13 +30,9 @@ class DatabaseClient {
       console.log('🔌 Connecting to PGlite database...');
       this.client = new PGlite();
       
-      // Check if database is initialized, if not, initialize it
-      try {
-        await this.client.query('SELECT 1 FROM table_info LIMIT 1');
-      } catch (error) {
-        console.log('📦 Initializing PGlite database with seed data...');
-        await this.initializePGlite();
-      }
+      // Always initialize with fresh seed data for consistent testing
+      console.log('📦 Initializing PGlite database with seed data...');
+      await this.initializePGlite();
     } else {
       console.log('🔌 Connecting to PostgreSQL database...');
       this.client = new Client({ connectionString: process.env.DATABASE_URL });
