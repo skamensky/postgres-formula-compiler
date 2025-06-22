@@ -4,7 +4,8 @@ This document describes all the data types used in the formula language.
 
 ## Basic Data Types
 
-### string {#string}
+<h3 id="string">string</h3>
+
 **Description:** Text data type for representing textual information.
 
 **Examples:**
@@ -22,7 +23,8 @@ String literals are enclosed in double quotes: `"text content"`
 
 ---
 
-### number {#number}
+<h3 id="number">number</h3>
+
 **Description:** Numeric data type for representing integers and decimal numbers.
 
 **Examples:**
@@ -41,7 +43,8 @@ Numeric literals can be integers or decimals: `123`, `45.67`
 
 ---
 
-### boolean {#boolean}
+<h3 id="boolean">boolean</h3>
+
 **Description:** Logical data type representing true or false values.
 
 **Examples:**
@@ -60,7 +63,8 @@ Boolean literals are the keywords `TRUE` and `FALSE`
 
 ---
 
-### date {#date}
+<h3 id="date">date</h3>
+
 **Description:** Date data type for representing calendar dates and timestamps.
 
 **Examples:**
@@ -79,7 +83,8 @@ Date literals are created using the `DATE()` function: `DATE("2023-12-25")`
 
 ---
 
-### null {#null}
+<h3 id="null">null</h3>
+
 **Description:** Special type representing the absence of a value.
 
 **Examples:**
@@ -97,7 +102,8 @@ The null literal is the keyword `NULL`
 
 ## Special Types
 
-### expression {#expression}
+<h3 id="expression">expression</h3>
+
 **Description:** A meta-type representing any valid formula expression that can be evaluated.
 
 **Usage:** Used in function parameters that accept any type of expression, such as:
@@ -114,7 +120,8 @@ The null literal is the keyword `NULL`
 
 ---
 
-### inverse_relationship {#inverse_relationship}
+<h3 id="inverse_relationship">inverse_relationship</h3>
+
 **Description:** A special type representing a relationship traversal for aggregate functions.
 
 **Usage:** Used as the first parameter in aggregate functions to specify which related records to aggregate over.
@@ -171,4 +178,4 @@ The formula language supports automatic type conversion in many contexts:
 - Only `boolean` values can be used with `AND`, `OR`, `NOT`
 - Comparison operations always return `boolean`
 
-*Documentation generated on 2025-06-22T20:51:58.866Z*
+*Documentation generated on 2025-06-22T21:00:31.661Z*
