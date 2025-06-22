@@ -2189,14 +2189,28 @@ function generateSQL(namedResults, baseTableName) {
           } else {
             // Subsequent levels: join from previous relationship in chain
             const parentChain = joinIntent.relationshipChain.slice(0, chainIndex);
-            const parentSemanticId = `direct:${baseTableName}→${parentChain.join('→')}[${joinIntent.joinField}]@main`;
-            const parentAlias = joinAliases.get(parentSemanticId);
-            if (parentAlias) {
-              fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAlias}.${joinIntent.joinField} = ${alias}.id`;
+            
+            // Find the parent join intent to get the correct join field
+            const parentJoinSemanticId = allJoinIntents.keys().find(semanticId => {
+              const parentJoinIntent = allJoinIntents.get(semanticId);
+              return parentJoinIntent.relationshipChain && 
+                     parentJoinIntent.relationshipChain.length === chainIndex &&
+                     parentJoinIntent.relationshipChain.every((rel, i) => rel === parentChain[i]);
+            });
+            
+            if (parentJoinSemanticId) {
+              const parentAlias = joinAliases.get(parentJoinSemanticId);
+              if (parentAlias) {
+                fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAlias}.${joinIntent.joinField} = ${alias}.id`;
+              } else {
+                // Fallback: construct the full parent alias name
+                const parentAliasName = `rel_${baseTableName}_${parentChain.join('_')}`;
+                fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAliasName}.${joinIntent.joinField} = ${alias}.id`;
+              }
             } else {
-              // Fallback: use the previous table name directly
-              const parentTableName = parentChain[parentChain.length - 1];
-              fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON rel_${parentTableName}.${joinIntent.joinField} = ${alias}.id`;
+              // Fallback: construct the full parent alias name
+              const parentAliasName = `rel_${baseTableName}_${parentChain.join('_')}`;
+              fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAliasName}.${joinIntent.joinField} = ${alias}.id`;
             }
           }
         } else {
