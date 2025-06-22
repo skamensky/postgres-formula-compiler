@@ -1,0 +1,1 @@
+business_name & " | Submissions: " & STRING(COUNT_AGG(submissions_merchant, amount)) & " | Total Reps: " & STRING(COUNT_AGG(rep_links_merchant, rep))
