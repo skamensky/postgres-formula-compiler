@@ -14,6 +14,7 @@ import {
   getTableNames,
   getColumnListsForTables,
   getAllRelationships,
+  getInverseRelationshipsForTables,
   mapPostgresType
 } from './db-introspection.js';
 import { readFileSync, readdirSync } from 'fs';
@@ -108,19 +109,54 @@ app.post('/api/execute', async (req, res) => {
     // Get all relationships using introspection
     const allRelationships = await getAllRelationships(dbClient);
     
-    // Build context
+    // Get inverse relationships
+    const allInverseRelationships = await getInverseRelationshipsForTables([tableName], dbClient);
+    const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
+    
+    // Build table infos
+    const tableInfos = Object.keys(columnLists).map(name => ({
+      tableName: name,
+      columnList: columnLists[name]
+    }));
+    
+    // Build old-style relationshipInfo for backward compatibility
+    const relationshipInfo = {};
+    const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRelationships) {
+      const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+      if (targetTable) {
+        relationshipInfo[rel.name] = {
+          joinColumn: rel.joinColumn,
+          columnList: targetTable.columnList
+        };
+      }
+    }
+    
+    // Build context matching exec-formula format
     const context = {
       tableName: tableName,
+      // NEW flat structure
+      tableInfos: tableInfos,
+      relationshipInfos: allRelationships,
+      // OLD structure for backward compatibility
       columnList: columnLists[tableName],
-      tableInfos: Object.keys(columnLists).map(name => ({
-        tableName: name,
-        columnList: columnLists[name]
-      })),
-      relationshipInfos: allRelationships
+      relationshipInfo: relationshipInfo,
+      inverseRelationshipInfo: inverseRelationshipInfo,
+      // Multi-level aggregate support
+      allInverseRelationships: allInverseRelationships
     };
     
     // Compile formula
-    const compilation = evaluateFormula(formula, context, dbClient);
+    let compilation;
+    try {
+      compilation = evaluateFormula(formula, context);
+    } catch (error) {
+      return res.json({
+        success: false,
+        error: error.message || error.toString(),
+        formula: formula
+      });
+    }
     
     if (compilation.error) {
       return res.json({
@@ -130,21 +166,31 @@ app.post('/api/execute', async (req, res) => {
       });
     }
     
-    // Generate SQL
-    const sql = generateSQL(compilation.expression, compilation.joins, compilation.aggregateJoins || new Map(), tableName);
+    // Generate SQL using the new format (match exec-formula structure)
+    const results = { formula_result: compilation };
+    let sqlResult;
+    try {
+      sqlResult = generateSQL(results, tableName);
+    } catch (error) {
+      return res.json({
+        success: false,
+        error: error.message || error.toString(),
+        formula: formula
+      });
+    }
     
     // Execute SQL
-    const result = await dbClient.query(sql);
+    const result = await dbClient.query(sqlResult.sql);
     
     res.json({
       success: true,
       formula: formula,
       compiledExpression: compilation.expression,
-      sql: sql,
+      sql: sqlResult.sql,
       results: result.rows,
       metadata: {
-        joinCount: compilation.joins.size,
-        aggregateCount: compilation.aggregateJoins ? compilation.aggregateJoins.size : 0
+        joinCount: compilation.joinIntents.length,
+        aggregateCount: compilation.aggregateIntents.length
       }
     });
     
