@@ -197,16 +197,16 @@ The formula language supports several data types including basic types (string, 
 
 ### Arithmetic Operators
 - `+` - Addition (numbers) or date arithmetic
-- `-` - Subtraction (numbers) or date arithmetic  
-- `*` - Multiplication
-- `/` - Division
+- `-` - Subtraction (numbers) or date arithmetic
+- `*` - Multiplication (numbers)
+- `/` - Division (numbers)
 
 ### String Operators
 - `&` - String concatenation (both sides must be strings)
 
 ### Comparison Operators
 - `=` - Equal to
-- `!=` or `<>` - Not equal to
+- `!= or <>` - Not equal to
 - `>` - Greater than
 - `>=` - Greater than or equal to
 - `<` - Less than
@@ -218,4 +218,4 @@ Logical operations are implemented as functions rather than operators:
 - `OR(condition1, condition2, ...)` - Any condition must be true
 - `NOT(condition)` - Negates the condition
 
-*Documentation generated on 2025-06-22T21:32:18.175Z*
+*Documentation generated on 2025-06-22T21:36:52.179Z*

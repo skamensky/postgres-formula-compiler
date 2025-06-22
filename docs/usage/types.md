@@ -332,4 +332,4 @@ The formula language supports automatic type conversion in many contexts:
 - `STRING(expression)` - converts any value to string
 - Date parsing through `DATE(string)` function
 
-*Documentation generated on 2025-06-22T21:32:18.174Z*
+*Documentation generated on 2025-06-22T21:36:52.178Z*

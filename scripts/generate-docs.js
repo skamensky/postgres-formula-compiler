@@ -13,7 +13,7 @@ import {
   CATEGORIES, 
   FUNCTIONS
 } from '../src/function-metadata.js';
-import { TYPE, typeToString, TYPE_METADATA, getOperationsForType } from '../src/types-unified.js';
+import { TYPE, typeToString, TYPE_METADATA, getOperationsForType, OPERATION_RULES, OPERATION } from '../src/types-unified.js';
 
 // Create TYPES mapping for backward compatibility
 const TYPES = {
@@ -285,28 +285,7 @@ The formula language supports several data types including basic types (string, 
 
 ## Operators
 
-### Arithmetic Operators
-- \`+\` - Addition (numbers) or date arithmetic
-- \`-\` - Subtraction (numbers) or date arithmetic  
-- \`*\` - Multiplication
-- \`/\` - Division
-
-### String Operators
-- \`&\` - String concatenation (both sides must be strings)
-
-### Comparison Operators
-- \`=\` - Equal to
-- \`!=\` or \`<>\` - Not equal to
-- \`>\` - Greater than
-- \`>=\` - Greater than or equal to
-- \`<\` - Less than
-- \`<=\` - Less than or equal to
-
-### Logical Functions
-Logical operations are implemented as functions rather than operators:
-- \`AND(condition1, condition2, ...)\` - All conditions must be true
-- \`OR(condition1, condition2, ...)\` - Any condition must be true
-- \`NOT(condition)\` - Negates the condition
+${generateOperatorsSection()}
 
 *Documentation generated on ${new Date().toISOString()}*
 `;
@@ -502,6 +481,103 @@ export function compileFunction(compiler, node) {
 `;
 
   fs.writeFileSync(path.join(langDir, 'integration.md'), integrationContent);
+}
+
+/**
+ * Generate operators documentation from metadata
+ */
+function generateOperatorsSection() {
+  // Group operations by type
+  const arithmeticOps = [];
+  const stringOps = [];
+  const comparisonOps = [];
+  
+  // Map operation symbols to their display format and description
+  const operatorDisplay = {
+    [OPERATION.PLUS]: { symbol: '+', name: 'Addition' },
+    [OPERATION.MINUS]: { symbol: '-', name: 'Subtraction' },
+    [OPERATION.MULTIPLY]: { symbol: '*', name: 'Multiplication' },
+    [OPERATION.DIVIDE]: { symbol: '/', name: 'Division' },
+    [OPERATION.CONCATENATE]: { symbol: '&', name: 'String concatenation' },
+    [OPERATION.EQUAL]: { symbol: '=', name: 'Equal to' },
+    [OPERATION.NOT_EQUAL]: { symbol: '!= or <>', name: 'Not equal to' },
+    [OPERATION.GREATER_THAN]: { symbol: '>', name: 'Greater than' },
+    [OPERATION.GREATER_THAN_EQUAL]: { symbol: '>=', name: 'Greater than or equal to' },
+    [OPERATION.LESS_THAN]: { symbol: '<', name: 'Less than' },
+    [OPERATION.LESS_THAN_EQUAL]: { symbol: '<=', name: 'Less than or equal to' }
+  };
+  
+  // Collect unique operations and their descriptions
+  const operationInfo = new Map();
+  
+  OPERATION_RULES.forEach(rule => {
+    const display = operatorDisplay[rule.op];
+    if (!display) return;
+    
+    const key = rule.op;
+    if (!operationInfo.has(key)) {
+      operationInfo.set(key, {
+        display,
+        descriptions: new Set()
+      });
+    }
+    
+    // Add description from the rule
+    operationInfo.get(key).descriptions.add(rule.description);
+  });
+  
+  // Categorize operations
+  operationInfo.forEach((info, operation) => {
+    const { display, descriptions } = info;
+    const descArray = Array.from(descriptions);
+    
+    if (operation === OPERATION.PLUS || operation === OPERATION.MINUS || 
+        operation === OPERATION.MULTIPLY || operation === OPERATION.DIVIDE) {
+      
+      // Determine if it's pure arithmetic or includes date operations
+      const hasDateOps = descArray.some(desc => desc.includes('date'));
+      const hasNumberOps = descArray.some(desc => desc.includes('number'));
+      
+      let description = display.name;
+      if (hasNumberOps && hasDateOps) {
+        description += ' (numbers) or date arithmetic';
+      } else if (hasNumberOps) {
+        description += ' (numbers)';
+      }
+      
+      arithmeticOps.push(`- \`${display.symbol}\` - ${description}`);
+      
+    } else if (operation === OPERATION.CONCATENATE) {
+      stringOps.push(`- \`${display.symbol}\` - ${display.name} (both sides must be strings)`);
+      
+    } else {
+      // Comparison operations
+      comparisonOps.push(`- \`${display.symbol}\` - ${display.name}`);
+    }
+  });
+  
+  // Generate the operators section
+  let operatorsSection = '';
+  
+  if (arithmeticOps.length > 0) {
+    operatorsSection += `### Arithmetic Operators\n${arithmeticOps.join('\n')}\n\n`;
+  }
+  
+  if (stringOps.length > 0) {
+    operatorsSection += `### String Operators\n${stringOps.join('\n')}\n\n`;
+  }
+  
+  if (comparisonOps.length > 0) {
+    operatorsSection += `### Comparison Operators\n${comparisonOps.join('\n')}\n\n`;
+  }
+  
+  // Add logical functions (these are still functions, not operators)
+  operatorsSection += `### Logical Functions\nLogical operations are implemented as functions rather than operators:\n`;
+  operatorsSection += `- \`AND(condition1, condition2, ...)\` - All conditions must be true\n`;
+  operatorsSection += `- \`OR(condition1, condition2, ...)\` - Any condition must be true\n`;
+  operatorsSection += `- \`NOT(condition)\` - Negates the condition`;
+  
+  return operatorsSection;
 }
 
 /**
