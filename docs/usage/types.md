@@ -14,13 +14,14 @@ This document describes all the data types used in the formula language.
 - Logical functions: `AND()`, `OR()`, `NOT()`
 - Conditional functions: `IF()` conditions
 - `boolean = boolean` → `boolean`
+- `boolean = null` → `boolean`
 - `boolean != boolean` → `boolean`
+- `boolean != null` → `boolean`
+- `null = boolean` → `boolean`
+- `null != boolean` → `boolean`
 
 **Literals:** Boolean literals are the keywords `TRUE` and `FALSE`
 
-**Type Compatibility:**
-- `boolean = boolean` → `boolean`
-- `boolean != boolean` → `boolean`
 
 <details>
 <summary><strong>Functions that use this type</strong> (11 functions)</summary>
@@ -50,26 +51,18 @@ This document describes all the data types used in the formula language.
 - `date - number` → `date` (subtracts days)
 - `date - date` → `number` (difference in days)
 - `date = date` → `boolean`
+- `date = null` → `boolean`
 - `date != date` → `boolean`
+- `date != null` → `boolean`
 - `date > date` → `boolean`
 - `date >= date` → `boolean`
 - `date < date` → `boolean`
 - `date <= date` → `boolean`
-- `number + date` → `date` (adds days)
+- `null = date` → `boolean`
+- `null != date` → `boolean`
 
 **Literals:** Date literals are created using the `DATE()` function: `DATE("2023-12-25")`
 
-**Type Compatibility:**
-- `date + number` → `date` (adds days)
-- `date - number` → `date` (subtracts days)
-- `date - date` → `number` (difference in days)
-- `date = date` → `boolean`
-- `date != date` → `boolean`
-- `date > date` → `boolean`
-- `date >= date` → `boolean`
-- `date < date` → `boolean`
-- `date <= date` → `boolean`
-- `number + date` → `date` (adds days)
 
 <details>
 <summary><strong>Functions that use this type</strong> (16 functions)</summary>
@@ -103,7 +96,23 @@ This document describes all the data types used in the formula language.
 - Null handling: `NULLVALUE()`, `COALESCE()`
 - Any operation with null typically results in null
 - `null = null` → `boolean`
+- `null = string` → `boolean`
+- `null = number` → `boolean`
+- `null = boolean` → `boolean`
+- `null = date` → `boolean`
 - `null != null` → `boolean`
+- `null != string` → `boolean`
+- `null != number` → `boolean`
+- `null != boolean` → `boolean`
+- `null != date` → `boolean`
+- `string = null` → `boolean`
+- `number = null` → `boolean`
+- `boolean = null` → `boolean`
+- `date = null` → `boolean`
+- `string != null` → `boolean`
+- `number != null` → `boolean`
+- `boolean != null` → `boolean`
+- `date != null` → `boolean`
 
 **Literals:** The null literal is the keyword `NULL`
 
@@ -127,35 +136,24 @@ No functions currently use this type.
 **Operations:**
 - Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.
 - `number + number` → `number`
-- `number + date` → `date` (adds days)
 - `number - number` → `number`
 - `number * number` → `number`
 - `number / number` → `number`
 - `number = number` → `boolean`
+- `number = null` → `boolean`
 - `number != number` → `boolean`
+- `number != null` → `boolean`
 - `number > number` → `boolean`
 - `number >= number` → `boolean`
 - `number < number` → `boolean`
 - `number <= number` → `boolean`
 - `date + number` → `date` (adds days)
 - `date - number` → `date` (subtracts days)
+- `null = number` → `boolean`
+- `null != number` → `boolean`
 
 **Literals:** Numeric literals can be integers or decimals: `123`, `45.67`
 
-**Type Compatibility:**
-- `number + number` → `number`
-- `number + date` → `date` (adds days)
-- `number - number` → `number`
-- `number * number` → `number`
-- `number / number` → `number`
-- `number = number` → `boolean`
-- `number != number` → `boolean`
-- `number > number` → `boolean`
-- `number >= number` → `boolean`
-- `number < number` → `boolean`
-- `number <= number` → `boolean`
-- `date + number` → `date` (adds days)
-- `date - number` → `date` (subtracts days)
 
 <details>
 <summary><strong>Functions that use this type</strong> (42 functions)</summary>
@@ -214,23 +212,19 @@ No functions currently use this type.
 - String functions: `UPPER()`, `LOWER()`, `TRIM()`, `LEN()`, etc.
 - `string & string` → `string` (concatenation)
 - `string = string` → `boolean`
+- `string = null` → `boolean`
 - `string != string` → `boolean`
+- `string != null` → `boolean`
 - `string > string` → `boolean` (lexicographic)
 - `string >= string` → `boolean` (lexicographic)
 - `string < string` → `boolean` (lexicographic)
 - `string <= string` → `boolean` (lexicographic)
+- `null = string` → `boolean`
+- `null != string` → `boolean`
 - Implicit string conversion: numbers and booleans convert to strings in string contexts
 
 **Literals:** String literals are enclosed in double quotes: `"text content"`
 
-**Type Compatibility:**
-- `string & string` → `string` (concatenation)
-- `string = string` → `boolean`
-- `string != string` → `boolean`
-- `string > string` → `boolean` (lexicographic)
-- `string >= string` → `boolean` (lexicographic)
-- `string < string` → `boolean` (lexicographic)
-- `string <= string` → `boolean` (lexicographic)
 
 <details>
 <summary><strong>Functions that use this type</strong> (20 functions)</summary>
@@ -338,4 +332,4 @@ The formula language supports automatic type conversion in many contexts:
 - `STRING(expression)` - converts any value to string
 - Date parsing through `DATE(string)` function
 
-*Documentation generated on 2025-06-22T21:23:58.579Z*
+*Documentation generated on 2025-06-22T21:32:18.174Z*

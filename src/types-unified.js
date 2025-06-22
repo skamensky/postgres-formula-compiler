@@ -189,7 +189,7 @@ export const TYPE_METADATA = {
       'Implicit string conversion: numbers and booleans convert to strings in string contexts'
     ],
     literals: 'String literals are enclosed in double quotes: `"text content"`',
-    compatibility: () => getOperationsForType(TYPE.STRING)
+    compatibility: () => []
   },
   
   [TYPE.NUMBER]: {
@@ -201,7 +201,7 @@ export const TYPE_METADATA = {
       ...getOperationsForType(TYPE.NUMBER)
     ],
     literals: 'Numeric literals can be integers or decimals: `123`, `45.67`',
-    compatibility: () => getOperationsForType(TYPE.NUMBER)
+    compatibility: () => []
   },
   
   [TYPE.BOOLEAN]: {
@@ -214,7 +214,7 @@ export const TYPE_METADATA = {
       ...getOperationsForType(TYPE.BOOLEAN)
     ],
     literals: 'Boolean literals are the keywords `TRUE` and `FALSE`',
-    compatibility: () => getOperationsForType(TYPE.BOOLEAN)
+    compatibility: () => []
   },
   
   [TYPE.DATE]: {
@@ -226,7 +226,7 @@ export const TYPE_METADATA = {
       ...getOperationsForType(TYPE.DATE)
     ],
     literals: 'Date literals are created using the `DATE()` function: `DATE("2023-12-25")`',
-    compatibility: () => getOperationsForType(TYPE.DATE)
+    compatibility: () => []
   },
   
   [TYPE.NULL]: {
