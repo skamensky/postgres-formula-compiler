@@ -1,10 +1,5 @@
-import { TokenType } from './lexer.js';
+import { TokenType, TokenValue } from './lexer.js';
 import { TYPE } from './types-unified.js';
-
-// Operator constants for consistency with compiler
-const OPERATORS = {
-  MINUS: '-'
-};
 
 /**
  * Parser - converts tokens into AST
@@ -52,7 +47,7 @@ class Parser {
       
       return {
         type: TYPE.UNARY_OP,
-        op: OPERATORS.MINUS,
+        op: TokenValue.MINUS,
         operand: operand,
         position: token.position
       };

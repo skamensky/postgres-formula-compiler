@@ -25,6 +25,22 @@ const TokenType = {
   EOF: 'EOF'
 };
 
+// Token values - centralized operator values to eliminate duplication
+const TokenValue = {
+  PLUS: '+',
+  MINUS: '-',
+  MULTIPLY: '*',
+  DIVIDE: '/',
+  AMPERSAND: '&',
+  GT: '>',
+  GTE: '>=',
+  LT: '<',
+  LTE: '<=',
+  EQ: '=',
+  NEQ_BANG: '!=',
+  NEQ_BRACKETS: '<>'
+};
+
 /**
  * Lexer - converts formula string into tokens
  */
@@ -281,4 +297,4 @@ class Lexer {
 }
 
 // Export for ES modules
-export { Lexer, TokenType };
+export { Lexer, TokenType, TokenValue };

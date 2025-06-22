@@ -1,19 +1,5 @@
 import { TYPE, typeToString } from './types-unified.js';
-
-// Operator constants - eliminates magic strings
-const OPERATORS = {
-  // Arithmetic operators
-  PLUS: '+',
-  MINUS: '-',
-  
-  // String concatenation
-  AMPERSAND: '&',
-  
-  // Comparison operators
-  EQUAL: '=',
-  NOT_EQUAL_BANG: '!=',
-  NOT_EQUAL_BRACKETS: '<>'
-};
+import { TokenValue } from './lexer.js';
 
 /**
  * @typedef {Object} SQLResult
@@ -566,13 +552,13 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
       const leftType = expr.children[0].returnType;
       const rightType = expr.children[1].returnType;
       
-      if (expr.value.op === OPERATORS.AMPERSAND) {
+      if (expr.value.op === TokenValue.AMPERSAND) {
         return `(${leftSQL} || ${rightSQL})`;
-      } else if (expr.value.op === OPERATORS.EQUAL) {
+      } else if (expr.value.op === TokenValue.EQ) {
         return `(${leftSQL} = ${rightSQL})`;
-      } else if (expr.value.op === OPERATORS.NOT_EQUAL_BANG || expr.value.op === OPERATORS.NOT_EQUAL_BRACKETS) {
+      } else if (expr.value.op === TokenValue.NEQ_BANG || expr.value.op === TokenValue.NEQ_BRACKETS) {
         return `(${leftSQL} <> ${rightSQL})`;
-      } else if (expr.value.op === OPERATORS.PLUS) {
+      } else if (expr.value.op === TokenValue.PLUS) {
         // Handle date arithmetic for addition
         if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
           return `(${leftSQL} + INTERVAL '${rightSQL} days')`;
@@ -581,7 +567,7 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
         } else {
           return `(${leftSQL} + ${rightSQL})`;
         }
-      } else if (expr.value.op === OPERATORS.MINUS) {
+      } else if (expr.value.op === TokenValue.MINUS) {
         // Handle date arithmetic for subtraction
         if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
           return `(${leftSQL} - INTERVAL '${rightSQL} days')`;

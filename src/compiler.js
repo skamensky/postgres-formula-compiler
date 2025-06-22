@@ -1,27 +1,7 @@
 import { TYPE, typeToString } from './types-unified.js';
 import { compileRelationshipRef } from './relationship-compiler.js';
 import { compileFunction } from './function-dispatcher.js';
-
-// Operator constants - eliminates magic strings
-const OPERATORS = {
-  // Arithmetic operators
-  PLUS: '+',
-  MINUS: '-',
-  MULTIPLY: '*',
-  DIVIDE: '/',
-  
-  // String concatenation
-  AMPERSAND: '&',
-  
-  // Comparison operators
-  GREATER_THAN: '>',
-  GREATER_THAN_OR_EQUAL: '>=',
-  LESS_THAN: '<',
-  LESS_THAN_OR_EQUAL: '<=',
-  EQUAL: '=',
-  NOT_EQUAL_BANG: '!=',
-  NOT_EQUAL_BRACKETS: '<>'
-};
+import { TokenValue } from './lexer.js';
 
 /**
  * Intent-based Formula Compiler
@@ -271,9 +251,9 @@ class Compiler {
     
     // Type checking and result type determination
     let resultType;
-    if ([OPERATORS.PLUS, OPERATORS.MINUS, OPERATORS.MULTIPLY, OPERATORS.DIVIDE].includes(node.op)) {
+    if ([TokenValue.PLUS, TokenValue.MINUS, TokenValue.MULTIPLY, TokenValue.DIVIDE].includes(node.op)) {
       // Handle date arithmetic
-      if (node.op === OPERATORS.PLUS) {
+      if (node.op === TokenValue.PLUS) {
         if (left.returnType === TYPE.DATE && right.returnType === TYPE.NUMBER) {
           resultType = TYPE.DATE; // date + number = date (allow for both direct dates and date expressions)
         } else if (left.returnType === TYPE.NUMBER && right.returnType === TYPE.DATE) {
@@ -290,7 +270,7 @@ class Compiler {
         } else {
           resultType = TYPE.NUMBER; // number + number = number
         }
-      } else if (node.op === OPERATORS.MINUS) {
+      } else if (node.op === TokenValue.MINUS) {
         if (left.returnType === TYPE.DATE && right.returnType === TYPE.NUMBER) {
           resultType = TYPE.DATE; // date - number = date (allow for both direct dates and date expressions)
         } else if (left.returnType === TYPE.DATE && right.returnType === TYPE.DATE) {
@@ -300,19 +280,19 @@ class Compiler {
         } else {
           resultType = TYPE.NUMBER; // number - number = number
         }
-      } else if ([OPERATORS.MULTIPLY, OPERATORS.DIVIDE].includes(node.op)) {
+      } else if ([TokenValue.MULTIPLY, TokenValue.DIVIDE].includes(node.op)) {
         // Multiplication and division only work with numbers
         if (left.returnType !== TYPE.NUMBER || right.returnType !== TYPE.NUMBER) {
           this.error(`Invalid operand types for ${node.op}: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
         }
         resultType = TYPE.NUMBER;
       }
-    } else if (node.op === OPERATORS.AMPERSAND) {
+    } else if (node.op === TokenValue.AMPERSAND) {
       if (left.returnType !== TYPE.STRING || right.returnType !== TYPE.STRING) {
         this.error(`String concatenation operator & requires both operands to be strings, got ${typeToString(left.returnType)} and ${typeToString(right.returnType)}. Use STRING() function to cast values to strings.`, node.position);
       }
       resultType = TYPE.STRING;
-    } else if ([OPERATORS.GREATER_THAN, OPERATORS.GREATER_THAN_OR_EQUAL, OPERATORS.LESS_THAN, OPERATORS.LESS_THAN_OR_EQUAL, OPERATORS.EQUAL, OPERATORS.NOT_EQUAL_BANG, OPERATORS.NOT_EQUAL_BRACKETS].includes(node.op)) {
+    } else if ([TokenValue.GT, TokenValue.GTE, TokenValue.LT, TokenValue.LTE, TokenValue.EQ, TokenValue.NEQ_BANG, TokenValue.NEQ_BRACKETS].includes(node.op)) {
       // Comparison operators
       if (left.returnType !== right.returnType && left.returnType !== TYPE.NULL && right.returnType !== TYPE.NULL) {
         this.error(`Cannot compare ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
