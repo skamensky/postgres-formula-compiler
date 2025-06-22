@@ -4,6 +4,7 @@
  */
 
 import { evaluateFormula, test, assertEqual, assertError, assertArrayEqual, assertDeepEqual, printTestResults } from './test-utils.js';
+import { TYPE } from '../src/types-unified.js';
 
 console.log('Running Multi-Level Relationships Tests...\n');
 
@@ -89,7 +90,7 @@ const multiLevelContext = {
 // Test 1: Two-level relationship
 test('Two-level relationship: merchant_rel.main_rep_rel.name', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.name', multiLevelContext);
-  assertEqual(result.expression.type, 'RELATIONSHIP_REF');
+  assertEqual(result.expression.type, TYPE.RELATIONSHIP_REF);
   assertArrayEqual(result.expression.value.relationshipChain, ['merchant', 'main_rep']);
   assertEqual(result.expression.value.fieldName, 'name');
   assertEqual(result.expression.dependentJoins.length, 2);
@@ -99,7 +100,7 @@ test('Two-level relationship: merchant_rel.main_rep_rel.name', () => {
 // Test 2: Three-level relationship
 test('Three-level relationship: merchant_rel.main_rep_rel.user_rel.username', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.user_rel.username', multiLevelContext);
-  assertEqual(result.expression.type, 'RELATIONSHIP_REF');
+  assertEqual(result.expression.type, TYPE.RELATIONSHIP_REF);
   assertArrayEqual(result.expression.value.relationshipChain, ['merchant', 'main_rep', 'user']);
   assertEqual(result.expression.value.fieldName, 'username');
   assertEqual(result.expression.dependentJoins.length, 3);
@@ -109,7 +110,7 @@ test('Three-level relationship: merchant_rel.main_rep_rel.user_rel.username', ()
 // Test 3: Three-level relationship with manager chain
 test('Three-level relationship: merchant_rel.main_rep_rel.manager_rel.name', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.manager_rel.name', multiLevelContext);
-  assertEqual(result.expression.type, 'RELATIONSHIP_REF');
+  assertEqual(result.expression.type, TYPE.RELATIONSHIP_REF);
   assertArrayEqual(result.expression.value.relationshipChain, ['merchant', 'main_rep', 'manager']);
   assertEqual(result.expression.value.fieldName, 'name');
   assertEqual(result.expression.dependentJoins.length, 3);
@@ -119,21 +120,21 @@ test('Three-level relationship: merchant_rel.main_rep_rel.manager_rel.name', () 
 // Test 4: Multi-level relationship in expression
 test('Multi-level relationship in expression', () => {
   const result = evaluateFormula('merchant_rel.business_name & " - " & merchant_rel.main_rep_rel.name', multiLevelContext);
-  assertEqual(result.expression.type, 'BINARY_OP');
+  assertEqual(result.expression.type, TYPE.BINARY_OP);
   assertEqual(result.joinIntents.length, 2); // merchant + merchant.main_rep
 });
 
 // Test 5: Multi-level relationship with IF function
 test('Multi-level relationship with IF function', () => {
   const result = evaluateFormula('IF(ISNULL(merchant_rel.main_rep_rel.user_rel.status), "No Status", merchant_rel.main_rep_rel.user_rel.status)', multiLevelContext);
-  assertEqual(result.expression.type, 'FUNCTION_CALL');
+  assertEqual(result.expression.type, TYPE.FUNCTION_CALL);
   assertEqual(result.joinIntents.length, 3); // All three levels of the chain
 });
 
 // Test 6: Backward compatibility - single level relationship
 test('Backward compatibility: single level merchant_rel.business_name', () => {
   const result = evaluateFormula('merchant_rel.business_name', multiLevelContext);
-  assertEqual(result.expression.type, 'RELATIONSHIP_REF');
+  assertEqual(result.expression.type, TYPE.RELATIONSHIP_REF);
   assertArrayEqual(result.expression.value.relationshipChain, ['merchant']);
   assertEqual(result.expression.value.fieldName, 'business_name');
   assertEqual(result.expression.dependentJoins.length, 1);
@@ -143,7 +144,7 @@ test('Backward compatibility: single level merchant_rel.business_name', () => {
 // Test 7: Different starting relationships
 test('Different starting relationship: main_rep_rel.user_rel.email', () => {
   const result = evaluateFormula('main_rep_rel.user_rel.email', multiLevelContext);
-  assertEqual(result.expression.type, 'RELATIONSHIP_REF');
+  assertEqual(result.expression.type, TYPE.RELATIONSHIP_REF);
   assertArrayEqual(result.expression.value.relationshipChain, ['main_rep', 'user']);
   assertEqual(result.expression.value.fieldName, 'email');
   assertEqual(result.expression.dependentJoins.length, 2);
@@ -226,14 +227,14 @@ test('Semantic ID generation for multi-level relationships', () => {
 // Test 13: Type validation through multi-level chain
 test('Type validation through multi-level chain', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.user_rel.username', multiLevelContext);
-  assertEqual(result.expression.returnType, 'string');
-  assertEqual(result.returnType, 'string');
+  assertEqual(result.expression.returnType, TYPE.STRING);
+  assertEqual(result.returnType, TYPE.STRING);
 });
 
 // Test 14: Complex expression with multiple multi-level relationships
 test('Complex expression with multiple multi-level relationships', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.name & " (" & merchant_rel.main_rep_rel.user_rel.email & ")"', multiLevelContext);
-  assertEqual(result.expression.type, 'BINARY_OP');
+  assertEqual(result.expression.type, TYPE.BINARY_OP);
   // Should create joins for both relationship chains
   const uniqueJoins = new Set(result.joinIntents.map(j => j.semanticId));
   assertEqual(uniqueJoins.size >= 3, true); // At least merchant, main_rep, user joins
@@ -242,9 +243,9 @@ test('Complex expression with multiple multi-level relationships', () => {
 // Test 15: Comparison operations with multi-level relationships
 test('Comparison operations with multi-level relationships', () => {
   const result = evaluateFormula('merchant_rel.main_rep_rel.user_rel.status = "active"', multiLevelContext);
-  assertEqual(result.expression.type, 'BINARY_OP');
+  assertEqual(result.expression.type, TYPE.BINARY_OP);
   assertEqual(result.expression.value.op, '=');
-  assertEqual(result.expression.returnType, 'boolean');
+  assertEqual(result.expression.returnType, TYPE.BOOLEAN);
   assertEqual(result.joinIntents.length, 3);
 });
 
@@ -267,7 +268,7 @@ test('Configurable maxRelationshipDepth option', () => {
 
   // Should work with custom maxRelationshipDepth = 5
   const result = evaluateFormula('a_rel.b_rel.c_rel.field', deepContext, { maxRelationshipDepth: 5 });
-  assertEqual(result.expression.type, 'RELATIONSHIP_REF');
+  assertEqual(result.expression.type, TYPE.RELATIONSHIP_REF);
   assertEqual(result.joinIntents.length, 3);
   
   // Should fail with custom maxRelationshipDepth = 2

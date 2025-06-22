@@ -1,4 +1,47 @@
-import { TokenType } from './types.js';
+import { LITERAL_VALUE } from './types-unified.js';
+
+// Token types
+const TokenType = {
+  NUMBER: 'NUMBER',
+  IDENTIFIER: 'IDENTIFIER',
+  FUNCTION: 'FUNCTION',
+  PLUS: 'PLUS',
+  MINUS: 'MINUS',
+  MULTIPLY: 'MULTIPLY',
+  DIVIDE: 'DIVIDE',
+  AMPERSAND: 'AMPERSAND',
+  LPAREN: 'LPAREN',
+  RPAREN: 'RPAREN',
+  COMMA: 'COMMA',
+  STRING: 'STRING',
+  DOT: 'DOT',
+  GT: 'GT',           // >
+  GTE: 'GTE',         // >=
+  LT: 'LT',           // <
+  LTE: 'LTE',         // <=
+  EQ: 'EQ',           // =
+  NEQ: 'NEQ',         // != or <>
+  AND: 'AND',         // AND
+  OR: 'OR',           // OR
+  NOT: 'NOT',         // NOT
+  EOF: 'EOF'
+};
+
+// Token values - centralized operator values to eliminate duplication
+const TokenValue = {
+  PLUS: '+',
+  MINUS: '-',
+  MULTIPLY: '*',
+  DIVIDE: '/',
+  AMPERSAND: '&',
+  GT: '>',
+  GTE: '>=',
+  LT: '<',
+  LTE: '<=',
+  EQ: '=',
+  NEQ_BANG: '!=',
+  NEQ_BRACKETS: '<>'
+};
 
 /**
  * Lexer - converts formula string into tokens
@@ -96,12 +139,12 @@ class Lexer {
     
     // Check for boolean literals only - treat logical operators as regular identifiers
     switch (upperResult) {
-      case 'TRUE':
-        return { type: TokenType.IDENTIFIER, value: 'TRUE', position: startPos }; // Treat as special identifier for now
-      case 'FALSE':
-        return { type: TokenType.IDENTIFIER, value: 'FALSE', position: startPos }; // Treat as special identifier for now
-      case 'NULL':
-        return { type: TokenType.IDENTIFIER, value: 'NULL', position: startPos }; // Treat as special identifier for now
+      case LITERAL_VALUE.TRUE:
+        return { type: TokenType.IDENTIFIER, value: LITERAL_VALUE.TRUE, position: startPos }; // Treat as special identifier for now
+      case LITERAL_VALUE.FALSE:
+        return { type: TokenType.IDENTIFIER, value: LITERAL_VALUE.FALSE, position: startPos }; // Treat as special identifier for now
+      case LITERAL_VALUE.NULL:
+        return { type: TokenType.IDENTIFIER, value: LITERAL_VALUE.NULL, position: startPos }; // Treat as special identifier for now
       default:
         return {
           type: TokenType.IDENTIFIER,
@@ -256,4 +299,4 @@ class Lexer {
 }
 
 // Export for ES modules
-export { Lexer };
+export { Lexer, TokenType, TokenValue };

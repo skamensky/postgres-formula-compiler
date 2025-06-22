@@ -1,7 +1,16 @@
 /**
  * Logical Functions
  * Handles AND, OR, and NOT functions
+ * Now uses metadata-driven approach for validation and compilation
  */
+
+import { 
+  validateFunctionArgs, 
+  FUNCTIONS, 
+  CATEGORIES,
+  FUNCTION_METADATA
+} from '../function-metadata.js';
+import { TYPE } from '../types-unified.js';
 
 /**
  * Compile logical function calls
@@ -12,86 +21,30 @@
 export function compileLogicalFunction(compiler, node) {
   const funcName = node.name;
   
-  switch (funcName) {
-    case 'AND':
-      if (node.args.length < 2) {
-        compiler.error('AND() takes at least two arguments', node.position);
-      }
-      
-      const andArgs = [];
-      const andDependentJoins = [];
-      const andChildIds = [];
-      
-      for (let i = 0; i < node.args.length; i++) {
-        const arg = compiler.compile(node.args[i]);
-        if (arg.returnType !== 'boolean') {
-          compiler.error(`AND() argument ${i + 1} must be boolean, got ${arg.returnType}`, node.position);
-        }
-        andArgs.push(arg);
-        andDependentJoins.push(...arg.dependentJoins);
-        andChildIds.push(arg.semanticId);
-      }
-      
-      return {
-        type: 'FUNCTION_CALL',
-        semanticId: compiler.generateSemanticId('function', 'AND', andChildIds),
-        dependentJoins: andDependentJoins,
-        returnType: 'boolean',
-        compilationContext: compiler.compilationContext,
-        value: { name: 'AND' },
-        children: andArgs
-      };
-
-    case 'OR':
-      if (node.args.length < 2) {
-        compiler.error('OR() takes at least two arguments', node.position);
-      }
-      
-      const orArgs = [];
-      const orDependentJoins = [];
-      const orChildIds = [];
-      
-      for (let i = 0; i < node.args.length; i++) {
-        const arg = compiler.compile(node.args[i]);
-        if (arg.returnType !== 'boolean') {
-          compiler.error(`OR() argument ${i + 1} must be boolean, got ${arg.returnType}`, node.position);
-        }
-        orArgs.push(arg);
-        orDependentJoins.push(...arg.dependentJoins);
-        orChildIds.push(arg.semanticId);
-      }
-      
-      return {
-        type: 'FUNCTION_CALL',
-        semanticId: compiler.generateSemanticId('function', 'OR', orChildIds),
-        dependentJoins: orDependentJoins,
-        returnType: 'boolean',
-        compilationContext: compiler.compilationContext,
-        value: { name: 'OR' },
-        children: orArgs
-      };
-
-    case 'NOT':
-      if (node.args.length !== 1) {
-        compiler.error('NOT() takes exactly one argument', node.position);
-      }
-      
-      const notArg = compiler.compile(node.args[0]);
-      if (notArg.returnType !== 'boolean') {
-        compiler.error('NOT() requires boolean argument, got ' + notArg.returnType, node.position);
-      }
-      
-      return {
-        type: 'FUNCTION_CALL',
-        semanticId: compiler.generateSemanticId('function', 'NOT', [notArg.semanticId]),
-        dependentJoins: notArg.dependentJoins,
-        returnType: 'boolean',
-        compilationContext: compiler.compilationContext,
-        value: { name: 'NOT' },
-        children: [notArg]
-      };
-
-    default:
-      return null; // Not handled by this module
+  // Check if this function exists and belongs to logical category
+  const metadata = FUNCTION_METADATA[funcName];
+  if (!metadata || metadata.category !== CATEGORIES.LOGICAL) {
+    return null; // Not handled by this module
   }
+  
+
+  
+  // Compile arguments
+  const compiledArgs = node.args.map(arg => compiler.compile(arg));
+  
+  // Validate using metadata
+  if (!validateFunctionArgs(funcName, compiledArgs, compiler, node)) {
+    return; // Validation failed, error already reported
+  }
+  
+  // All logical functions use standard compilation
+  return {
+    type: TYPE.FUNCTION_CALL,
+    semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
+    dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
+    returnType: metadata.returnType,
+    compilationContext: compiler.compilationContext,
+    value: { name: funcName },
+    children: compiledArgs
+  };
 }

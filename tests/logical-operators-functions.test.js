@@ -107,7 +107,7 @@ test('OR with ISNULL and comparison', () => {
 test('Error - AND with no arguments', () => {
   assertError(
     () => evaluateFormula('AND()', testContext),
-    /AND\(\) takes at least two arguments/,
+    /AND\(\) takes at least 2 arguments/,
     'Should throw error when AND has no arguments'
   );
 });
@@ -115,7 +115,7 @@ test('Error - AND with no arguments', () => {
 test('Error - AND with one argument', () => {
   assertError(
     () => evaluateFormula('AND(TRUE)', testContext),
-    /AND\(\) takes at least two arguments/,
+    /AND\(\) takes at least 2 arguments/,
     'Should throw error when AND has only one argument'
   );
 });
@@ -123,7 +123,7 @@ test('Error - AND with one argument', () => {
 test('Error - OR with no arguments', () => {
   assertError(
     () => evaluateFormula('OR()', testContext),
-    /OR\(\) takes at least two arguments/,
+    /OR\(\) takes at least 2 arguments/,
     'Should throw error when OR has no arguments'
   );
 });
@@ -131,7 +131,7 @@ test('Error - OR with no arguments', () => {
 test('Error - OR with one argument', () => {
   assertError(
     () => evaluateFormula('OR(FALSE)', testContext),
-    /OR\(\) takes at least two arguments/,
+    /OR\(\) takes at least 2 arguments/,
     'Should throw error when OR has only one argument'
   );
 });

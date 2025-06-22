@@ -1,6 +1,7 @@
-import { NodeType } from './types.js';
+import { TYPE, typeToString, OPERATION, getOperationRule, getOperationResultType } from './types-unified.js';
 import { compileRelationshipRef } from './relationship-compiler.js';
 import { compileFunction } from './function-dispatcher.js';
+import { TokenValue } from './lexer.js';
 
 /**
  * Intent-based Formula Compiler
@@ -12,10 +13,10 @@ import { compileFunction } from './function-dispatcher.js';
 
 /**
  * @typedef {Object} ExpressionIntent
- * @property {string} type - Expression type (maps to NodeType)
+ * @property {Symbol} type - Expression type (from unified TYPE system)
  * @property {string} semanticId - Hierarchical human-readable identifier
  * @property {Array<string>} dependentJoins - Required join semanticIds
- * @property {string} returnType - Result type ('string'|'number'|'boolean'|'date'|'null')
+ * @property {Symbol} returnType - Result type (from unified TYPE system)
  * @property {string} compilationContext - Context where this was compiled ('main'|'agg:...')
  * @property {*} value - Type-specific value
  * @property {Array<ExpressionIntent>} [children] - Sub-expressions for complex types
@@ -39,7 +40,7 @@ import { compileFunction } from './function-dispatcher.js';
  * @property {ExpressionIntent} expression - Expression to aggregate
  * @property {ExpressionIntent} [delimiter] - Delimiter for STRING_AGG
  * @property {Array<JoinIntent>} internalJoins - Joins needed within subquery
- * @property {string} returnType - Result type of aggregate
+ * @property {Symbol} returnType - Result type of aggregate (from unified TYPE system)
  */
 
 /**
@@ -47,7 +48,7 @@ import { compileFunction } from './function-dispatcher.js';
  * @property {ExpressionIntent} expression - Root expression intent
  * @property {Array<JoinIntent>} joinIntents - Required joins
  * @property {Array<AggregateIntent>} aggregateIntents - Required aggregates
- * @property {string} returnType - Overall result type
+ * @property {Symbol} returnType - Overall result type (from unified TYPE system)
  */
 
 class Compiler {
@@ -98,7 +99,23 @@ class Compiler {
     if (!(upperName in this.columnList)) {
       return null;
     }
-    return this.columnList[upperName];
+    return this.stringTypeToSymbol(this.columnList[upperName]);
+  }
+
+  /**
+   * Convert string type to Symbol type for consistency
+   * @param {string} stringType - String type from column list
+   * @returns {Symbol} Corresponding Symbol type
+   */
+  stringTypeToSymbol(stringType) {
+    switch (stringType) {
+      case 'string': return TYPE.STRING;
+      case 'number': return TYPE.NUMBER;
+      case 'boolean': return TYPE.BOOLEAN;
+      case 'date': return TYPE.DATE;
+      case 'null': return TYPE.NULL;
+      default: return stringType; // Return as-is if not a known string type
+    }
   }
 
   /**
@@ -117,69 +134,69 @@ class Compiler {
 
   compile(node) {
     switch (node.type) {
-      case NodeType.NUMBER:
+      case TYPE.NUMBER_LITERAL:
         return {
-          type: 'NUMBER',
+          type: TYPE.NUMBER_LITERAL,
           semanticId: this.generateSemanticId('number', node.value.toString()),
           dependentJoins: [],
-          returnType: 'number',
+          returnType: TYPE.NUMBER,
           compilationContext: this.compilationContext,
           value: node.value
         };
 
-      case NodeType.IDENTIFIER:
+      case TYPE.IDENTIFIER:
         return this.compileIdentifier(node);
 
-      case NodeType.BOOLEAN_LITERAL:
+      case TYPE.BOOLEAN_LITERAL:
         return {
-          type: 'BOOLEAN_LITERAL',
+          type: TYPE.BOOLEAN_LITERAL,
           semanticId: this.generateSemanticId('boolean', node.value),
           dependentJoins: [],
-          returnType: 'boolean',
+          returnType: TYPE.BOOLEAN,
           compilationContext: this.compilationContext,
           value: node.value
         };
 
-      case NodeType.NULL_LITERAL:
+      case TYPE.NULL_LITERAL:
         return {
-          type: 'NULL_LITERAL',
+          type: TYPE.NULL_LITERAL,
           semanticId: this.generateSemanticId('null', 'NULL'),
           dependentJoins: [],
-          returnType: 'null',
+          returnType: TYPE.NULL,
           compilationContext: this.compilationContext,
           value: null
         };
 
-      case NodeType.STRING_LITERAL:
+      case TYPE.STRING_LITERAL:
         return {
-          type: 'STRING_LITERAL',
+          type: TYPE.STRING_LITERAL,
           semanticId: this.generateSemanticId('string', `'${node.value}'`),
           dependentJoins: [],
-          returnType: 'string',
+          returnType: TYPE.STRING,
           compilationContext: this.compilationContext,
           value: node.value
         };
 
-      case NodeType.DATE_LITERAL:
+      case TYPE.DATE_LITERAL:
         return {
-          type: 'DATE_LITERAL',
+          type: TYPE.DATE_LITERAL,
           semanticId: this.generateSemanticId('date', node.value),
           dependentJoins: [],
-          returnType: 'date',
+          returnType: TYPE.DATE,
           compilationContext: this.compilationContext,
           value: node.value
         };
 
-      case NodeType.UNARY_OP:
+      case TYPE.UNARY_OP:
         return this.compileUnaryOp(node);
 
-      case NodeType.BINARY_OP:
+      case TYPE.BINARY_OP:
         return this.compileBinaryOp(node);
 
-      case NodeType.FUNCTION_CALL:
+      case TYPE.FUNCTION_CALL:
         return compileFunction(this, node);
 
-      case NodeType.RELATIONSHIP_REF:
+      case TYPE.RELATIONSHIP_REF:
         return compileRelationshipRef(this, node);
 
       default:
@@ -198,7 +215,7 @@ class Compiler {
     }
 
     return {
-      type: 'IDENTIFIER',
+      type: TYPE.IDENTIFIER,
       semanticId: this.generateSemanticId('column', `${this.tableName}.${node.value.toLowerCase()}`),
       dependentJoins: [],
       returnType: columnType,
@@ -210,15 +227,15 @@ class Compiler {
   compileUnaryOp(node) {
     const operand = this.compile(node.operand);
     
-    if (operand.returnType !== 'number') {
+    if (operand.returnType !== TYPE.NUMBER) {
       this.error(`Unary ${node.op} requires numeric operand`, node.position);
     }
 
     return {
-      type: 'UNARY_OP',
+      type: TYPE.UNARY_OP,
       semanticId: this.generateSemanticId('unary_op', node.op, [operand.semanticId]),
       dependentJoins: operand.dependentJoins,
-      returnType: 'number',
+      returnType: TYPE.NUMBER,
       compilationContext: this.compilationContext,
       value: { op: node.op },
       children: [operand]
@@ -232,71 +249,94 @@ class Compiler {
     // Collect dependent joins from both sides
     const dependentJoins = [...left.dependentJoins, ...right.dependentJoins];
     
-    // Type checking and result type determination
-    let resultType;
-    if (['+', '-', '*', '/'].includes(node.op)) {
-      // Handle date arithmetic
-      if (node.op === '+') {
-        if (left.returnType === 'date' && right.returnType === 'number') {
-          resultType = 'date'; // date + number = date (allow for both direct dates and date expressions)
-        } else if (left.returnType === 'number' && right.returnType === 'date') {
-          // Only allow number + date if the number is a direct operand (not an expression result)
-          if (left.type === 'NUMBER' || left.type === 'IDENTIFIER') {
-            resultType = 'date'; // number + date = date
-          } else {
-            this.error(`Invalid operand types for +: ${left.returnType} and ${right.returnType}`, node.position);
-          }
-        } else if (left.returnType === 'date' && right.returnType === 'date') {
-          this.error('Invalid operand types for +: date and date', node.position);
-        } else if (left.returnType !== 'number' || right.returnType !== 'number') {
-          this.error(`Invalid operand types for +: ${left.returnType} and ${right.returnType}`, node.position);
-        } else {
-          resultType = 'number'; // number + number = number
+    // Map token value directly to operation symbol using TokenValue constants
+    let operation;
+    switch (node.op) {
+      case TokenValue.PLUS:
+        operation = OPERATION.PLUS;
+        break;
+      case TokenValue.MINUS:
+        operation = OPERATION.MINUS;
+        break;
+      case TokenValue.MULTIPLY:
+        operation = OPERATION.MULTIPLY;
+        break;
+      case TokenValue.DIVIDE:
+        operation = OPERATION.DIVIDE;
+        break;
+      case TokenValue.AMPERSAND:
+        operation = OPERATION.CONCATENATE;
+        break;
+      case TokenValue.EQ:
+        operation = OPERATION.EQUAL;
+        break;
+      case TokenValue.NEQ_BANG:
+      case TokenValue.NEQ_BRACKETS:
+        operation = OPERATION.NOT_EQUAL;
+        break;
+      case TokenValue.GT:
+        operation = OPERATION.GREATER_THAN;
+        break;
+      case TokenValue.GTE:
+        operation = OPERATION.GREATER_THAN_EQUAL;
+        break;
+      case TokenValue.LT:
+        operation = OPERATION.LESS_THAN;
+        break;
+      case TokenValue.LTE:
+        operation = OPERATION.LESS_THAN_EQUAL;
+        break;
+      default:
+        this.error(`Unknown binary operator: ${node.op}`, node.position);
+    }
+    
+    // Check if operation is valid for these types
+    const operationRule = getOperationRule(left.returnType, operation, right.returnType);
+    
+    // Handle special case for number + date where we need to check left operand type
+    if (!operationRule && operation === OPERATION.PLUS && 
+        left.returnType === TYPE.NUMBER && right.returnType === TYPE.DATE) {
+      // Only allow number + date if the number is a direct operand (not an expression result)
+      if (left.type === TYPE.NUMBER_LITERAL || left.type === TYPE.IDENTIFIER) {
+        // This is valid, treat as date + number
+        const reverseRule = getOperationRule(right.returnType, operation, left.returnType);
+        if (reverseRule) {
+          return {
+            type: TYPE.BINARY_OP,
+            semanticId: this.generateSemanticId('binary_op', node.op, [left.semanticId, right.semanticId]),
+            dependentJoins: dependentJoins,
+            returnType: reverseRule.result,
+            compilationContext: this.compilationContext,
+            value: { op: node.op },
+            children: [left, right]
+          };
         }
-      } else if (node.op === '-') {
-        if (left.returnType === 'date' && right.returnType === 'number') {
-          resultType = 'date'; // date - number = date (allow for both direct dates and date expressions)
-        } else if (left.returnType === 'date' && right.returnType === 'date') {
-          resultType = 'number'; // date - date = interval (treated as number)
-        } else if (left.returnType !== 'number' || right.returnType !== 'number') {
-          this.error(`Invalid operand types for -: ${left.returnType} and ${right.returnType}`, node.position);
-        } else {
-          resultType = 'number'; // number - number = number
-        }
-      } else if (['*', '/'].includes(node.op)) {
-        // Multiplication and division only work with numbers
-        if (left.returnType !== 'number' || right.returnType !== 'number') {
-          this.error(`Invalid operand types for ${node.op}: ${left.returnType} and ${right.returnType}`, node.position);
-        }
-        resultType = 'number';
       }
-    } else if (node.op === '&') {
-      if (left.returnType !== 'string' || right.returnType !== 'string') {
-        this.error(`String concatenation operator & requires both operands to be strings, got ${left.returnType} and ${right.returnType}. Use STRING() function to cast values to strings.`, node.position);
+    }
+    
+    if (!operationRule) {
+      // Special error message for string concatenation
+      if (operation === OPERATION.CONCATENATE) {
+        this.error(`String concatenation operator & requires both operands to be strings, got ${typeToString(left.returnType)} and ${typeToString(right.returnType)}. Use STRING() function to cast values to strings.`, node.position);
+      } else if (operation === OPERATION.GREATER_THAN || operation === OPERATION.GREATER_THAN_EQUAL || 
+                 operation === OPERATION.LESS_THAN || operation === OPERATION.LESS_THAN_EQUAL) {
+        // Special error message for comparison operators
+        this.error(`Cannot compare ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
+      } else {
+        this.error(`Invalid operand types for ${node.op}: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
       }
-      resultType = 'string';
-    } else if (['>', '>=', '<', '<=', '=', '!=', '<>'].includes(node.op)) {
-      // Comparison operators
-      if (left.returnType !== right.returnType && left.returnType !== 'null' && right.returnType !== 'null') {
-        this.error(`Cannot compare ${left.returnType} and ${right.returnType}`, node.position);
-      }
-      resultType = 'boolean';
-    } else {
-      this.error(`Unknown binary operator: ${node.op}`, node.position);
     }
     
     return {
-      type: 'BINARY_OP',
+      type: TYPE.BINARY_OP,
       semanticId: this.generateSemanticId('binary_op', node.op, [left.semanticId, right.semanticId]),
       dependentJoins: dependentJoins,
-      returnType: resultType,
+      returnType: operationRule.result,
       compilationContext: this.compilationContext,
       value: { op: node.op },
       children: [left, right]
     };
   }
-
-
 
   getJoinIntents() {
     return Array.from(this.joinIntents.values());
@@ -305,8 +345,6 @@ class Compiler {
   getAggregateIntents() {
     return Array.from(this.aggregateIntents.values());
   }
-
-
 }
 
 // Export for ES modules

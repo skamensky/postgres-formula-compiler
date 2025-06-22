@@ -2,7 +2,15 @@
  * Aggregate Functions
  * Handles STRING_AGG, STRING_AGG_DISTINCT, SUM_AGG, COUNT_AGG, AVG_AGG, MIN_AGG, MAX_AGG, AND_AGG, OR_AGG functions
  * Now supports multi-level aggregate functions with chained inverse relationships
+ * Uses metadata-driven approach with function constants to eliminate magic strings
  */
+
+import { 
+  FUNCTIONS, 
+  CATEGORIES,
+  FUNCTION_METADATA
+} from '../function-metadata.js';
+import { TYPE, typeToString } from '../types-unified.js';
 
 /**
  * Parse multi-level relationship chain from aggregate function first argument
@@ -158,17 +166,20 @@ export function compileAggregateFunction(compiler, node) {
   const funcName = node.name;
   
   // Check if this is an aggregate function
-  if (!['STRING_AGG', 'STRING_AGG_DISTINCT', 'SUM_AGG', 'COUNT_AGG', 'AVG_AGG', 'MIN_AGG', 'MAX_AGG', 'AND_AGG', 'OR_AGG'].includes(funcName)) {
+  const metadata = FUNCTION_METADATA[funcName];
+  if (!metadata || metadata.category !== CATEGORIES.AGGREGATE) {
     return null; // Not handled by this module
   }
   
-  let expectedArgCount = 2; // Most aggregate functions take 2 args
-  if (funcName === 'STRING_AGG' || funcName === 'STRING_AGG_DISTINCT') {
-    expectedArgCount = 3; // STRING_AGG takes delimiter as 3rd arg
-  }
-  
-  if (node.args.length !== expectedArgCount) {
-    compiler.error(`${funcName}() takes exactly ${expectedArgCount} arguments`, node.position);
+  // Validate argument count using metadata
+  if (node.args.length < metadata.minArgs || 
+      (metadata.maxArgs !== null && node.args.length > metadata.maxArgs)) {
+    const expectedText = metadata.maxArgs === null ? 
+      `at least ${metadata.minArgs}` : 
+      metadata.minArgs === metadata.maxArgs ? 
+        `exactly ${metadata.minArgs}` : 
+        `${metadata.minArgs}-${metadata.maxArgs}`;
+    compiler.error(`${funcName}() takes ${expectedText} arguments, got ${node.args.length}`, node.position);
   }
 
   // First argument must be an inverse relationship identifier or dot-separated chain
@@ -177,9 +188,9 @@ export function compileAggregateFunction(compiler, node) {
   let relationshipName;
   
   // Handle both single identifier and dot-separated chain
-  if (relationshipArg.type === 'IDENTIFIER') {
+  if (relationshipArg.type === TYPE.IDENTIFIER) {
     relationshipName = relationshipArg.value.toLowerCase();
-  } else if (relationshipArg.type === 'RELATIONSHIP_REF') {
+  } else if (relationshipArg.type === TYPE.RELATIONSHIP_REF) {
     // For multi-level chains, reconstruct the full dot-separated path
     const relationshipChain = relationshipArg.relationshipChain || [relationshipArg.relationName];
     relationshipName = relationshipChain.join('.').toLowerCase();
@@ -283,27 +294,19 @@ export function compileAggregateFunction(compiler, node) {
   
   // Handle delimiter for STRING_AGG functions
   let delimiterResult = null;
-  if (funcName === 'STRING_AGG' || funcName === 'STRING_AGG_DISTINCT') {
-    delimiterResult = compiler.compile(node.args[2]); // Compile in main context
-    if (delimiterResult.returnType !== 'string') {
-      compiler.error(`${funcName}() delimiter must be string, got ${delimiterResult.returnType}`, node.position);
+  if (funcName === FUNCTIONS.STRING_AGG) {
+    delimiterResult = compiler.compile(node.args[2]); // Third argument is the delimiter
+    if (delimiterResult.returnType !== TYPE.STRING) {
+      compiler.error(`${funcName}() delimiter must be string, got ${typeToString(delimiterResult.returnType)}`, node.position);
     }
   }
   
-  // Determine return type
-  let returnType;
-  if (funcName.startsWith('STRING_AGG')) {
-    returnType = 'string';
-  } else if (['AND_AGG', 'OR_AGG'].includes(funcName)) {
-    returnType = 'boolean';
-  } else {
-    returnType = 'number';
-  }
+  // Determine return type using metadata
   
   // Generate aggregate intent
   // For COUNT_AGG, use the same semantic ID regardless of column since SQL is always COUNT(*)
   let semanticDetails;
-  if (funcName === 'COUNT_AGG') {
+  if (funcName === FUNCTIONS.COUNT_AGG) {
     semanticDetails = `${funcName}[${subCompiler.compilationContext}]`;
   } else {
     semanticDetails = `${funcName}[${expressionResult.semanticId}]`;
@@ -317,7 +320,7 @@ export function compileAggregateFunction(compiler, node) {
     expression: expressionResult,
     delimiter: delimiterResult,
     internalJoins: Array.from(subCompiler.joinIntents.values()),
-    returnType: returnType,
+    returnType: metadata.returnType,
     // Multi-level specific properties
     isMultiLevel: resolvedChain.isMultiLevel,
     chainInfo: resolvedChain.isMultiLevel ? resolvedChain.chainInfo : null
@@ -327,10 +330,10 @@ export function compileAggregateFunction(compiler, node) {
   compiler.aggregateIntents.set(aggSemanticId, aggregateIntent);
   
   return {
-    type: 'AGGREGATE_FUNCTION',
+    type: TYPE.AGGREGATE_FUNCTION,
     semanticId: aggSemanticId,
     dependentJoins: [], // Aggregates don't create main query joins
-    returnType: returnType,
+    returnType: metadata.returnType,
     compilationContext: compiler.compilationContext,
     value: { 
       aggregateSemanticId: aggSemanticId,

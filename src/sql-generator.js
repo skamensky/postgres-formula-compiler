@@ -1,3 +1,7 @@
+import { TYPE, typeToString } from './types-unified.js';
+import { TokenValue } from './lexer.js';
+import { FUNCTIONS } from './function-metadata.js';
+
 /**
  * @typedef {Object} SQLResult
  * @property {string} sql - Generated SQL query
@@ -94,22 +98,22 @@ function generateSQL(namedResults, baseTableName) {
     
     aggIntents.forEach((aggIntent, index) => {
       let columnAlias;
-      if (aggIntent.aggregateFunction.startsWith('STRING_AGG')) {
-        columnAlias = `rep_names`;
-      } else if (aggIntent.aggregateFunction === 'COUNT_AGG') {
-        columnAlias = `rep_count`;
-      } else if (aggIntent.aggregateFunction === 'SUM_AGG') {
+      if (aggIntent.aggregateFunction.startsWith(FUNCTIONS.STRING_AGG)) {
+        columnAlias = `string_agg_value`;
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.COUNT_AGG) {
+        columnAlias = `count_value`;
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.SUM_AGG) {
         columnAlias = `sum_value`;
-      } else if (aggIntent.aggregateFunction === 'AVG_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.AVG_AGG) {
         columnAlias = `avg_value`;
-      } else if (aggIntent.aggregateFunction === 'MIN_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.MIN_AGG) {
         columnAlias = `min_value`;
-      } else if (aggIntent.aggregateFunction === 'MAX_AGG') {
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.MAX_AGG) {
         columnAlias = `max_value`;
-      } else if (aggIntent.aggregateFunction === 'AND_AGG') {
-        columnAlias = `and_value`;
-      } else if (aggIntent.aggregateFunction === 'OR_AGG') {
-        columnAlias = `or_value`;
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.AND_AGG) {
+        columnAlias = `bool_and_value`;
+      } else if (aggIntent.aggregateFunction === FUNCTIONS.OR_AGG) {
+        columnAlias = `bool_or_value`;
       } else {
         columnAlias = `agg_col_${index + 1}`;
       }
@@ -280,33 +284,33 @@ function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableN
     let aggSQL;
     
     switch (aggIntent.aggregateFunction) {
-      case 'STRING_AGG':
-        const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+      case FUNCTIONS.STRING_AGG:
+        const delimiterSQL = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
         break;
-      case 'STRING_AGG_DISTINCT':
-        const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+      case FUNCTIONS.STRING_AGG_DISTINCT:
+        const delimiterSQL2 = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
         break;
-      case 'COUNT_AGG':
+      case FUNCTIONS.COUNT_AGG:
         aggSQL = `COUNT(*)`;
         break;
-      case 'SUM_AGG':
+      case FUNCTIONS.SUM_AGG:
         aggSQL = `SUM(${exprSQL})`;
         break;
-      case 'AVG_AGG':
+      case FUNCTIONS.AVG_AGG:
         aggSQL = `AVG(${exprSQL})`;
         break;
-      case 'MIN_AGG':
+      case FUNCTIONS.MIN_AGG:
         aggSQL = `MIN(${exprSQL})`;
         break;
-      case 'MAX_AGG':
+      case FUNCTIONS.MAX_AGG:
         aggSQL = `MAX(${exprSQL})`;
         break;
-      case 'AND_AGG':
+      case FUNCTIONS.AND_AGG:
         aggSQL = `BOOL_AND(${exprSQL})`;
         break;
-      case 'OR_AGG':
+      case FUNCTIONS.OR_AGG:
         aggSQL = `BOOL_OR(${exprSQL})`;
         break;
       default:
@@ -387,33 +391,33 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
     let aggSQL;
     
     switch (aggIntent.aggregateFunction) {
-      case 'STRING_AGG':
-        const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+      case FUNCTIONS.STRING_AGG:
+        const delimiterSQL = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
         break;
-      case 'STRING_AGG_DISTINCT':
-        const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName);
+      case FUNCTIONS.STRING_AGG_DISTINCT:
+        const delimiterSQL2 = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), baseTableName) : "', '";
         aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
         break;
-      case 'COUNT_AGG':
+      case FUNCTIONS.COUNT_AGG:
         aggSQL = `COUNT(*)`;
         break;
-      case 'SUM_AGG':
+      case FUNCTIONS.SUM_AGG:
         aggSQL = `SUM(${exprSQL})`;
         break;
-      case 'AVG_AGG':
+      case FUNCTIONS.AVG_AGG:
         aggSQL = `AVG(${exprSQL})`;
         break;
-      case 'MIN_AGG':
+      case FUNCTIONS.MIN_AGG:
         aggSQL = `MIN(${exprSQL})`;
         break;
-      case 'MAX_AGG':
+      case FUNCTIONS.MAX_AGG:
         aggSQL = `MAX(${exprSQL})`;
         break;
-      case 'AND_AGG':
+      case FUNCTIONS.AND_AGG:
         aggSQL = `BOOL_AND(${exprSQL})`;
         break;
-      case 'OR_AGG':
+      case FUNCTIONS.OR_AGG:
         aggSQL = `BOOL_OR(${exprSQL})`;
         break;
       default:
@@ -461,33 +465,33 @@ function generateAggregateSubquery(aggIntent, joinAliases, baseTableName) {
   // Build aggregate function SQL
   let aggSQL;
   switch (aggIntent.aggregateFunction) {
-    case 'STRING_AGG':
-      const delimiterSQL = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable);
+    case FUNCTIONS.STRING_AGG:
+      const delimiterSQL = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable) : "', '";
       aggSQL = `STRING_AGG(${exprSQL}, ${delimiterSQL})`;
       break;
-    case 'STRING_AGG_DISTINCT':
-      const delimiterSQL2 = generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable);
+    case FUNCTIONS.STRING_AGG_DISTINCT:
+      const delimiterSQL2 = aggIntent.delimiter ? generateExpressionSQL(aggIntent.delimiter, new Map(), new Map(), sourceTable) : "', '";
       aggSQL = `STRING_AGG(DISTINCT ${exprSQL}, ${delimiterSQL2})`;
       break;
-    case 'SUM_AGG':
+    case FUNCTIONS.SUM_AGG:
       aggSQL = `SUM(${exprSQL})`;
       break;
-    case 'COUNT_AGG':
+    case FUNCTIONS.COUNT_AGG:
       aggSQL = `COUNT(${exprSQL})`;
       break;
-    case 'AVG_AGG':
+    case FUNCTIONS.AVG_AGG:
       aggSQL = `AVG(${exprSQL})`;
       break;
-    case 'MIN_AGG':
+    case FUNCTIONS.MIN_AGG:
       aggSQL = `MIN(${exprSQL})`;
       break;
-    case 'MAX_AGG':
+    case FUNCTIONS.MAX_AGG:
       aggSQL = `MAX(${exprSQL})`;
       break;
-    case 'AND_AGG':
+    case FUNCTIONS.AND_AGG:
       aggSQL = `BOOL_AND(${exprSQL})`;
       break;
-    case 'OR_AGG':
+    case FUNCTIONS.OR_AGG:
       aggSQL = `BOOL_OR(${exprSQL})`;
       break;
     default:
@@ -510,26 +514,33 @@ function generateAggregateSubquery(aggIntent, joinAliases, baseTableName) {
  * @returns {string} SQL expression
  */
 function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseTableName) {
+  if (!expr) {
+    throw new Error(`Cannot generate SQL for null expression (baseTableName: ${baseTableName})`);
+  }
+  if (!expr.type) {
+    throw new Error(`Expression missing type property: ${JSON.stringify(expr)} (baseTableName: ${baseTableName})`);
+  }
+  
   switch (expr.type) {
-    case 'NUMBER':
+    case TYPE.NUMBER_LITERAL:
       return expr.value.toString();
       
-    case 'STRING_LITERAL':
+    case TYPE.STRING_LITERAL:
       return `'${expr.value.replace(/'/g, "''")}'`; // Escape single quotes
       
-    case 'BOOLEAN_LITERAL':
+    case TYPE.BOOLEAN_LITERAL:
       return expr.value === 'TRUE' ? 'TRUE' : 'FALSE';
       
-    case 'NULL_LITERAL':
+    case TYPE.NULL_LITERAL:
       return 'NULL';
       
-    case 'DATE_LITERAL':
+    case TYPE.DATE_LITERAL:
       return `'${expr.value}'::date`;
       
-    case 'IDENTIFIER':
+    case TYPE.IDENTIFIER:
       return `"${baseTableName}"."${expr.value.toLowerCase()}"`;
       
-    case 'RELATIONSHIP_REF':
+    case TYPE.RELATIONSHIP_REF:
       // For multi-level relationships, use the final table alias
       // The last join in dependentJoins represents the final table in the chain
       const finalJoinSemanticId = expr.dependentJoins[expr.dependentJoins.length - 1];
@@ -539,34 +550,34 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
       }
       return `"${finalJoinAlias}"."${expr.value.fieldName}"`;
       
-    case 'UNARY_OP':
+    case TYPE.UNARY_OP:
       const operandSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `${expr.value.op}${operandSQL}`;
       
-    case 'BINARY_OP':
+    case TYPE.BINARY_OP:
       const leftSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const rightSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       const leftType = expr.children[0].returnType;
       const rightType = expr.children[1].returnType;
       
-      if (expr.value.op === '&') {
+      if (expr.value.op === TokenValue.AMPERSAND) {
         return `(${leftSQL} || ${rightSQL})`;
-      } else if (expr.value.op === '=') {
+      } else if (expr.value.op === TokenValue.EQ) {
         return `(${leftSQL} = ${rightSQL})`;
-      } else if (expr.value.op === '!=' || expr.value.op === '<>') {
+      } else if (expr.value.op === TokenValue.NEQ_BANG || expr.value.op === TokenValue.NEQ_BRACKETS) {
         return `(${leftSQL} <> ${rightSQL})`;
-      } else if (expr.value.op === '+') {
+      } else if (expr.value.op === TokenValue.PLUS) {
         // Handle date arithmetic for addition
-        if (leftType === 'date' && rightType === 'number') {
+        if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
           return `(${leftSQL} + INTERVAL '${rightSQL} days')`;
-        } else if (leftType === 'number' && rightType === 'date') {
+        } else if (leftType === TYPE.NUMBER && rightType === TYPE.DATE) {
           return `(${rightSQL} + INTERVAL '${leftSQL} days')`;
         } else {
           return `(${leftSQL} + ${rightSQL})`;
         }
-      } else if (expr.value.op === '-') {
+      } else if (expr.value.op === TokenValue.MINUS) {
         // Handle date arithmetic for subtraction
-        if (leftType === 'date' && rightType === 'number') {
+        if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
           return `(${leftSQL} - INTERVAL '${rightSQL} days')`;
         } else {
           return `(${leftSQL} - ${rightSQL})`;
@@ -575,10 +586,10 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
         return `(${leftSQL} ${expr.value.op} ${rightSQL})`;
       }
       
-    case 'FUNCTION_CALL':
+    case TYPE.FUNCTION_CALL:
       return generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTableName);
       
-    case 'AGGREGATE_FUNCTION':
+    case TYPE.AGGREGATE_FUNCTION:
       // For aggregate functions, reference the consolidated JOIN column
       const aggMapping = aggregateColumnMappings.get(expr.semanticId);
       if (!aggMapping) {
@@ -593,11 +604,12 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
 
 /**
  * Get default value for aggregate return type when result is NULL
- * @param {string} returnType - The return type (string, number, boolean)
+ * @param {Symbol} returnType - The return type (from unified type system)
  * @returns {string} Default SQL value
  */
 function getDefaultValueForAggregateType(returnType) {
-  switch (returnType) {
+  const typeString = typeof returnType === 'string' ? returnType : typeToString(returnType);
+  switch (typeString) {
     case 'string':
       return "''";
     case 'number':
@@ -621,53 +633,53 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
   const funcName = expr.value.name;
   
   switch (funcName) {
-    case 'TODAY':
+    case FUNCTIONS.TODAY:
       return 'current_date';
       
-    case 'ME':
+    case FUNCTIONS.ME:
       return "(select auth().uid())";
       
-    case 'DATE':
+    case FUNCTIONS.DATE:
       // Use the string value stored during compilation
       return `DATE('${expr.value.stringValue}')`;
       
-    case 'STRING':
+    case FUNCTIONS.STRING:
       const argSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `CAST(${argSQL} AS TEXT)`;
       
-    case 'UPPER':
+    case FUNCTIONS.UPPER:
       const upperArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `UPPER(${upperArgSQL})`;
       
-    case 'LOWER':
+    case FUNCTIONS.LOWER:
       const lowerArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `LOWER(${lowerArgSQL})`;
       
-    case 'TRIM':
+    case FUNCTIONS.TRIM:
       const trimArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `TRIM(${trimArgSQL})`;
       
-    case 'LEN':
+    case FUNCTIONS.LEN:
       const lenArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `LENGTH(${lenArgSQL})`;
       
-    case 'LEFT':
+    case FUNCTIONS.LEFT:
       const leftTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const leftNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `LEFT(${leftTextSQL}, ${leftNumSQL})`;
       
-    case 'RIGHT':
+    case FUNCTIONS.RIGHT:
       const rightTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const rightNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `RIGHT(${rightTextSQL}, ${rightNumSQL})`;
       
-    case 'MID':
+    case FUNCTIONS.MID:
       const midTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const midStartSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       const midLengthSQL = generateExpressionSQL(expr.children[2], joinAliases, aggregateColumnMappings, baseTableName);
       return `SUBSTRING(${midTextSQL}, ${midStartSQL}, ${midLengthSQL})`;
       
-    case 'IF':
+    case FUNCTIONS.IF:
       const conditionSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const trueSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       
@@ -678,105 +690,105 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
         return `CASE WHEN ${conditionSQL} THEN ${trueSQL} ELSE NULL END`;
       }
       
-    case 'ISNULL':
+    case FUNCTIONS.ISNULL:
       const isnullArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `(${isnullArgSQL} IS NULL)`;
       
-    case 'NULLVALUE':
+    case FUNCTIONS.NULLVALUE:
       const nullvalue1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const nullvalue2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `COALESCE(${nullvalue1SQL}, ${nullvalue2SQL})`;
       
-    case 'ISBLANK':
+    case FUNCTIONS.ISBLANK:
       const isblankArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `(${isblankArgSQL} IS NULL OR ${isblankArgSQL} = '')`;
       
-    case 'AND':
+    case FUNCTIONS.AND:
       const andArgSQLs = expr.children.map(child => 
         generateExpressionSQL(child, joinAliases, aggregateColumnMappings, baseTableName)
       );
       return `(${andArgSQLs.join(' AND ')})`;
 
-    case 'OR':
+    case FUNCTIONS.OR:
       const orArgSQLs = expr.children.map(child => 
         generateExpressionSQL(child, joinAliases, aggregateColumnMappings, baseTableName)
       );
       return `(${orArgSQLs.join(' OR ')})`;
 
-    case 'NOT':
+    case FUNCTIONS.NOT:
       const notArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `NOT (${notArgSQL})`;
       
-    case 'CONTAINS':
+    case FUNCTIONS.CONTAINS:
       const containsTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const containsSubstringSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `(POSITION(${containsSubstringSQL} IN ${containsTextSQL}) > 0)`;
       
-    case 'SUBSTITUTE':
+    case FUNCTIONS.SUBSTITUTE:
       const subTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const subOldSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       const subNewSQL = generateExpressionSQL(expr.children[2], joinAliases, aggregateColumnMappings, baseTableName);
       return `REPLACE(${subTextSQL}, ${subOldSQL}, ${subNewSQL})`;
       
-    case 'ABS':
+    case FUNCTIONS.ABS:
       const absArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `ABS(${absArgSQL})`;
       
-    case 'ROUND':
+    case FUNCTIONS.ROUND:
       const roundNumSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const roundDecSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `ROUND(${roundNumSQL}, ${roundDecSQL})`;
       
-    case 'MIN':
+    case FUNCTIONS.MIN:
       const minArg1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const minArg2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `LEAST(${minArg1SQL}, ${minArg2SQL})`;
       
-    case 'MAX':
+    case FUNCTIONS.MAX:
       const maxArg1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const maxArg2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `GREATEST(${maxArg1SQL}, ${maxArg2SQL})`;
       
-    case 'MOD':
+    case FUNCTIONS.MOD:
       const modArg1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const modArg2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `MOD(${modArg1SQL}, ${modArg2SQL})`;
       
-    case 'CEILING':
+    case FUNCTIONS.CEILING:
       const ceilingArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `CEILING(${ceilingArgSQL})`;
       
-    case 'FLOOR':
+    case FUNCTIONS.FLOOR:
       const floorArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `FLOOR(${floorArgSQL})`;
       
-    case 'YEAR':
+    case FUNCTIONS.YEAR:
       const yearArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `EXTRACT(YEAR FROM ${yearArgSQL})`;
       
-    case 'MONTH':
+    case FUNCTIONS.MONTH:
       const monthArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `EXTRACT(MONTH FROM ${monthArgSQL})`;
       
-    case 'DAY':
+    case FUNCTIONS.DAY:
       const dayArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `EXTRACT(DAY FROM ${dayArgSQL})`;
       
-    case 'WEEKDAY':
+    case FUNCTIONS.WEEKDAY:
       const weekdayArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `EXTRACT(DOW FROM ${weekdayArgSQL}) + 1`;
       
-    case 'ADDMONTHS':
+    case FUNCTIONS.ADDMONTHS:
       const addMonthsDateSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const addMonthsNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `(${addMonthsDateSQL} + INTERVAL '${addMonthsNumSQL} months')`;
       
-    case 'ADDDAYS':
+    case FUNCTIONS.ADDDAYS:
       const addDaysDateSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const addDaysNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       return `(${addDaysDateSQL} + INTERVAL '${addDaysNumSQL} days')`;
       
-    case 'DATEDIF':
+    case FUNCTIONS.DATEDIF:
       const datedifDate1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const datedifDate2SQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       const unit = expr.value.unit;

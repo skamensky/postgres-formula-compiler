@@ -1,3 +1,20 @@
+import { TYPE } from './types-unified.js';
+
+/**
+ * Convert schema field type string to unified TYPE symbol
+ * @param {string} schemaType - Schema type like 'string', 'number', etc.
+ * @returns {Symbol} Unified TYPE symbol
+ */
+function convertSchemaTypeToUnifiedType(schemaType) {
+  switch (schemaType) {
+    case 'string': return TYPE.STRING;
+    case 'number': return TYPE.NUMBER;
+    case 'boolean': return TYPE.BOOLEAN;
+    case 'date': return TYPE.DATE;
+    default: return TYPE.STRING; // Default fallback
+  }
+}
+
 /**
  * Relationship compilation utilities
  * Handles multi-level relationship chains, join intent generation, and field validation
@@ -119,10 +136,10 @@ export function compileMultiLevelRelationship(compiler, relationshipChain, field
         );
         
         return {
-          type: 'RELATIONSHIP_REF',
+          type: TYPE.RELATIONSHIP_REF,
           semanticId: relationshipRefSemanticId,
           dependentJoins: allJoinSemanticIds,
-          returnType: fieldType,
+          returnType: convertSchemaTypeToUnifiedType(fieldType),
           compilationContext: compiler.compilationContext,
           value: { 
             relationshipChain: relationshipChain,
@@ -153,10 +170,10 @@ export function compileMultiLevelRelationship(compiler, relationshipChain, field
   );
   
   return {
-    type: 'RELATIONSHIP_REF',
+    type: TYPE.RELATIONSHIP_REF,
     semanticId: relationshipRefSemanticId,
     dependentJoins: allJoinSemanticIds,
-    returnType: fieldType,
+    returnType: convertSchemaTypeToUnifiedType(fieldType),
     compilationContext: compiler.compilationContext,
     value: { 
       relationshipChain: relationshipChain,

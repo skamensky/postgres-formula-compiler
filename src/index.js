@@ -1,5 +1,4 @@
 import { mapPostgresType } from './utils.js';
-import { TokenType, NodeType } from './types.js';
 import { Lexer } from './lexer.js';
 import { Parser } from './parser.js';
 import { Compiler } from './compiler.js';
