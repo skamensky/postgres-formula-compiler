@@ -218,4 +218,4 @@ Logical operations are implemented as functions rather than operators:
 - `OR(condition1, condition2, ...)` - Any condition must be true
 - `NOT(condition)` - Negates the condition
 
-*Documentation generated on 2025-06-22T21:16:11.263Z*
+*Documentation generated on 2025-06-22T21:23:58.581Z*

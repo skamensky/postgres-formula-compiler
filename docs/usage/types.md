@@ -11,15 +11,16 @@ This document describes all the data types used in the formula language.
 **Description:** Logical data type representing true or false values.
 
 **Operations:**
-- Logical operators: `AND`, `OR`, `NOT`
-- Comparison operations result in boolean values
-- Conditional functions: `IF()`, `AND()`, `OR()`, `NOT()`
+- Logical functions: `AND()`, `OR()`, `NOT()`
+- Conditional functions: `IF()` conditions
+- `boolean = boolean` → `boolean`
+- `boolean != boolean` → `boolean`
 
 **Literals:** Boolean literals are the keywords `TRUE` and `FALSE`
 
 **Type Compatibility:**
-- Only `boolean` values can be used with `AND`, `OR`, `NOT`
-- Comparison operations always return `boolean`
+- `boolean = boolean` → `boolean`
+- `boolean != boolean` → `boolean`
 
 <details>
 <summary><strong>Functions that use this type</strong> (11 functions)</summary>
@@ -44,9 +45,17 @@ This document describes all the data types used in the formula language.
 **Description:** Date data type for representing calendar dates and timestamps.
 
 **Operations:**
-- Date arithmetic: `date + number` (adds days), `date - number` (subtracts days)
-- Date comparison: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`
 - Date functions: `YEAR()`, `MONTH()`, `DAY()`, `WEEKDAY()`, `DATEDIF()`, etc.
+- `date + number` → `date` (adds days)
+- `date - number` → `date` (subtracts days)
+- `date - date` → `number` (difference in days)
+- `date = date` → `boolean`
+- `date != date` → `boolean`
+- `date > date` → `boolean`
+- `date >= date` → `boolean`
+- `date < date` → `boolean`
+- `date <= date` → `boolean`
+- `number + date` → `date` (adds days)
 
 **Literals:** Date literals are created using the `DATE()` function: `DATE("2023-12-25")`
 
@@ -54,6 +63,13 @@ This document describes all the data types used in the formula language.
 - `date + number` → `date` (adds days)
 - `date - number` → `date` (subtracts days)
 - `date - date` → `number` (difference in days)
+- `date = date` → `boolean`
+- `date != date` → `boolean`
+- `date > date` → `boolean`
+- `date >= date` → `boolean`
+- `date < date` → `boolean`
+- `date <= date` → `boolean`
+- `number + date` → `date` (adds days)
 
 <details>
 <summary><strong>Functions that use this type</strong> (16 functions)</summary>
@@ -86,6 +102,8 @@ This document describes all the data types used in the formula language.
 - Null checking: `ISNULL()`, `ISBLANK()`
 - Null handling: `NULLVALUE()`, `COALESCE()`
 - Any operation with null typically results in null
+- `null = null` → `boolean`
+- `null != null` → `boolean`
 
 **Literals:** The null literal is the keyword `NULL`
 
@@ -107,17 +125,37 @@ No functions currently use this type.
 **Description:** Numeric data type for representing integers and decimal numbers.
 
 **Operations:**
-- Arithmetic operators: `+`, `-`, `*`, `/`
-- Comparison operators: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`
 - Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.
+- `number + number` → `number`
+- `number + date` → `date` (adds days)
+- `number - number` → `number`
+- `number * number` → `number`
+- `number / number` → `number`
+- `number = number` → `boolean`
+- `number != number` → `boolean`
+- `number > number` → `boolean`
+- `number >= number` → `boolean`
+- `number < number` → `boolean`
+- `number <= number` → `boolean`
+- `date + number` → `date` (adds days)
+- `date - number` → `date` (subtracts days)
 
 **Literals:** Numeric literals can be integers or decimals: `123`, `45.67`
 
 **Type Compatibility:**
 - `number + number` → `number`
+- `number + date` → `date` (adds days)
+- `number - number` → `number`
+- `number * number` → `number`
+- `number / number` → `number`
+- `number = number` → `boolean`
+- `number != number` → `boolean`
+- `number > number` → `boolean`
+- `number >= number` → `boolean`
+- `number < number` → `boolean`
+- `number <= number` → `boolean`
 - `date + number` → `date` (adds days)
 - `date - number` → `date` (subtracts days)
-- `date - date` → `number` (difference in days)
 
 <details>
 <summary><strong>Functions that use this type</strong> (42 functions)</summary>
@@ -173,16 +211,26 @@ No functions currently use this type.
 **Description:** Text data type for representing textual information.
 
 **Operations:**
-- String concatenation using `&` operator: `"Hello" & " World"`
 - String functions: `UPPER()`, `LOWER()`, `TRIM()`, `LEN()`, etc.
-- Comparison operators: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`
+- `string & string` → `string` (concatenation)
+- `string = string` → `boolean`
+- `string != string` → `boolean`
+- `string > string` → `boolean` (lexicographic)
+- `string >= string` → `boolean` (lexicographic)
+- `string < string` → `boolean` (lexicographic)
+- `string <= string` → `boolean` (lexicographic)
+- Implicit string conversion: numbers and booleans convert to strings in string contexts
 
 **Literals:** String literals are enclosed in double quotes: `"text content"`
 
 **Type Compatibility:**
 - `string & string` → `string` (concatenation)
-- `string & number` → `string` (number converted to string)
-- `string & boolean` → `string` (boolean converted to string)
+- `string = string` → `boolean`
+- `string != string` → `boolean`
+- `string > string` → `boolean` (lexicographic)
+- `string >= string` → `boolean` (lexicographic)
+- `string < string` → `boolean` (lexicographic)
+- `string <= string` → `boolean` (lexicographic)
 
 <details>
 <summary><strong>Functions that use this type</strong> (20 functions)</summary>
@@ -290,4 +338,4 @@ The formula language supports automatic type conversion in many contexts:
 - `STRING(expression)` - converts any value to string
 - Date parsing through `DATE(string)` function
 
-*Documentation generated on 2025-06-22T21:16:11.261Z*
+*Documentation generated on 2025-06-22T21:23:58.579Z*

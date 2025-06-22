@@ -1,4 +1,4 @@
-import { TYPE, typeToString } from './types-unified.js';
+import { TYPE, typeToString, TOKEN_TO_OPERATION, getOperationRule, getOperationResultType } from './types-unified.js';
 import { compileRelationshipRef } from './relationship-compiler.js';
 import { compileFunction } from './function-dispatcher.js';
 import { TokenValue } from './lexer.js';
@@ -249,64 +249,50 @@ class Compiler {
     // Collect dependent joins from both sides
     const dependentJoins = [...left.dependentJoins, ...right.dependentJoins];
     
-    // Type checking and result type determination
-    let resultType;
-    if ([TokenValue.PLUS, TokenValue.MINUS, TokenValue.MULTIPLY, TokenValue.DIVIDE].includes(node.op)) {
-      // Handle date arithmetic
-      if (node.op === TokenValue.PLUS) {
-        if (left.returnType === TYPE.DATE && right.returnType === TYPE.NUMBER) {
-          resultType = TYPE.DATE; // date + number = date (allow for both direct dates and date expressions)
-        } else if (left.returnType === TYPE.NUMBER && right.returnType === TYPE.DATE) {
-          // Only allow number + date if the number is a direct operand (not an expression result)
-          if (left.type === TYPE.NUMBER_LITERAL || left.type === TYPE.IDENTIFIER) {
-            resultType = TYPE.DATE; // number + date = date
-          } else {
-            this.error(`Invalid operand types for +: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
-          }
-        } else if (left.returnType === TYPE.DATE && right.returnType === TYPE.DATE) {
-          this.error(`Invalid operand types for +: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
-        } else if (left.returnType !== TYPE.NUMBER || right.returnType !== TYPE.NUMBER) {
-          this.error(`Invalid operand types for +: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
-        } else {
-          resultType = TYPE.NUMBER; // number + number = number
-        }
-      } else if (node.op === TokenValue.MINUS) {
-        if (left.returnType === TYPE.DATE && right.returnType === TYPE.NUMBER) {
-          resultType = TYPE.DATE; // date - number = date (allow for both direct dates and date expressions)
-        } else if (left.returnType === TYPE.DATE && right.returnType === TYPE.DATE) {
-          resultType = TYPE.NUMBER; // date - date = interval (treated as number)
-        } else if (left.returnType !== TYPE.NUMBER || right.returnType !== TYPE.NUMBER) {
-          this.error(`Invalid operand types for -: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
-        } else {
-          resultType = TYPE.NUMBER; // number - number = number
-        }
-      } else if ([TokenValue.MULTIPLY, TokenValue.DIVIDE].includes(node.op)) {
-        // Multiplication and division only work with numbers
-        if (left.returnType !== TYPE.NUMBER || right.returnType !== TYPE.NUMBER) {
-          this.error(`Invalid operand types for ${node.op}: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
-        }
-        resultType = TYPE.NUMBER;
-      }
-    } else if (node.op === TokenValue.AMPERSAND) {
-      if (left.returnType !== TYPE.STRING || right.returnType !== TYPE.STRING) {
-        this.error(`String concatenation operator & requires both operands to be strings, got ${typeToString(left.returnType)} and ${typeToString(right.returnType)}. Use STRING() function to cast values to strings.`, node.position);
-      }
-      resultType = TYPE.STRING;
-    } else if ([TokenValue.GT, TokenValue.GTE, TokenValue.LT, TokenValue.LTE, TokenValue.EQ, TokenValue.NEQ_BANG, TokenValue.NEQ_BRACKETS].includes(node.op)) {
-      // Comparison operators
-      if (left.returnType !== right.returnType && left.returnType !== TYPE.NULL && right.returnType !== TYPE.NULL) {
-        this.error(`Cannot compare ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
-      }
-      resultType = TYPE.BOOLEAN;
-    } else {
+    // Convert token value to operation symbol
+    const operation = TOKEN_TO_OPERATION[node.op];
+    if (!operation) {
       this.error(`Unknown binary operator: ${node.op}`, node.position);
+    }
+    
+    // Check if operation is valid for these types
+    const operationRule = getOperationRule(left.returnType, operation, right.returnType);
+    
+    // Handle special case for number + date where we need to check left operand type
+    if (!operationRule && operation === TOKEN_TO_OPERATION['+'] && 
+        left.returnType === TYPE.NUMBER && right.returnType === TYPE.DATE) {
+      // Only allow number + date if the number is a direct operand (not an expression result)
+      if (left.type === TYPE.NUMBER_LITERAL || left.type === TYPE.IDENTIFIER) {
+        // This is valid, treat as date + number
+        const reverseRule = getOperationRule(right.returnType, operation, left.returnType);
+        if (reverseRule) {
+          return {
+            type: TYPE.BINARY_OP,
+            semanticId: this.generateSemanticId('binary_op', node.op, [left.semanticId, right.semanticId]),
+            dependentJoins: dependentJoins,
+            returnType: reverseRule.result,
+            compilationContext: this.compilationContext,
+            value: { op: node.op },
+            children: [left, right]
+          };
+        }
+      }
+    }
+    
+    if (!operationRule) {
+      // Special error message for string concatenation
+      if (operation === TOKEN_TO_OPERATION['&']) {
+        this.error(`String concatenation operator & requires both operands to be strings, got ${typeToString(left.returnType)} and ${typeToString(right.returnType)}. Use STRING() function to cast values to strings.`, node.position);
+      } else {
+        this.error(`Invalid operand types for ${node.op}: ${typeToString(left.returnType)} and ${typeToString(right.returnType)}`, node.position);
+      }
     }
     
     return {
       type: TYPE.BINARY_OP,
       semanticId: this.generateSemanticId('binary_op', node.op, [left.semanticId, right.semanticId]),
       dependentJoins: dependentJoins,
-      returnType: resultType,
+      returnType: operationRule.result,
       compilationContext: this.compilationContext,
       value: { op: node.op },
       children: [left, right]

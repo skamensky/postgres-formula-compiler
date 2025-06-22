@@ -40,89 +40,205 @@ export const TYPE = {
   INVERSE_RELATIONSHIP: Symbol('INVERSE_RELATIONSHIP')
 };
 
-// Comprehensive type metadata for documentation generation
+// Operation symbols for type checking
+export const OPERATION = {
+  // Arithmetic
+  PLUS: Symbol('PLUS'),
+  MINUS: Symbol('MINUS'),
+  MULTIPLY: Symbol('MULTIPLY'),
+  DIVIDE: Symbol('DIVIDE'),
+  
+  // String
+  CONCATENATE: Symbol('CONCATENATE'),
+  
+  // Comparison
+  EQUAL: Symbol('EQUAL'),
+  NOT_EQUAL: Symbol('NOT_EQUAL'),
+  GREATER_THAN: Symbol('GREATER_THAN'),
+  GREATER_THAN_EQUAL: Symbol('GREATER_THAN_EQUAL'),
+  LESS_THAN: Symbol('LESS_THAN'),
+  LESS_THAN_EQUAL: Symbol('LESS_THAN_EQUAL')
+};
+
+// Map token values to operation symbols
+export const TOKEN_TO_OPERATION = {
+  '+': OPERATION.PLUS,
+  '-': OPERATION.MINUS,
+  '*': OPERATION.MULTIPLY,
+  '/': OPERATION.DIVIDE,
+  '&': OPERATION.CONCATENATE,
+  '=': OPERATION.EQUAL,
+  '!=': OPERATION.NOT_EQUAL,
+  '<>': OPERATION.NOT_EQUAL,
+  '>': OPERATION.GREATER_THAN,
+  '>=': OPERATION.GREATER_THAN_EQUAL,
+  '<': OPERATION.LESS_THAN,
+  '<=': OPERATION.LESS_THAN_EQUAL
+};
+
+// Operation rules - defines valid type combinations and result types
+export const OPERATION_RULES = [
+  // Arithmetic operations
+  { left: TYPE.NUMBER, op: OPERATION.PLUS, right: TYPE.NUMBER, result: TYPE.NUMBER, description: '`number + number` → `number`' },
+  { left: TYPE.DATE, op: OPERATION.PLUS, right: TYPE.NUMBER, result: TYPE.DATE, description: '`date + number` → `date` (adds days)' },
+  // Note: number + date is handled as a special case in the compiler (only for literals/identifiers)
+  
+  { left: TYPE.NUMBER, op: OPERATION.MINUS, right: TYPE.NUMBER, result: TYPE.NUMBER, description: '`number - number` → `number`' },
+  { left: TYPE.DATE, op: OPERATION.MINUS, right: TYPE.NUMBER, result: TYPE.DATE, description: '`date - number` → `date` (subtracts days)' },
+  { left: TYPE.DATE, op: OPERATION.MINUS, right: TYPE.DATE, result: TYPE.NUMBER, description: '`date - date` → `number` (difference in days)' },
+  
+  { left: TYPE.NUMBER, op: OPERATION.MULTIPLY, right: TYPE.NUMBER, result: TYPE.NUMBER, description: '`number * number` → `number`' },
+  { left: TYPE.NUMBER, op: OPERATION.DIVIDE, right: TYPE.NUMBER, result: TYPE.NUMBER, description: '`number / number` → `number`' },
+  
+  // String operations
+  { left: TYPE.STRING, op: OPERATION.CONCATENATE, right: TYPE.STRING, result: TYPE.STRING, description: '`string & string` → `string` (concatenation)' },
+  
+  // Comparison operations (same types)
+  { left: TYPE.STRING, op: OPERATION.EQUAL, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`string = string` → `boolean`' },
+  { left: TYPE.NUMBER, op: OPERATION.EQUAL, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number = number` → `boolean`' },
+  { left: TYPE.BOOLEAN, op: OPERATION.EQUAL, right: TYPE.BOOLEAN, result: TYPE.BOOLEAN, description: '`boolean = boolean` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date = date` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`null = null` → `boolean`' },
+  
+  // Not equal
+  { left: TYPE.STRING, op: OPERATION.NOT_EQUAL, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`string != string` → `boolean`' },
+  { left: TYPE.NUMBER, op: OPERATION.NOT_EQUAL, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number != number` → `boolean`' },
+  { left: TYPE.BOOLEAN, op: OPERATION.NOT_EQUAL, right: TYPE.BOOLEAN, result: TYPE.BOOLEAN, description: '`boolean != boolean` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.NOT_EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date != date` → `boolean`' },
+  { left: TYPE.NULL, op: OPERATION.NOT_EQUAL, right: TYPE.NULL, result: TYPE.BOOLEAN, description: '`null != null` → `boolean`' },
+  
+  // Relational comparisons (numbers, dates, strings)
+  { left: TYPE.NUMBER, op: OPERATION.GREATER_THAN, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number > number` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.GREATER_THAN, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date > date` → `boolean`' },
+  { left: TYPE.STRING, op: OPERATION.GREATER_THAN, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`string > string` → `boolean` (lexicographic)' },
+  
+  { left: TYPE.NUMBER, op: OPERATION.GREATER_THAN_EQUAL, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number >= number` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.GREATER_THAN_EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date >= date` → `boolean`' },
+  { left: TYPE.STRING, op: OPERATION.GREATER_THAN_EQUAL, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`string >= string` → `boolean` (lexicographic)' },
+  
+  { left: TYPE.NUMBER, op: OPERATION.LESS_THAN, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number < number` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.LESS_THAN, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date < date` → `boolean`' },
+  { left: TYPE.STRING, op: OPERATION.LESS_THAN, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`string < string` → `boolean` (lexicographic)' },
+  
+  { left: TYPE.NUMBER, op: OPERATION.LESS_THAN_EQUAL, right: TYPE.NUMBER, result: TYPE.BOOLEAN, description: '`number <= number` → `boolean`' },
+  { left: TYPE.DATE, op: OPERATION.LESS_THAN_EQUAL, right: TYPE.DATE, result: TYPE.BOOLEAN, description: '`date <= date` → `boolean`' },
+  { left: TYPE.STRING, op: OPERATION.LESS_THAN_EQUAL, right: TYPE.STRING, result: TYPE.BOOLEAN, description: '`string <= string` → `boolean` (lexicographic)' }
+];
+
+/**
+ * Check if an operation is valid for given types
+ * @param {Symbol} leftType - Left operand type
+ * @param {Symbol} operation - Operation symbol
+ * @param {Symbol} rightType - Right operand type
+ * @returns {Object|null} Operation rule if valid, null if invalid
+ */
+export function getOperationRule(leftType, operation, rightType) {
+  return OPERATION_RULES.find(rule => 
+    rule.left === leftType && 
+    rule.op === operation && 
+    rule.right === rightType
+  ) || null;
+}
+
+/**
+ * Get all operations supported by a type
+ * @param {Symbol} type - The type to check
+ * @returns {Array} Array of operation descriptions
+ */
+export function getOperationsForType(type) {
+  const operations = [];
+  
+  // Get operations where this type is the left operand
+  const leftOps = OPERATION_RULES
+    .filter(rule => rule.left === type)
+    .map(rule => rule.description);
+  
+  // Get operations where this type is the right operand (avoid duplicates)
+  const rightOps = OPERATION_RULES
+    .filter(rule => rule.right === type && rule.left !== type)
+    .map(rule => rule.description);
+  
+  return [...new Set([...leftOps, ...rightOps])];
+}
+
+/**
+ * Get the result type of an operation
+ * @param {Symbol} leftType - Left operand type
+ * @param {Symbol} operation - Operation symbol
+ * @param {Symbol} rightType - Right operand type
+ * @returns {Symbol|null} Result type if valid, null if invalid
+ */
+export function getOperationResultType(leftType, operation, rightType) {
+  const rule = getOperationRule(leftType, operation, rightType);
+  return rule ? rule.result : null;
+}
+
+// Comprehensive type metadata for documentation generation  
 export const TYPE_METADATA = {
   [TYPE.STRING]: {
     name: 'string',
     category: 'basic',
     description: 'Text data type for representing textual information.',
-    operations: [
-      'String concatenation using `&` operator: `"Hello" & " World"`',
+    getOperations: () => [
       'String functions: `UPPER()`, `LOWER()`, `TRIM()`, `LEN()`, etc.',
-      'Comparison operators: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`'
+      ...getOperationsForType(TYPE.STRING),
+      'Implicit string conversion: numbers and booleans convert to strings in string contexts'
     ],
     literals: 'String literals are enclosed in double quotes: `"text content"`',
-    compatibility: [
-      '`string & string` → `string` (concatenation)',
-      '`string & number` → `string` (number converted to string)', 
-      '`string & boolean` → `string` (boolean converted to string)'
-    ]
+    compatibility: () => getOperationsForType(TYPE.STRING)
   },
   
   [TYPE.NUMBER]: {
     name: 'number',
     category: 'basic',
     description: 'Numeric data type for representing integers and decimal numbers.',
-    operations: [
-      'Arithmetic operators: `+`, `-`, `*`, `/`',
-      'Comparison operators: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`',
-      'Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.'
+    getOperations: () => [
+      'Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.',
+      ...getOperationsForType(TYPE.NUMBER)
     ],
     literals: 'Numeric literals can be integers or decimals: `123`, `45.67`',
-    compatibility: [
-      '`number + number` → `number`',
-      '`date + number` → `date` (adds days)',
-      '`date - number` → `date` (subtracts days)',
-      '`date - date` → `number` (difference in days)'
-    ]
+    compatibility: () => getOperationsForType(TYPE.NUMBER)
   },
   
   [TYPE.BOOLEAN]: {
     name: 'boolean',
     category: 'basic',
     description: 'Logical data type representing true or false values.',
-    operations: [
-      'Logical operators: `AND`, `OR`, `NOT`',
-      'Comparison operations result in boolean values',
-      'Conditional functions: `IF()`, `AND()`, `OR()`, `NOT()`'
+    getOperations: () => [
+      'Logical functions: `AND()`, `OR()`, `NOT()`',
+      'Conditional functions: `IF()` conditions',
+      ...getOperationsForType(TYPE.BOOLEAN)
     ],
     literals: 'Boolean literals are the keywords `TRUE` and `FALSE`',
-    compatibility: [
-      'Only `boolean` values can be used with `AND`, `OR`, `NOT`',
-      'Comparison operations always return `boolean`'
-    ]
+    compatibility: () => getOperationsForType(TYPE.BOOLEAN)
   },
   
   [TYPE.DATE]: {
     name: 'date',
     category: 'basic',
     description: 'Date data type for representing calendar dates and timestamps.',
-    operations: [
-      'Date arithmetic: `date + number` (adds days), `date - number` (subtracts days)',
-      'Date comparison: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`',
-      'Date functions: `YEAR()`, `MONTH()`, `DAY()`, `WEEKDAY()`, `DATEDIF()`, etc.'
+    getOperations: () => [
+      'Date functions: `YEAR()`, `MONTH()`, `DAY()`, `WEEKDAY()`, `DATEDIF()`, etc.',
+      ...getOperationsForType(TYPE.DATE)
     ],
     literals: 'Date literals are created using the `DATE()` function: `DATE("2023-12-25")`',
-    compatibility: [
-      '`date + number` → `date` (adds days)',
-      '`date - number` → `date` (subtracts days)',
-      '`date - date` → `number` (difference in days)'
-    ]
+    compatibility: () => getOperationsForType(TYPE.DATE)
   },
   
   [TYPE.NULL]: {
     name: 'null',
     category: 'basic',
     description: 'Special type representing the absence of a value.',
-    operations: [
+    getOperations: () => [
       'Null checking: `ISNULL()`, `ISBLANK()`',
       'Null handling: `NULLVALUE()`, `COALESCE()`',
-      'Any operation with null typically results in null'
+      'Any operation with null typically results in null',
+      ...getOperationsForType(TYPE.NULL)
     ],
     literals: 'The null literal is the keyword `NULL`',
-    compatibility: [
+    compatibility: () => [
       '`null` is equal only to `null`',
-      'Cross-type comparisons may use implicit conversion',
+      'Cross-type comparisons may use implicit conversion', 
       'Null values propagate through most operations'
     ]
   },
@@ -138,9 +254,9 @@ export const TYPE_METADATA = {
       '- Type conversion functions like `STRING(expression)`'
     ],
     note: 'This type indicates that the parameter accepts any valid expression, and the actual return type depends on what the expression evaluates to.',
-    operations: [],
+    getOperations: () => [],
     literals: 'N/A - this is a meta-type for function signatures',
-    compatibility: ['Accepts any valid expression type']
+    compatibility: () => ['Accepts any valid expression type']
   },
   
   [TYPE.INVERSE_RELATIONSHIP]: {
@@ -151,9 +267,9 @@ export const TYPE_METADATA = {
       'Used as the first parameter in aggregate functions to specify which related records to aggregate over.',
       '**Syntax:** `table_relationship` or `table_relationship.field` for multi-level relationships'
     ],
-    operations: [],
+    getOperations: () => [],
     literals: 'N/A - this refers to relationship definitions in your data model',
-    compatibility: ['Only used in aggregate function contexts']
+    compatibility: () => ['Only used in aggregate function contexts']
   }
 };
 

@@ -13,7 +13,7 @@ import {
   CATEGORIES, 
   FUNCTIONS
 } from '../src/function-metadata.js';
-import { TYPE, typeToString, TYPE_METADATA } from '../src/types-unified.js';
+import { TYPE, typeToString, TYPE_METADATA, getOperationsForType } from '../src/types-unified.js';
 
 // Create TYPES mapping for backward compatibility
 const TYPES = {
@@ -154,17 +154,20 @@ This document describes all the data types used in the formula language.
 ${basicTypes.map(([typeSymbol, metadata]) => {
   const functionsUsingType = getFunctionsUsingType(typeSymbol);
   
+  const operations = metadata.getOperations ? metadata.getOperations() : [];
+  const compatibility = metadata.compatibility ? metadata.compatibility() : [];
+  
   return `### ${metadata.name}
 
 **Description:** ${metadata.description}
 
-${metadata.operations.length > 0 ? `**Operations:**
-${metadata.operations.map(op => `- ${op}`).join('\n')}
+${operations.length > 0 ? `**Operations:**
+${operations.map(op => `- ${op}`).join('\n')}
 ` : ''}
 **Literals:** ${metadata.literals}
 
-${metadata.compatibility.length > 0 ? `**Type Compatibility:**
-${metadata.compatibility.map(comp => `- ${comp}`).join('\n')}
+${compatibility.length > 0 ? `**Type Compatibility:**
+${compatibility.map(comp => `- ${comp}`).join('\n')}
 ` : ''}
 <details>
 <summary><strong>Functions that use this type</strong> (${functionsUsingType.length} functions)</summary>
@@ -185,6 +188,9 @@ ${functionsUsingType.length > 0 ?
 ${specialTypes.map(([typeSymbol, metadata]) => {
   const functionsUsingType = getFunctionsUsingType(typeSymbol);
   
+  const operations = metadata.getOperations ? metadata.getOperations() : [];
+  const compatibility = metadata.compatibility ? metadata.compatibility() : [];
+  
   return `### ${metadata.name}
 
 **Description:** ${metadata.description}
@@ -196,8 +202,8 @@ ${metadata.note ? `**Note:** ${metadata.note}
 
 ` : ''}**Literals:** ${metadata.literals}
 
-${metadata.compatibility.length > 0 ? `**Type Compatibility:**
-${metadata.compatibility.map(comp => `- ${comp}`).join('\n')}
+${compatibility.length > 0 ? `**Type Compatibility:**
+${compatibility.map(comp => `- ${comp}`).join('\n')}
 ` : ''}
 <details>
 <summary><strong>Functions that use this type</strong> (${functionsUsingType.length} functions)</summary>
