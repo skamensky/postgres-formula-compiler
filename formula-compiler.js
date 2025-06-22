@@ -2134,7 +2134,6 @@ function generateSQL(namedResults, baseTableName) {
     
     // Map each aggregate to its column in the consolidated subquery
     const usedAliases = new Set();
-    let aliasCounter = 1;
     
     aggIntents.forEach((aggIntent, index) => {
       let columnAlias;
@@ -2158,10 +2157,12 @@ function generateSQL(namedResults, baseTableName) {
         columnAlias = `agg_col_${index + 1}`;
       }
       
-      // Make column alias unique if it's already used
+      // Make column alias unique by finding the next available number
       let finalColumnAlias = columnAlias;
-      if (usedAliases.has(columnAlias)) {
-        finalColumnAlias = `${columnAlias}_${aliasCounter++}`;
+      let counter = 1;
+      while (usedAliases.has(finalColumnAlias)) {
+        finalColumnAlias = `${columnAlias}_${counter}`;
+        counter++;
       }
       usedAliases.add(finalColumnAlias);
       
