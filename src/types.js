@@ -25,19 +25,5 @@ const TokenType = {
   EOF: 'EOF'
 };
 
-// AST Node types
-const NodeType = {
-  BINARY_OP: 'BINARY_OP',
-  UNARY_OP: 'UNARY_OP',
-  NUMBER: 'NUMBER',
-  IDENTIFIER: 'IDENTIFIER',
-  FUNCTION_CALL: 'FUNCTION_CALL',
-  DATE_LITERAL: 'DATE_LITERAL',
-  STRING_LITERAL: 'STRING_LITERAL',
-  BOOLEAN_LITERAL: 'BOOLEAN_LITERAL',
-  NULL_LITERAL: 'NULL_LITERAL',
-  RELATIONSHIP_REF: 'RELATIONSHIP_REF'
-};
-
 // Export for ES modules
-export { TokenType, NodeType };
+export { TokenType };
