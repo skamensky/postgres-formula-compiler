@@ -559,16 +559,16 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
         return `(${leftSQL} <> ${rightSQL})`;
       } else if (expr.value.op === '+') {
         // Handle date arithmetic for addition
-        if (leftType === 'date' && rightType === 'number') {
+        if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
           return `(${leftSQL} + INTERVAL '${rightSQL} days')`;
-        } else if (leftType === 'number' && rightType === 'date') {
+        } else if (leftType === TYPE.NUMBER && rightType === TYPE.DATE) {
           return `(${rightSQL} + INTERVAL '${leftSQL} days')`;
         } else {
           return `(${leftSQL} + ${rightSQL})`;
         }
       } else if (expr.value.op === '-') {
         // Handle date arithmetic for subtraction
-        if (leftType === 'date' && rightType === 'number') {
+        if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
           return `(${leftSQL} - INTERVAL '${rightSQL} days')`;
         } else {
           return `(${leftSQL} - ${rightSQL})`;

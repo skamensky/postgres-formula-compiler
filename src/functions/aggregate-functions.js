@@ -296,16 +296,12 @@ export function compileAggregateFunction(compiler, node) {
   let delimiterResult = null;
   if (funcName === FUNCTIONS.STRING_AGG) {
     delimiterResult = compiler.compile(node.args[2]); // Third argument is the delimiter
-    if (delimiterResult.returnType !== 'string') {
+    if (delimiterResult.returnType !== TYPE.STRING) {
       compiler.error(`${funcName}() delimiter must be string, got ${delimiterResult.returnType}`, node.position);
     }
   }
   
-  // Determine return type using metadata and convert Symbol to string
-  const returnTypeString = metadata.returnType === TYPE.NUMBER ? 'number' : 
-                          metadata.returnType === TYPE.STRING ? 'string' :
-                          metadata.returnType === TYPE.BOOLEAN ? 'boolean' :
-                          metadata.returnType === TYPE.DATE ? 'date' : 'unknown';
+  // Determine return type using metadata
   
   // Generate aggregate intent
   // For COUNT_AGG, use the same semantic ID regardless of column since SQL is always COUNT(*)
@@ -324,7 +320,7 @@ export function compileAggregateFunction(compiler, node) {
     expression: expressionResult,
     delimiter: delimiterResult,
     internalJoins: Array.from(subCompiler.joinIntents.values()),
-    returnType: returnTypeString,
+    returnType: metadata.returnType,
     // Multi-level specific properties
     isMultiLevel: resolvedChain.isMultiLevel,
     chainInfo: resolvedChain.isMultiLevel ? resolvedChain.chainInfo : null
@@ -334,10 +330,10 @@ export function compileAggregateFunction(compiler, node) {
   compiler.aggregateIntents.set(aggSemanticId, aggregateIntent);
   
   return {
-    type: 'AGGREGATE_FUNCTION',
+    type: TYPE.AGGREGATE_FUNCTION,
     semanticId: aggSemanticId,
     dependentJoins: [], // Aggregates don't create main query joins
-    returnType: returnTypeString,
+    returnType: metadata.returnType,
     compilationContext: compiler.compilationContext,
     value: { 
       aggregateSemanticId: aggSemanticId,

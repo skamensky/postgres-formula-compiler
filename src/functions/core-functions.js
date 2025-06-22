@@ -10,7 +10,7 @@ import {
   CATEGORIES,
   FUNCTION_METADATA
 } from '../function-metadata.js';
-import { TYPE } from '../types-unified.js';
+import { TYPE, typeToString } from '../types-unified.js';
 
 /**
  * Compile core/special function calls
@@ -44,12 +44,6 @@ export function compileCoreFunction(compiler, node) {
     return; // Validation failed, error already reported
   }
   
-  // Convert Symbol return type to string for consistency
-  const returnTypeString = metadata.returnType === TYPE.NUMBER ? 'number' : 
-                          metadata.returnType === TYPE.STRING ? 'string' :
-                          metadata.returnType === TYPE.BOOLEAN ? 'boolean' :
-                          metadata.returnType === TYPE.DATE ? 'date' : 'unknown';
-  
   // Special handling for different core functions
   switch (funcName) {
     case FUNCTIONS.TODAY:
@@ -58,7 +52,7 @@ export function compileCoreFunction(compiler, node) {
         type: TYPE.FUNCTION_CALL,
         semanticId: compiler.generateSemanticId('function', funcName),
         dependentJoins: [],
-        returnType: returnTypeString,
+        returnType: metadata.returnType,
         compilationContext: compiler.compilationContext,
         value: { name: funcName, args: [] }
       };
@@ -68,7 +62,7 @@ export function compileCoreFunction(compiler, node) {
         type: TYPE.FUNCTION_CALL,
         semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
         dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
-        returnType: returnTypeString,
+        returnType: metadata.returnType,
         compilationContext: compiler.compilationContext,
         value: { name: funcName },
         children: compiledArgs
@@ -100,7 +94,7 @@ function compileDateFunction(compiler, node, metadata) {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', 'DATE', [dateArg.semanticId]),
     dependentJoins: [],
-    returnType: 'date',
+    returnType: TYPE.DATE,
     compilationContext: compiler.compilationContext,
     value: { name: 'DATE', stringValue: dateArg.value },
     children: [dateArg]
@@ -126,12 +120,12 @@ export function compileIfFunction(compiler, node) {
     falseValue = compiler.compile(node.args[2]);
     
     if (trueValue.returnType !== falseValue.returnType) {
-      compiler.error(`IF() true and false values must be the same type, got ${trueValue.returnType} and ${falseValue.returnType}`, node.position);
+      compiler.error(`IF() true and false values must be the same type, got ${typeToString(trueValue.returnType)} and ${typeToString(falseValue.returnType)}`, node.position);
     }
   }
   
-  if (condition.returnType !== 'boolean') {
-    compiler.error(`IF() condition must be boolean, got ${condition.returnType}`, node.position);
+  if (condition.returnType !== TYPE.BOOLEAN) {
+    compiler.error(`IF() condition must be boolean, got ${typeToString(condition.returnType)}`, node.position);
   }
   
   const children = falseValue ? [condition, trueValue, falseValue] : [condition, trueValue];

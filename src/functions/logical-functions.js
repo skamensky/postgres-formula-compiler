@@ -37,15 +37,12 @@ export function compileLogicalFunction(compiler, node) {
     return; // Validation failed, error already reported
   }
   
-  // Convert Symbol return type to string for consistency
-  const returnTypeString = metadata.returnType === TYPE.BOOLEAN ? 'boolean' : 'unknown';
-  
   // All logical functions use standard compilation
   return {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
     dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
-    returnType: returnTypeString,
+    returnType: metadata.returnType,
     compilationContext: compiler.compilationContext,
     value: { name: funcName },
     children: compiledArgs

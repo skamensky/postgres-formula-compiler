@@ -36,17 +36,11 @@ export function compileMathFunction(compiler, node) {
   }
   
   // All math functions use standard compilation (no special handling required)
-  // Convert Symbol return type to string for consistency
-  const returnTypeString = metadata.returnType === TYPE.NUMBER ? 'number' : 
-                          metadata.returnType === TYPE.STRING ? 'string' :
-                          metadata.returnType === TYPE.BOOLEAN ? 'boolean' :
-                          metadata.returnType === TYPE.DATE ? 'date' : 'unknown';
-  
   return {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
     dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
-    returnType: returnTypeString,
+    returnType: metadata.returnType,
     compilationContext: compiler.compilationContext,
     value: { name: funcName },
     children: compiledArgs

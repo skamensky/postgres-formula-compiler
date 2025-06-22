@@ -48,18 +48,12 @@ export function compileDateFunction(compiler, node) {
     return; // Validation failed, error already reported
   }
   
-  // Convert Symbol return type to string for consistency
-  const returnTypeString = metadata.returnType === TYPE.NUMBER ? 'number' : 
-                          metadata.returnType === TYPE.STRING ? 'string' :
-                          metadata.returnType === TYPE.BOOLEAN ? 'boolean' :
-                          metadata.returnType === TYPE.DATE ? 'date' : 'unknown';
-  
   // All date functions use standard compilation (except DATEDIF which is handled separately)
   return {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
     dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
-    returnType: returnTypeString,
+    returnType: metadata.returnType,
     compilationContext: compiler.compilationContext,
     value: { name: funcName },
     children: compiledArgs
@@ -85,7 +79,7 @@ function compileDateExtractionFunction(compiler, node, metadata) {
   const arg = compiler.compile(node.args[0]);
   
   // Custom type validation
-  if (arg.returnType !== 'date') {
+  if (arg.returnType !== TYPE.DATE) {
     compiler.error(`${funcName}() requires date argument, got ${arg.returnType}`, node.position);
   }
   
@@ -93,7 +87,7 @@ function compileDateExtractionFunction(compiler, node, metadata) {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, [arg.semanticId]),
     dependentJoins: arg.dependentJoins,
-    returnType: 'number',
+    returnType: TYPE.NUMBER,
     compilationContext: compiler.compilationContext,
     value: { name: funcName },
     children: [arg]
@@ -121,10 +115,10 @@ function compileAddDateFunction(compiler, node, metadata) {
   const arg2 = compiler.compile(node.args[1]);
   
   // Custom type validation
-  if (arg1.returnType !== 'date') {
+  if (arg1.returnType !== TYPE.DATE) {
     compiler.error(`${funcName}() first argument must be date, got ${arg1.returnType}`, node.position);
   }
-  if (arg2.returnType !== 'number') {
+  if (arg2.returnType !== TYPE.NUMBER) {
     compiler.error(`${funcName}() second argument must be number, got ${arg2.returnType}`, node.position);
   }
   
@@ -132,7 +126,7 @@ function compileAddDateFunction(compiler, node, metadata) {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, [arg1.semanticId, arg2.semanticId]),
     dependentJoins: [...arg1.dependentJoins, ...arg2.dependentJoins],
-    returnType: 'date',
+    returnType: TYPE.DATE,
     compilationContext: compiler.compilationContext,
     value: { name: funcName },
     children: [arg1, arg2]
@@ -157,10 +151,10 @@ function compileDatedifFunction(compiler, node, metadata) {
   const datedifArg2 = compiler.compile(node.args[1]);
   
   // Validate argument types for first two arguments
-  if (datedifArg1.returnType !== 'date') {
+  if (datedifArg1.returnType !== TYPE.DATE) {
     compiler.error('DATEDIF() first argument must be date, got ' + datedifArg1.returnType, node.position);
   }
-  if (datedifArg2.returnType !== 'date') {
+  if (datedifArg2.returnType !== TYPE.DATE) {
     compiler.error('DATEDIF() second argument must be date, got ' + datedifArg2.returnType, node.position);
   }
   
@@ -178,7 +172,7 @@ function compileDatedifFunction(compiler, node, metadata) {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', 'DATEDIF', [datedifArg1.semanticId, datedifArg2.semanticId, unit]),
     dependentJoins: [...datedifArg1.dependentJoins, ...datedifArg2.dependentJoins],
-    returnType: 'number',
+    returnType: TYPE.NUMBER,
     compilationContext: compiler.compilationContext,
     value: { name: 'DATEDIF', unit: unit },
     children: [datedifArg1, datedifArg2]

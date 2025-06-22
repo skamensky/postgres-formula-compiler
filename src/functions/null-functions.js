@@ -10,7 +10,7 @@ import {
   CATEGORIES,
   FUNCTION_METADATA
 } from '../function-metadata.js';
-import { TYPE } from '../types-unified.js';
+import { TYPE, typeToString } from '../types-unified.js';
 
 /**
  * Compile null handling function calls
@@ -40,15 +40,12 @@ export function compileNullFunction(compiler, node) {
     return; // Validation failed, error already reported
   }
   
-  // Convert Symbol return type to string for consistency
-  const returnTypeString = metadata.returnType === TYPE.BOOLEAN ? 'boolean' : 'unknown';
-  
   // Standard null functions (ISNULL, ISBLANK) use standard compilation
   return {
     type: TYPE.FUNCTION_CALL,
     semanticId: compiler.generateSemanticId('function', funcName, compiledArgs.map(a => a.semanticId)),
     dependentJoins: compiledArgs.flatMap(a => a.dependentJoins),
-    returnType: returnTypeString,
+    returnType: metadata.returnType,
     compilationContext: compiler.compilationContext,
     value: { name: funcName },
     children: compiledArgs
@@ -71,12 +68,12 @@ function compileNullValueFunction(compiler, node) {
   
   // Type checking - both arguments should be the same type (unless one is null)
   if (nullvalueArg1.returnType !== nullvalueArg2.returnType && 
-      nullvalueArg1.returnType !== 'null' && nullvalueArg2.returnType !== 'null') {
-    compiler.error(`NULLVALUE() value and default must be the same type, got ${nullvalueArg1.returnType} and ${nullvalueArg2.returnType}`, node.position);
+      nullvalueArg1.returnType !== TYPE.NULL && nullvalueArg2.returnType !== TYPE.NULL) {
+    compiler.error(`NULLVALUE() value and default must be the same type, got ${typeToString(nullvalueArg1.returnType)} and ${typeToString(nullvalueArg2.returnType)}`, node.position);
   }
   
   // Return type is the non-null type, or the first type if both are non-null
-  const nullvalueReturnType = nullvalueArg1.returnType !== 'null' ? nullvalueArg1.returnType : nullvalueArg2.returnType;
+  const nullvalueReturnType = nullvalueArg1.returnType !== TYPE.NULL ? nullvalueArg1.returnType : nullvalueArg2.returnType;
   
   return {
     type: TYPE.FUNCTION_CALL,
