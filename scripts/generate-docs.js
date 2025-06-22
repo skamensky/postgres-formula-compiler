@@ -304,6 +304,10 @@ ${generateOperatorsSection()}
 ${functions.map(funcName => {
   const metadata = FUNCTION_METADATA[funcName];
   
+  // Find test references and examples for this function
+  const testRefs = findTestReferences(funcName);
+  const exampleRefs = findExampleReferences(funcName);
+  
   return `
 ## ${funcName}
 
@@ -314,12 +318,10 @@ ${functions.map(funcName => {
 ${metadata.arguments.length > 0 ? `**Arguments:**
 ${metadata.arguments.map(arg => `- \`${arg.name}\` (${formatTypeLink(arg.type)}): ${arg.description}${arg.optional ? ' *(optional)*' : ''}${arg.variadic ? ' *(variadic)*' : ''}`).join('\n')}
 ` : '**Arguments:** None\n'}
-**Test References:** ${metadata.testRefs ? metadata.testRefs.map(ref => `[${ref}](../../${ref})`).join(', ') : 'Not specified'}
 
-**Example Usage:**
-\`\`\`
-// TODO: Add usage examples from test files
-\`\`\`
+${generateTestReferencesMarkdown(testRefs)}
+
+${generateExampleReferencesMarkdown(exampleRefs)}
 `;
 }).join('\n---\n')}
 
@@ -578,6 +580,217 @@ function generateOperatorsSection() {
   operatorsSection += `- \`NOT(condition)\` - Negates the condition`;
   
   return operatorsSection;
+}
+
+/**
+ * Find all test files that reference a specific function
+ * @param {string} functionName - The function name to search for
+ * @returns {Array} Array of objects with file path and line numbers
+ */
+function findTestReferences(functionName) {
+  const testReferences = [];
+  const testDir = path.join(rootDir, 'tests');
+  
+  if (!fs.existsSync(testDir)) {
+    return testReferences;
+  }
+  
+  // Get all test files
+  const testFiles = fs.readdirSync(testDir)
+    .filter(file => file.endsWith('.test.js'))
+    .map(file => path.join(testDir, file));
+  
+  testFiles.forEach(filePath => {
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const lines = content.split('\n');
+      const fileName = path.basename(filePath);
+      
+      lines.forEach((line, index) => {
+        // Look for function calls in various contexts
+        const patterns = [
+          new RegExp(`\\b${functionName}\\s*\\(`, 'gi'), // Function calls
+          new RegExp(`'[^']*\\b${functionName}\\s*\\([^']*'`, 'gi'), // In strings
+          new RegExp(`"[^"]*\\b${functionName}\\s*\\([^"]*"`, 'gi'), // In double quotes
+          new RegExp(`\`[^\`]*\\b${functionName}\\s*\\([^\`]*\``, 'gi') // In template literals
+        ];
+        
+        patterns.forEach(pattern => {
+          if (pattern.test(line)) {
+            testReferences.push({
+              file: fileName,
+              line: index + 1,
+              content: line.trim(),
+              url: `tests/${fileName}#L${index + 1}`
+            });
+          }
+        });
+      });
+    } catch (error) {
+      console.warn(`Warning: Could not read test file ${filePath}:`, error.message);
+    }
+  });
+  
+  // Remove duplicates and sort by file then line
+  const uniqueReferences = testReferences.filter((ref, index, arr) => 
+    arr.findIndex(r => r.file === ref.file && r.line === ref.line) === index
+  );
+  
+  return uniqueReferences.sort((a, b) => {
+    if (a.file !== b.file) return a.file.localeCompare(b.file);
+    return a.line - b.line;
+  });
+}
+
+/**
+ * Find all example files that reference a specific function
+ * @param {string} functionName - The function name to search for
+ * @returns {Array} Array of objects with file path and line numbers
+ */
+function findExampleReferences(functionName) {
+  const exampleReferences = [];
+  const searchDirs = [
+    path.join(rootDir, 'examples'),
+    path.join(rootDir, 'docs', 'examples'),
+    path.join(rootDir, 'src') // Also search source files for usage examples
+  ];
+  
+  searchDirs.forEach(dir => {
+    if (!fs.existsSync(dir)) return;
+    
+    // Recursively search for files
+    const searchFiles = (dirPath) => {
+      const items = fs.readdirSync(dirPath);
+      
+      items.forEach(item => {
+        const fullPath = path.join(dirPath, item);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory()) {
+          searchFiles(fullPath);
+        } else if (item.endsWith('.js') || item.endsWith('.md') || item.endsWith('.txt')) {
+          try {
+            const content = fs.readFileSync(fullPath, 'utf8');
+            const lines = content.split('\n');
+            const relativePath = path.relative(rootDir, fullPath);
+            
+            lines.forEach((line, index) => {
+              // Look for function usage in various contexts
+              const patterns = [
+                new RegExp(`\\b${functionName}\\s*\\(`, 'gi'), // Function calls
+                new RegExp(`'[^']*\\b${functionName}\\s*\\([^']*'`, 'gi'), // In strings
+                new RegExp(`"[^"]*\\b${functionName}\\s*\\([^"]*"`, 'gi'), // In double quotes
+                new RegExp(`\`[^\`]*\\b${functionName}\\s*\\([^\`]*\``, 'gi') // In template literals
+              ];
+              
+              patterns.forEach(pattern => {
+                if (pattern.test(line)) {
+                  exampleReferences.push({
+                    file: relativePath,
+                    line: index + 1,
+                    content: line.trim(),
+                    url: `${relativePath}#L${index + 1}`
+                  });
+                }
+              });
+            });
+          } catch (error) {
+            console.warn(`Warning: Could not read example file ${fullPath}:`, error.message);
+          }
+        }
+      });
+    };
+    
+    searchFiles(dir);
+  });
+  
+  // Remove duplicates and sort by file then line
+  const uniqueReferences = exampleReferences.filter((ref, index, arr) => 
+    arr.findIndex(r => r.file === ref.file && r.line === ref.line) === index
+  );
+  
+  return uniqueReferences.sort((a, b) => {
+    if (a.file !== b.file) return a.file.localeCompare(b.file);
+    return a.line - b.line;
+  });
+}
+
+/**
+ * Generate markdown for test references
+ * @param {Array} testRefs - Array of test reference objects
+ * @returns {string} Markdown content
+ */
+function generateTestReferencesMarkdown(testRefs) {
+  if (testRefs.length === 0) {
+    return `<details>
+<summary><strong>Test References</strong> (0 found)</summary>
+
+No test references found for this function.
+</details>`;
+  }
+  
+  const groupedByFile = {};
+  testRefs.forEach(ref => {
+    if (!groupedByFile[ref.file]) {
+      groupedByFile[ref.file] = [];
+    }
+    groupedByFile[ref.file].push(ref);
+  });
+  
+  const content = Object.entries(groupedByFile)
+    .map(([file, refs]) => {
+      const linksList = refs.map(ref => 
+        `  - [Line ${ref.line}](../../${ref.url}): \`${ref.content}\``
+      ).join('\n');
+      
+      return `- **${file}** (${refs.length} reference${refs.length > 1 ? 's' : ''})\n${linksList}`;
+    })
+    .join('\n\n');
+  
+  return `<details>
+<summary><strong>Test References</strong> (${testRefs.length} found)</summary>
+
+${content}
+</details>`;
+}
+
+/**
+ * Generate markdown for example references
+ * @param {Array} exampleRefs - Array of example reference objects
+ * @returns {string} Markdown content
+ */
+function generateExampleReferencesMarkdown(exampleRefs) {
+  if (exampleRefs.length === 0) {
+    return `<details>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
+
+No usage examples found for this function.
+</details>`;
+  }
+  
+  const groupedByFile = {};
+  exampleRefs.forEach(ref => {
+    if (!groupedByFile[ref.file]) {
+      groupedByFile[ref.file] = [];
+    }
+    groupedByFile[ref.file].push(ref);
+  });
+  
+  const content = Object.entries(groupedByFile)
+    .map(([file, refs]) => {
+      const linksList = refs.map(ref => 
+        `  - [Line ${ref.line}](../../${ref.url}): \`${ref.content}\``
+      ).join('\n');
+      
+      return `- **${file}** (${refs.length} reference${refs.length > 1 ? 's' : ''})\n${linksList}`;
+    })
+    .join('\n\n');
+  
+  return `<details>
+<summary><strong>Usage Examples</strong> (${exampleRefs.length} found)</summary>
+
+${content}
+</details>`;
 }
 
 /**
