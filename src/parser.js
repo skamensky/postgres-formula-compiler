@@ -77,7 +77,15 @@ class Parser {
         const args = [];
         
         if (this.currentToken.type !== TokenType.RPAREN) {
-          args.push(this.comparison());
+          // Check if this is an aggregate function that needs special first argument parsing
+          const isAggregateFunction = ['STRING_AGG', 'STRING_AGG_DISTINCT', 'SUM_AGG', 'COUNT_AGG', 'AVG_AGG', 'MIN_AGG', 'MAX_AGG', 'AND_AGG', 'OR_AGG'].includes(identifier);
+          
+          if (isAggregateFunction) {
+            // Parse first argument with special dot-separated handling
+            args.push(this.parseAggregateRelationshipArg());
+          } else {
+            args.push(this.comparison());
+          }
           
           while (this.currentToken.type === TokenType.COMMA) {
             this.eat(TokenType.COMMA);
@@ -240,6 +248,53 @@ class Parser {
     }
 
     return node;
+  }
+
+  /**
+   * Parse dot-separated relationship chain for aggregate function first argument
+   * Handles both single relationships and multi-level chains like: rel1.rel2.rel3
+   * @returns {Object} Relationship identifier or relationship reference AST node
+   */
+  parseAggregateRelationshipArg() {
+    if (this.currentToken.type !== TokenType.IDENTIFIER) {
+      this.error('Expected relationship identifier', this.currentToken.position);
+    }
+    
+    const firstIdentifier = this.currentToken.value;
+    const position = this.currentToken.position;
+    this.eat(TokenType.IDENTIFIER);
+    
+    // Check if this is a dot-separated chain
+    if (this.currentToken.type === TokenType.DOT) {
+      const relationshipChain = [firstIdentifier.toLowerCase()];
+      
+      // Parse the chain of relationships
+      while (this.currentToken.type === TokenType.DOT) {
+        this.eat(TokenType.DOT);
+        
+        if (this.currentToken.type !== TokenType.IDENTIFIER) {
+          this.error('Expected identifier after dot in relationship chain', this.currentToken.position);
+        }
+        
+        relationshipChain.push(this.currentToken.value.toLowerCase());
+        this.eat(TokenType.IDENTIFIER);
+      }
+      
+      // Return as a relationship reference with chain
+      return {
+        type: NodeType.RELATIONSHIP_REF,
+        relationshipChain: relationshipChain,
+        fieldName: null, // No field name in aggregate context
+        position: position
+      };
+    } else {
+      // Single identifier - return as simple identifier
+      return {
+        type: NodeType.IDENTIFIER,
+        value: firstIdentifier,
+        position: position
+      };
+    }
   }
 
   /**

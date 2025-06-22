@@ -120,9 +120,9 @@ test('Aggregate with nested relationship', () => {
 // Multi-level relationship chain parsing tests
 test('Multi-level aggregate function chain parsing', () => {
   // This test verifies that multi-level relationship names are parsed correctly
-  // Note: This will likely fail initially since we need proper context setup
+  // Using correct dot notation syntax: rel1.rel2
   try {
-    const result = evaluateFormula('STRING_AGG(submissions_merchant_rep_links_submission, rep_rel.name, ",")', relationshipContext);
+    const result = evaluateFormula('STRING_AGG(submissions_merchant.rep_links_submission, rep_rel.name, ",")', relationshipContext);
     // If we get here, parsing worked
     assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'STRING_AGG');
@@ -142,7 +142,7 @@ test('Multi-level aggregate function chain parsing', () => {
 
 test('Multi-level aggregate with COUNT_AGG', () => {
   try {
-    const result = evaluateFormula('COUNT_AGG(submissions_merchant_rep_links_submission, rep_rel.id)', relationshipContext);
+    const result = evaluateFormula('COUNT_AGG(submissions_merchant.rep_links_submission, rep_rel.id)', relationshipContext);
     assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'COUNT_AGG');
   } catch (error) {
@@ -156,7 +156,7 @@ test('Multi-level aggregate with COUNT_AGG', () => {
 
 test('Multi-level aggregate with SUM_AGG', () => {
   try {
-    const result = evaluateFormula('SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage)', relationshipContext);
+    const result = evaluateFormula('SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage)', relationshipContext);
     assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
   } catch (error) {
@@ -170,10 +170,10 @@ test('Multi-level aggregate with SUM_AGG', () => {
 
 test('Multi-level aggregate depth limit', () => {
   // Test that chains that are too deep are rejected
-  // Use a valid identifier with many underscores to test depth limiting
+  // Use dot notation with many levels to test depth limiting
   try {
     // This should be caught as either a depth limit or unknown relationship error
-    evaluateFormula('STRING_AGG(aaaaa_bbbbb_ccccc_ddddd_eeeee_fffff_ggggg_hhhhh, value, ",")', relationshipContext);
+    evaluateFormula('STRING_AGG(rela.relb.relc.reld.rele.relf.relg.relh, value, ",")', relationshipContext);
     // If no error is thrown, this test should fail
     throw new Error('Expected depth limit or unknown relationship error');
   } catch (error) {
@@ -189,7 +189,7 @@ test('Multi-level aggregate depth limit', () => {
 
 test('Multi-level aggregate with complex expression', () => {
   try {
-    const result = evaluateFormula('IF(SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage) > 100, "High", "Low")', relationshipContext);
+    const result = evaluateFormula('IF(SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage) > 100, "High", "Low")', relationshipContext);
     assertEqual(result.aggregateIntents.length, 1);
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
   } catch (error) {
@@ -204,7 +204,7 @@ test('Multi-level aggregate with complex expression', () => {
 // Multi-level chain parsing validation tests
 test('Multi-level chain parsing - three levels', () => {
   try {
-    const result = evaluateFormula('STRING_AGG(submissions_merchant_locations_merchant_staff_location, name, ",")', relationshipContext);
+    const result = evaluateFormula('STRING_AGG(submissions_merchant.locations_merchant.staff_location, name, ",")', relationshipContext);
     assertEqual(result.expression.type, 'AGGREGATE_FUNCTION');
   } catch (error) {
     if (error.message.includes('Unknown inverse relationship in chain') || error.message.includes('Multi-level aggregate chain too deep')) {
@@ -254,7 +254,7 @@ test('Non-string delimiter for STRING_AGG', () => {
 test('First argument must be relationship name', () => {
   assertError(
     () => evaluateFormula('SUM_AGG("not_a_relationship", commission_percentage)', relationshipContext),
-    /first argument must be an inverse relationship name/,
+    /Expected relationship identifier|first argument must be an inverse relationship name/,
     'Should throw error when first argument is not an identifier'
   );
 });
@@ -265,7 +265,7 @@ test('First argument must be relationship name', () => {
 
 test('Multi-level chain with unknown relationship', () => {
   assertError(
-    () => evaluateFormula('STRING_AGG(unknown_table_unknown_field, value, ",")', relationshipContext),
+    () => evaluateFormula('STRING_AGG(unknown_table.unknown_field, value, ",")', relationshipContext),
     /Unknown inverse relationship in chain: unknown_table/,
     'Should throw error for unknown relationship in multi-level chain'
   );
@@ -275,7 +275,7 @@ test('Multi-level chain - invalid second level', () => {
   // This would test a chain where first level is valid but second is not
   // This will be useful once we have proper multi-level context
   try {
-    evaluateFormula('STRING_AGG(rep_links_submission_invalid_relationship, value, ",")', relationshipContext);
+    evaluateFormula('STRING_AGG(rep_links_submission.invalid_relationship, value, ",")', relationshipContext);
   } catch (error) {
     if (error.message.includes('Unknown inverse relationship') || error.message.includes('chain')) {
       console.log('  ✓ Multi-level chain validation working');
@@ -307,7 +307,7 @@ test('Aggregate in comparison', () => {
 
 test('Multi-level aggregate in string concatenation', () => {
   try {
-    const result = evaluateFormula('"Total reps: " & STRING(COUNT_AGG(submissions_merchant_rep_links_submission, rep_rel.id))', relationshipContext);
+    const result = evaluateFormula('"Total reps: " & STRING(COUNT_AGG(submissions_merchant.rep_links_submission, rep_rel.id))', relationshipContext);
     assertEqual(result.aggregateIntents.length, 1);
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'COUNT_AGG');
   } catch (error) {
@@ -321,7 +321,7 @@ test('Multi-level aggregate in string concatenation', () => {
 
 test('Multi-level aggregate in comparison', () => {
   try {
-    const result = evaluateFormula('SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage) > 100', relationshipContext);
+    const result = evaluateFormula('SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage) > 100', relationshipContext);
     assertEqual(result.aggregateIntents.length, 1);
     assertEqual(result.aggregateIntents[0].aggregateFunction, 'SUM_AGG');
   } catch (error) {
@@ -335,7 +335,7 @@ test('Multi-level aggregate in comparison', () => {
 
 test('Multiple multi-level aggregates', () => {
   try {
-    const result = evaluateFormula('SUM_AGG(submissions_merchant_rep_links_submission, commission_percentage) + COUNT_AGG(submissions_merchant_documents_submission, size)', relationshipContext);
+    const result = evaluateFormula('SUM_AGG(submissions_merchant.rep_links_submission, commission_percentage) + COUNT_AGG(submissions_merchant.documents_submission, size)', relationshipContext);
     assertEqual(result.aggregateIntents.length, 2);
   } catch (error) {
     if (error.message.includes('Unknown inverse relationship')) {

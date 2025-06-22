@@ -6,51 +6,27 @@
 
 /**
  * Parse multi-level relationship chain from aggregate function first argument
- * @param {string} relationshipName - Underscore-separated relationship chain
+ * @param {string} relationshipName - Dot-separated relationship chain
  * @returns {Array<string>} Array of individual relationship names
  */
 function parseMultiLevelChain(relationshipName) {
-  // Multi-level chains are expected to have more underscores than typical single relationships
-  // Single relationships typically follow pattern: {source_table_plural}_{foreign_key_column}
-  // Multi-level chains follow pattern: {rel1}_{rel2}[_{rel3}...] where each rel is itself a relationship
+  // Multi-level chains use dot notation to separate relationship levels
+  // Pattern: {rel1}.{rel2}[.{rel3}...] where each rel is a complete relationship name
+  // Examples:
+  //   Single-level: "rep_links_submission"
+  //   Multi-level: "submissions_merchant.rep_links_submission"
+  //   Three-level: "submissions_merchant.locations_merchant.staff_location"
   
-  const parts = relationshipName.split('_');
+  // Split by dots to get individual relationship names
+  const parts = relationshipName.split('.');
   
-  // Simple heuristic: if the relationship has fewer than 4 parts, treat as single-level
-  // Single-level examples: rep_links_submission (3 parts), documents_submission (2 parts)
-  // Multi-level examples: submissions_merchant_rep_links_submission (4+ parts)
-  if (parts.length < 4) {
-    return [relationshipName]; // Treat as single relationship
+  // If there's no dot, it's a single-level relationship
+  if (parts.length === 1) {
+    return [relationshipName];
   }
   
-  // For multi-level chains, we need to split at the boundaries between relationships
-  // This is a simplified approach - we'll split into chunks of 2-3 parts each
-  // A more sophisticated approach would validate against known relationship patterns
-  
-  const relationships = [];
-  let i = 0;
-  
-  while (i < parts.length) {
-    if (i + 3 < parts.length) {
-      // If we have 3+ parts remaining, try a 2-part relationship first
-      relationships.push(parts[i] + '_' + parts[i + 1]);
-      i += 2;
-    } else if (i + 2 < parts.length) {
-      // If we have exactly 3 parts remaining, it's likely a 3-part relationship
-      relationships.push(parts[i] + '_' + parts[i + 1] + '_' + parts[i + 2]);
-      i += 3;
-    } else if (i + 1 < parts.length) {
-      // If we have exactly 2 parts remaining, it's a 2-part relationship
-      relationships.push(parts[i] + '_' + parts[i + 1]);
-      i += 2;
-    } else {
-      // Single part remaining (shouldn't happen with valid multi-level chains)
-      relationships.push(parts[i]);
-      i += 1;
-    }
-  }
-  
-  return relationships.length > 0 ? relationships : [relationshipName];
+  // Multi-level: return the array of relationship names
+  return parts;
 }
 
 /**
@@ -133,7 +109,7 @@ function resolveMultiLevelChain(compiler, relationshipChain, position) {
       relationshipInfo: finalInverseRelInfo.relationshipInfo || {}
     },
     finalInverseRelInfo: finalInverseRelInfo,
-    chainSemanticId: relationshipChain.join('_')
+    chainSemanticId: relationshipChain.join('.')
   };
 }
 
@@ -192,13 +168,21 @@ export function compileAggregateFunction(compiler, node) {
     compiler.error(`${funcName}() takes exactly ${expectedArgCount} arguments`, node.position);
   }
 
-  // First argument must be an inverse relationship identifier (possibly multi-level)
+  // First argument must be an inverse relationship identifier or dot-separated chain
   const relationshipArg = node.args[0];
-  if (relationshipArg.type !== 'IDENTIFIER') {
-    compiler.error(`${funcName}() first argument must be an inverse relationship name`, node.position);
+  
+  let relationshipName;
+  
+  // Handle both single identifier and dot-separated chain
+  if (relationshipArg.type === 'IDENTIFIER') {
+    relationshipName = relationshipArg.value.toLowerCase();
+  } else if (relationshipArg.type === 'RELATIONSHIP_REF') {
+    // For multi-level chains, reconstruct the full dot-separated path
+    const relationshipChain = relationshipArg.relationshipChain || [relationshipArg.relationName];
+    relationshipName = relationshipChain.join('.').toLowerCase();
+  } else {
+    compiler.error(`${funcName}() first argument must be an inverse relationship name or chain`, node.position);
   }
-
-  const relationshipName = relationshipArg.value.toLowerCase();
   
   // Parse potential multi-level relationship chain
   const relationshipChain = parseMultiLevelChain(relationshipName);
