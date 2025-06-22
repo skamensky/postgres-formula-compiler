@@ -1,4 +1,4 @@
-import { TokenType } from './types.js';
+import { TokenType } from './lexer.js';
 import { TYPE } from './types-unified.js';
 
 /**
