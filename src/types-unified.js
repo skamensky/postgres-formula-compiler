@@ -40,6 +40,123 @@ export const TYPE = {
   INVERSE_RELATIONSHIP: Symbol('INVERSE_RELATIONSHIP')
 };
 
+// Comprehensive type metadata for documentation generation
+export const TYPE_METADATA = {
+  [TYPE.STRING]: {
+    name: 'string',
+    category: 'basic',
+    description: 'Text data type for representing textual information.',
+    operations: [
+      'String concatenation using `&` operator: `"Hello" & " World"`',
+      'String functions: `UPPER()`, `LOWER()`, `TRIM()`, `LEN()`, etc.',
+      'Comparison operators: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`'
+    ],
+    literals: 'String literals are enclosed in double quotes: `"text content"`',
+    compatibility: [
+      '`string & string` → `string` (concatenation)',
+      '`string & number` → `string` (number converted to string)', 
+      '`string & boolean` → `string` (boolean converted to string)'
+    ]
+  },
+  
+  [TYPE.NUMBER]: {
+    name: 'number',
+    category: 'basic',
+    description: 'Numeric data type for representing integers and decimal numbers.',
+    operations: [
+      'Arithmetic operators: `+`, `-`, `*`, `/`',
+      'Comparison operators: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`',
+      'Math functions: `ROUND()`, `ABS()`, `CEILING()`, `FLOOR()`, etc.'
+    ],
+    literals: 'Numeric literals can be integers or decimals: `123`, `45.67`',
+    compatibility: [
+      '`number + number` → `number`',
+      '`date + number` → `date` (adds days)',
+      '`date - number` → `date` (subtracts days)',
+      '`date - date` → `number` (difference in days)'
+    ]
+  },
+  
+  [TYPE.BOOLEAN]: {
+    name: 'boolean',
+    category: 'basic',
+    description: 'Logical data type representing true or false values.',
+    operations: [
+      'Logical operators: `AND`, `OR`, `NOT`',
+      'Comparison operations result in boolean values',
+      'Conditional functions: `IF()`, `AND()`, `OR()`, `NOT()`'
+    ],
+    literals: 'Boolean literals are the keywords `TRUE` and `FALSE`',
+    compatibility: [
+      'Only `boolean` values can be used with `AND`, `OR`, `NOT`',
+      'Comparison operations always return `boolean`'
+    ]
+  },
+  
+  [TYPE.DATE]: {
+    name: 'date',
+    category: 'basic',
+    description: 'Date data type for representing calendar dates and timestamps.',
+    operations: [
+      'Date arithmetic: `date + number` (adds days), `date - number` (subtracts days)',
+      'Date comparison: `=`, `!=`, `<>`, `<`, `>`, `<=`, `>=`',
+      'Date functions: `YEAR()`, `MONTH()`, `DAY()`, `WEEKDAY()`, `DATEDIF()`, etc.'
+    ],
+    literals: 'Date literals are created using the `DATE()` function: `DATE("2023-12-25")`',
+    compatibility: [
+      '`date + number` → `date` (adds days)',
+      '`date - number` → `date` (subtracts days)',
+      '`date - date` → `number` (difference in days)'
+    ]
+  },
+  
+  [TYPE.NULL]: {
+    name: 'null',
+    category: 'basic',
+    description: 'Special type representing the absence of a value.',
+    operations: [
+      'Null checking: `ISNULL()`, `ISBLANK()`',
+      'Null handling: `NULLVALUE()`, `COALESCE()`',
+      'Any operation with null typically results in null'
+    ],
+    literals: 'The null literal is the keyword `NULL`',
+    compatibility: [
+      '`null` is equal only to `null`',
+      'Cross-type comparisons may use implicit conversion',
+      'Null values propagate through most operations'
+    ]
+  },
+  
+  [TYPE.EXPRESSION]: {
+    name: 'expression',
+    category: 'special',
+    description: 'A meta-type representing any valid formula expression that can be evaluated.',
+    usage: [
+      'Used in function parameters that accept any type of expression, such as:',
+      '- Conditional expressions in `IF(condition, trueValue, falseValue)`',
+      '- Value expressions in aggregate functions',
+      '- Type conversion functions like `STRING(expression)`'
+    ],
+    note: 'This type indicates that the parameter accepts any valid expression, and the actual return type depends on what the expression evaluates to.',
+    operations: [],
+    literals: 'N/A - this is a meta-type for function signatures',
+    compatibility: ['Accepts any valid expression type']
+  },
+  
+  [TYPE.INVERSE_RELATIONSHIP]: {
+    name: 'inverse_relationship',
+    category: 'special',
+    description: 'A special type representing a relationship traversal for aggregate functions.',
+    usage: [
+      'Used as the first parameter in aggregate functions to specify which related records to aggregate over.',
+      '**Syntax:** `table_relationship` or `table_relationship.field` for multi-level relationships'
+    ],
+    operations: [],
+    literals: 'N/A - this refers to relationship definitions in your data model',
+    compatibility: ['Only used in aggregate function contexts']
+  }
+};
+
 // Type categories for easier classification and validation
 export const TYPE_CATEGORY = {
   LITERAL: new Set([
