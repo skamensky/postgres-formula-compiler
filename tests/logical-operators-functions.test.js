@@ -171,7 +171,7 @@ test('Error - OR with non-boolean argument', () => {
 test('Error - NOT with non-boolean argument', () => {
   assertError(
     () => evaluateFormula('NOT(revenue)', testContext),
-    /NOT\(\) requires boolean argument, got number/,
+    /NOT\(\) condition must be boolean, got number/,
     'Should throw error when NOT has non-boolean argument'
   );
 });

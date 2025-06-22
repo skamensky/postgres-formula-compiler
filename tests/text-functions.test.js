@@ -126,7 +126,7 @@ test('Error - UPPER with wrong argument count', () => {
 test('Error - UPPER with non-string argument', () => {
   assertError(
     () => evaluateFormula('UPPER(42)', testContext),
-    /UPPER\(\) requires string argument, got number/,
+    /UPPER\(\) text must be string, got number/,
     'Should throw error when UPPER has non-string argument'
   );
 });
@@ -135,7 +135,7 @@ test('Error - UPPER with non-string argument', () => {
 test('Error - LEFT with wrong argument count', () => {
   assertError(
     () => evaluateFormula('LEFT("hello")', testContext),
-    /LEFT\(\) takes exactly two arguments: LEFT\(text, num\)/,
+    /LEFT\(\) takes exactly 2 arguments/,
     'Should throw error when LEFT has wrong argument count'
   );
 });
@@ -144,7 +144,7 @@ test('Error - LEFT with wrong argument count', () => {
 test('Error - LEFT with non-string first argument', () => {
   assertError(
     () => evaluateFormula('LEFT(123, 5)', testContext),
-    /LEFT\(\) first argument must be string, got number/,
+    /LEFT\(\) text must be string, got number/,
     'Should throw error when LEFT first argument is not string'
   );
 });
@@ -153,7 +153,7 @@ test('Error - LEFT with non-string first argument', () => {
 test('Error - MID with wrong argument count', () => {
   assertError(
     () => evaluateFormula('MID("hello", 2)', testContext),
-    /MID\(\) takes exactly three arguments: MID\(text, start, length\)/,
+    /MID\(\) takes exactly 3 arguments/,
     'Should throw error when MID has wrong argument count'
   );
 });
@@ -162,7 +162,7 @@ test('Error - MID with wrong argument count', () => {
 test('Error - CONTAINS with wrong argument types', () => {
   assertError(
     () => evaluateFormula('CONTAINS("hello", 123)', testContext),
-    /CONTAINS\(\) second argument must be string, got number/,
+    /CONTAINS\(\) search_text must be string, got number/,
     'Should throw error when CONTAINS second argument is not string'
   );
 });
@@ -171,7 +171,7 @@ test('Error - CONTAINS with wrong argument types', () => {
 test('Error - SUBSTITUTE with wrong argument count', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE("hello", "world")', testContext),
-    /SUBSTITUTE\(\) takes exactly three arguments: SUBSTITUTE\(text, old_text, new_text\)/,
+    /SUBSTITUTE\(\) takes exactly 3 arguments/,
     'Should throw error when SUBSTITUTE has wrong argument count'
   );
 });
@@ -180,7 +180,7 @@ test('Error - SUBSTITUTE with wrong argument count', () => {
 test('Error - SUBSTITUTE with non-string first argument', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE(123, "1", "2")', testContext),
-    /SUBSTITUTE\(\) first argument must be string, got number/,
+    /SUBSTITUTE\(\) text must be string, got number/,
     'Should throw error when SUBSTITUTE first argument is not string'
   );
 });
@@ -189,7 +189,7 @@ test('Error - SUBSTITUTE with non-string first argument', () => {
 test('Error - LOWER with non-string argument', () => {
   assertError(
     () => evaluateFormula('LOWER(revenue)', testContext),
-    /LOWER\(\) requires string argument, got number/,
+    /LOWER\(\) text must be string, got number/,
     'Should throw error when LOWER has non-string argument'
   );
 });
@@ -198,7 +198,7 @@ test('Error - LOWER with non-string argument', () => {
 test('Error - TRIM with non-string argument', () => {
   assertError(
     () => evaluateFormula('TRIM(123)', testContext),
-    /TRIM\(\) requires string argument, got number/,
+    /TRIM\(\) text must be string, got number/,
     'Should throw error when TRIM has non-string argument'
   );
 });
@@ -207,7 +207,7 @@ test('Error - TRIM with non-string argument', () => {
 test('Error - LEN with non-string argument', () => {
   assertError(
     () => evaluateFormula('LEN(TODAY())', testContext),
-    /LEN\(\) requires string argument, got date/,
+    /LEN\(\) text must be string, got date/,
     'Should throw error when LEN has non-string argument'
   );
 });
@@ -216,7 +216,7 @@ test('Error - LEN with non-string argument', () => {
 test('Error - LEFT with non-number second argument', () => {
   assertError(
     () => evaluateFormula('LEFT("hello", "world")', testContext),
-    /LEFT\(\) second argument must be number, got string/,
+    /LEFT\(\) num_chars must be number, got string/,
     'Should throw error when LEFT second argument is not number'
   );
 });
@@ -225,7 +225,7 @@ test('Error - LEFT with non-number second argument', () => {
 test('Error - RIGHT with wrong arguments', () => {
   assertError(
     () => evaluateFormula('RIGHT(123, "abc")', testContext),
-    /RIGHT\(\) first argument must be string, got number/,
+    /RIGHT\(\) text must be string, got number/,
     'Should throw error when RIGHT has wrong argument types'
   );
 });
@@ -234,7 +234,7 @@ test('Error - RIGHT with wrong arguments', () => {
 test('Error - MID with wrong argument types', () => {
   assertError(
     () => evaluateFormula('MID(123, "start", "length")', testContext),
-    /MID\(\) first argument must be string, got number/,
+    /MID\(\) text must be string, got number/,
     'Should throw error when MID has wrong argument types'
   );
 });
@@ -243,7 +243,7 @@ test('Error - MID with wrong argument types', () => {
 test('Error - CONTAINS with wrong argument count', () => {
   assertError(
     () => evaluateFormula('CONTAINS("hello")', testContext),
-    /CONTAINS\(\) takes exactly two arguments: CONTAINS\(text, search\)/,
+    /CONTAINS\(\) takes exactly 2 arguments/,
     'Should throw error when CONTAINS has wrong argument count'
   );
 });
@@ -252,7 +252,7 @@ test('Error - CONTAINS with wrong argument count', () => {
 test('Error - SUBSTITUTE with too many arguments', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE("hello", "world", "universe", "extra")', testContext),
-    /SUBSTITUTE\(\) takes exactly three arguments: SUBSTITUTE\(text, old_text, new_text\)/,
+    /SUBSTITUTE\(\) takes exactly 3 arguments/,
     'Should throw error when SUBSTITUTE has too many arguments'
   );
 });
@@ -261,7 +261,7 @@ test('Error - SUBSTITUTE with too many arguments', () => {
 test('Error - SUBSTITUTE with non-string second argument', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE("hello", 123, "world")', testContext),
-    /SUBSTITUTE\(\) second argument must be string, got number/,
+    /SUBSTITUTE\(\) old_text must be string, got number/,
     'Should throw error when SUBSTITUTE second argument is not string'
   );
 });
@@ -270,7 +270,7 @@ test('Error - SUBSTITUTE with non-string second argument', () => {
 test('Error - SUBSTITUTE with non-string third argument', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE("hello", "world", 123)', testContext),
-    /SUBSTITUTE\(\) third argument must be string, got number/,
+    /SUBSTITUTE\(\) new_text must be string, got number/,
     'Should throw error when SUBSTITUTE third argument is not string'
   );
 });
@@ -279,7 +279,7 @@ test('Error - SUBSTITUTE with non-string third argument', () => {
 test('Error - SUBSTITUTE with mixed invalid types', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE(revenue, "hello", TODAY())', testContext),
-    /SUBSTITUTE\(\) first argument must be string, got number/,
+    /SUBSTITUTE\(\) text must be string, got number/,
     'Should throw error when SUBSTITUTE has multiple invalid argument types'
   );
 });
