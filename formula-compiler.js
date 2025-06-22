@@ -1932,7 +1932,14 @@ class Compiler {
     }
     
     // Generate aggregate intent
-    const aggSemanticId = this.generateSemanticId('aggregate', `${funcName}[${expressionResult.semanticId}]`);
+    // For COUNT_AGG, use the same semantic ID regardless of column since SQL is always COUNT(*)
+    let semanticDetails;
+    if (funcName === 'COUNT_AGG') {
+      semanticDetails = `${funcName}[${subCompiler.compilationContext}]`;
+    } else {
+      semanticDetails = `${funcName}[${expressionResult.semanticId}]`;
+    }
+    const aggSemanticId = this.generateSemanticId('aggregate', semanticDetails);
     
     const aggregateIntent = {
       semanticId: aggSemanticId,
