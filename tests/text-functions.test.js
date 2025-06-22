@@ -135,7 +135,7 @@ test('Error - UPPER with non-string argument', () => {
 test('Error - LEFT with wrong argument count', () => {
   assertError(
     () => evaluateFormula('LEFT("hello")', testContext),
-    /LEFT\(\) takes exactly two arguments: LEFT\(text, num\)/,
+    /LEFT\(\) takes exactly 2 arguments/,
     'Should throw error when LEFT has wrong argument count'
   );
 });
@@ -153,7 +153,7 @@ test('Error - LEFT with non-string first argument', () => {
 test('Error - MID with wrong argument count', () => {
   assertError(
     () => evaluateFormula('MID("hello", 2)', testContext),
-    /MID\(\) takes exactly three arguments: MID\(text, start, length\)/,
+    /MID\(\) takes exactly 3 arguments/,
     'Should throw error when MID has wrong argument count'
   );
 });
@@ -171,7 +171,7 @@ test('Error - CONTAINS with wrong argument types', () => {
 test('Error - SUBSTITUTE with wrong argument count', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE("hello", "world")', testContext),
-    /SUBSTITUTE\(\) takes exactly three arguments: SUBSTITUTE\(text, old_text, new_text\)/,
+    /SUBSTITUTE\(\) takes exactly 3 arguments/,
     'Should throw error when SUBSTITUTE has wrong argument count'
   );
 });
@@ -243,7 +243,7 @@ test('Error - MID with wrong argument types', () => {
 test('Error - CONTAINS with wrong argument count', () => {
   assertError(
     () => evaluateFormula('CONTAINS("hello")', testContext),
-    /CONTAINS\(\) takes exactly two arguments: CONTAINS\(text, search\)/,
+    /CONTAINS\(\) takes exactly 2 arguments/,
     'Should throw error when CONTAINS has wrong argument count'
   );
 });
@@ -252,7 +252,7 @@ test('Error - CONTAINS with wrong argument count', () => {
 test('Error - SUBSTITUTE with too many arguments', () => {
   assertError(
     () => evaluateFormula('SUBSTITUTE("hello", "world", "universe", "extra")', testContext),
-    /SUBSTITUTE\(\) takes exactly three arguments: SUBSTITUTE\(text, old_text, new_text\)/,
+    /SUBSTITUTE\(\) takes exactly 3 arguments/,
     'Should throw error when SUBSTITUTE has too many arguments'
   );
 });

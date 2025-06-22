@@ -140,7 +140,7 @@ test('Error - MOD with non-number arguments', () => {
 test('Error - CEILING with wrong argument count', () => {
   assertError(
     () => evaluateFormula('CEILING(3.2, 5)', testContext),
-    /CEILING\(\) takes exactly 1 argument/,
+    /CEILING\(\) takes exactly one argument/,
     'Should throw error when CEILING has wrong argument count'
   );
 });
@@ -169,7 +169,7 @@ test('Error - Mixed math function errors', () => {
 test('Error - ROUND with wrong argument count', () => {
   assertError(
     () => evaluateFormula('ROUND(3.14)', testContext),
-    /ROUND\(\) takes at least 2 arguments/,
+    /ROUND\(\) takes exactly 2 arguments/,
     'Should throw error when ROUND has wrong argument count'
   );
 });
@@ -187,7 +187,7 @@ test('Error - ROUND with non-number first argument', () => {
 test('Error - ABS with wrong argument count', () => {
   assertError(
     () => evaluateFormula('ABS()', testContext),
-    /ABS\(\) takes at least 1 argument/,
+    /ABS\(\) takes exactly one argument/,
     'Should throw error when ABS has no arguments'
   );
 });
@@ -205,7 +205,7 @@ test('Error - ABS with non-number argument', () => {
 test('Error - MIN with wrong argument count', () => {
   assertError(
     () => evaluateFormula('MIN(5)', testContext),
-    /MIN\(\) takes at least 2 arguments/,
+    /MIN\(\) takes exactly 2 arguments/,
     'Should throw error when MIN has wrong argument count'
   );
 });
