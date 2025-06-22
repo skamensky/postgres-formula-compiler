@@ -8,7 +8,7 @@
 **Description:** Counts the number of non-null values
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([expression](../types.md#expression)): Expression to count
 
 **Test References:** Not specified
@@ -27,7 +27,7 @@
 **Description:** Sums numeric values
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([number](../types.md#number)): Numeric expression to sum
 
 **Test References:** Not specified
@@ -46,7 +46,7 @@
 **Description:** Calculates the average of numeric values
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([number](../types.md#number)): Numeric expression to average
 
 **Test References:** Not specified
@@ -65,7 +65,7 @@
 **Description:** Finds the minimum value
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([expression](../types.md#expression)): Expression to find minimum of
 
 **Test References:** Not specified
@@ -84,7 +84,7 @@
 **Description:** Finds the maximum value
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([expression](../types.md#expression)): Expression to find maximum of
 
 **Test References:** Not specified
@@ -103,7 +103,7 @@
 **Description:** Concatenates string values with a separator
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([string](../types.md#string)): String expression to concatenate
 - `separator` ([string](../types.md#string)): Separator between values
 
@@ -123,7 +123,7 @@
 **Description:** Concatenates unique string values with a separator
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([string](../types.md#string)): String expression to concatenate
 - `separator` ([string](../types.md#string)): Separator between values
 
@@ -143,7 +143,7 @@
 **Description:** Sums numeric values
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([number](../types.md#number)): Numeric expression to sum
 
 **Test References:** Not specified
@@ -162,7 +162,7 @@
 **Description:** Counts the number of non-null values
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([expression](../types.md#expression)): Expression to count
 
 **Test References:** Not specified
@@ -181,7 +181,7 @@
 **Description:** Calculates the average of numeric values
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([number](../types.md#number)): Numeric expression to average
 
 **Test References:** Not specified
@@ -200,7 +200,7 @@
 **Description:** Returns true if all boolean values are true
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([boolean](../types.md#boolean)): Boolean expression to check
 
 **Test References:** Not specified
@@ -219,7 +219,7 @@
 **Description:** Returns true if any boolean value is true
 
 **Arguments:**
-- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `relationship` ([inverse relationship](../types.md#inverse-relationship)): Inverse relationship to aggregate
 - `value` ([boolean](../types.md#boolean)): Boolean expression to check
 
 **Test References:** Not specified
@@ -230,4 +230,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T21:00:31.663Z*
+*Documentation generated on 2025-06-22T21:03:23.858Z*

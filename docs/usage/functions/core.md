@@ -43,7 +43,7 @@
 **Description:** Creates a date from a string literal
 
 **Arguments:**
-- `dateString` ([string literal](../types.md#string_literal)): Date string in ISO format
+- `dateString` ([string literal](../types.md#string-literal)): Date string in ISO format
 
 **Test References:** Not specified
 
@@ -81,7 +81,7 @@
 **Description:** Evaluates an expression from another table
 
 **Arguments:**
-- `relationshipRef` ([inverse relationship](../types.md#inverse_relationship)): Reference to relationship and expression
+- `relationshipRef` ([inverse relationship](../types.md#inverse-relationship)): Reference to relationship and expression
 
 **Test References:** Not specified
 
@@ -91,4 +91,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T21:00:31.663Z*
+*Documentation generated on 2025-06-22T21:03:23.858Z*

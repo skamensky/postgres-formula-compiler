@@ -152,7 +152,7 @@
 **Arguments:**
 - `date` ([date](../types.md#date)): Base date
 - `amount` ([number](../types.md#number)): Amount to add
-- `unit` ([string literal](../types.md#string_literal)): Time unit (day, month, year, hour, minute, second)
+- `unit` ([string literal](../types.md#string-literal)): Time unit (day, month, year, hour, minute, second)
 
 **Test References:** Not specified
 
@@ -172,7 +172,7 @@
 **Arguments:**
 - `date1` ([date](../types.md#date)): First date
 - `date2` ([date](../types.md#date)): Second date
-- `unit` ([string literal](../types.md#string_literal)): Time unit (day, month, year, hour, minute, second)
+- `unit` ([string literal](../types.md#string-literal)): Time unit (day, month, year, hour, minute, second)
 
 **Test References:** Not specified
 
@@ -191,7 +191,7 @@
 
 **Arguments:**
 - `date` ([date](../types.md#date)): Date to format
-- `format` ([string literal](../types.md#string_literal)): Format string
+- `format` ([string literal](../types.md#string-literal)): Format string
 
 **Test References:** Not specified
 
@@ -267,7 +267,7 @@
 **Arguments:**
 - `date1` ([date](../types.md#date)): First date
 - `date2` ([date](../types.md#date)): Second date
-- `unit` ([string literal](../types.md#string_literal)): Time unit ("days", "months", or "years")
+- `unit` ([string literal](../types.md#string-literal)): Time unit ("days", "months", or "years")
 
 **Test References:** Not specified
 
@@ -277,4 +277,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T21:00:31.663Z*
+*Documentation generated on 2025-06-22T21:03:23.858Z*

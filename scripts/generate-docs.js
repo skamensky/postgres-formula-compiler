@@ -60,8 +60,9 @@ function formatTypeLink(typeSymbol, isUsageDoc = true) {
   const typeString = typeToString(typeSymbol);
   
   if (isUsageDoc) {
-    // Link to types documentation with proper anchor formatting
-    const anchor = typeString.toLowerCase().replace(/\s+/g, '_');
+    // Link to types documentation using GitHub's auto-generated anchor format
+    // GitHub converts headers to lowercase and replaces spaces/underscores with dashes
+    const anchor = typeString.toLowerCase().replace(/[\s_]+/g, '-');
     return `[${typeString}](../types.md#${anchor})`;
   } else {
     // Just return the type string for language docs
@@ -101,7 +102,7 @@ This document describes all the data types used in the formula language.
 
 ## Basic Data Types
 
-<h3 id="string">string</h3>
+### string
 
 **Description:** Text data type for representing textual information.
 
@@ -120,7 +121,7 @@ String literals are enclosed in double quotes: \`"text content"\`
 
 ---
 
-<h3 id="number">number</h3>
+### number
 
 **Description:** Numeric data type for representing integers and decimal numbers.
 
@@ -140,7 +141,7 @@ Numeric literals can be integers or decimals: \`123\`, \`45.67\`
 
 ---
 
-<h3 id="boolean">boolean</h3>
+### boolean
 
 **Description:** Logical data type representing true or false values.
 
@@ -160,7 +161,7 @@ Boolean literals are the keywords \`TRUE\` and \`FALSE\`
 
 ---
 
-<h3 id="date">date</h3>
+### date
 
 **Description:** Date data type for representing calendar dates and timestamps.
 
@@ -180,7 +181,7 @@ Date literals are created using the \`DATE()\` function: \`DATE("2023-12-25")\`
 
 ---
 
-<h3 id="null">null</h3>
+### null
 
 **Description:** Special type representing the absence of a value.
 
@@ -199,7 +200,7 @@ The null literal is the keyword \`NULL\`
 
 ## Special Types
 
-<h3 id="expression">expression</h3>
+### expression
 
 **Description:** A meta-type representing any valid formula expression that can be evaluated.
 
@@ -217,7 +218,7 @@ The null literal is the keyword \`NULL\`
 
 ---
 
-<h3 id="inverse_relationship">inverse_relationship</h3>
+### inverse_relationship
 
 **Description:** A special type representing a relationship traversal for aggregate functions.
 
