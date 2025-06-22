@@ -111,9 +111,55 @@ export const testContext = {
   }
 };
 
-// Extended test context with relationships
+// Extended test context with relationships - supporting both old and new format
 export const relationshipContext = {
   tableName: 'submission',
+  // New flat structure
+  tableInfos: [
+    {
+      tableName: 'submission',
+      columnList: {
+        'amount': 'number',
+        'revenue': 'number',
+        'cost': 'number',
+        'created_date': 'date',
+        'updated_date': 'date',
+        'status': 'string',
+        'closed': 'boolean',
+        'syndication': 'boolean',
+        'open_approval': 'boolean'
+      }
+    },
+    {
+      tableName: 'merchant',
+      columnList: {
+        'business_name': 'string',
+        'fee_rate': 'number'
+      }
+    },
+    {
+      tableName: 'funder',
+      columnList: {
+        'name': 'string',
+        'rate': 'number'
+      }
+    }
+  ],
+  relationshipInfos: [
+    {
+      name: 'merchant',
+      fromTable: 'submission',
+      toTable: 'merchant',
+      joinColumn: 'merchant_id'
+    },
+    {
+      name: 'funder',
+      fromTable: 'submission',
+      toTable: 'funder',
+      joinColumn: 'funder_id'
+    }
+  ],
+  // Keep old structure for backward compatibility and inverse relationships
   columnList: {
     'amount': 'number',
     'revenue': 'number',

@@ -37,7 +37,7 @@ test('Multiple relationships', () => {
 test('Unknown relationship error', () => {
   assertError(
     () => evaluateFormula('unknown_rel.field', relationshipContext),
-    /Unknown relationship: unknown\. Available relationships:/,
+    /Unknown relationship: unknown\. Available relationships from submission:/,
     'Should throw error for unknown relationship'
   );
 });

@@ -7,86 +7,83 @@ import { evaluateFormula, test, assertEqual, assertError, assertArrayEqual, asse
 
 console.log('Running Multi-Level Relationships Tests...\n');
 
-// Extended test context with multi-level relationships
+// Extended test context with multi-level relationships using new flat structure
 const multiLevelContext = {
   tableName: 'submission',
-  columnList: {
-    'id': 'number',
-    'amount': 'number',
-    'status': 'string',
-    'created_at': 'date',
-    'merchant_id': 'number',
-    'main_rep_id': 'number'
-  },
-  relationshipInfo: {
-    'merchant': {
+  tableInfos: [
+    {
+      tableName: 'submission',
+      columnList: {
+        'id': 'number',
+        'amount': 'number',
+        'status': 'string',
+        'created_at': 'date',
+        'merchant_id': 'number',
+        'main_rep_id': 'number'
+      }
+    },
+    {
       tableName: 'merchant',
-      joinColumn: 'merchant_id',
       columnList: {
         'id': 'number',
         'business_name': 'string',
         'main_rep_id': 'number',
         'address': 'string',
         'city': 'string'
-      },
-      relationshipInfo: {
-        'main_rep': {
-          tableName: 'rep',
-          joinColumn: 'main_rep_id',
-          columnList: {
-            'id': 'number',
-            'name': 'string',
-            'email': 'string',
-            'user_id': 'number',
-            'manager_id': 'number'
-          },
-          relationshipInfo: {
-            'user': {
-              tableName: 'user',
-              joinColumn: 'user_id',
-              columnList: {
-                'id': 'number',
-                'username': 'string',
-                'email': 'string',
-                'status': 'string'
-              }
-            },
-            'manager': {
-              tableName: 'rep',
-              joinColumn: 'manager_id',
-              columnList: {
-                'id': 'number',
-                'name': 'string',
-                'email': 'string'
-              }
-            }
-          }
-        }
       }
     },
-    'main_rep': {
+    {
       tableName: 'rep',
-      joinColumn: 'main_rep_id',
       columnList: {
         'id': 'number',
         'name': 'string',
         'email': 'string',
-        'user_id': 'number'
-      },
-      relationshipInfo: {
-        'user': {
-          tableName: 'user',
-          joinColumn: 'user_id',
-          columnList: {
-            'id': 'number',
-            'username': 'string',
-            'email': 'string',
-            'status': 'string'
-          }
-        }
+        'user_id': 'number',
+        'manager_id': 'number'
+      }
+    },
+    {
+      tableName: 'user',
+      columnList: {
+        'id': 'number',
+        'username': 'string',
+        'email': 'string',
+        'status': 'string'
       }
     }
-  }
+  ],
+  relationshipInfos: [
+    {
+      name: 'merchant',
+      fromTable: 'submission',
+      toTable: 'merchant',
+      joinColumn: 'merchant_id'
+    },
+    {
+      name: 'main_rep',
+      fromTable: 'submission',
+      toTable: 'rep',
+      joinColumn: 'main_rep_id'
+    },
+    {
+      name: 'main_rep',
+      fromTable: 'merchant',
+      toTable: 'rep',
+      joinColumn: 'main_rep_id'
+    },
+    {
+      name: 'user',
+      fromTable: 'rep',
+      toTable: 'user',
+      joinColumn: 'user_id'
+    },
+    {
+      name: 'manager',
+      fromTable: 'rep',
+      toTable: 'rep',
+      joinColumn: 'manager_id'
+    }
+  ]
 };
 
 // Test 1: Two-level relationship
@@ -185,49 +182,23 @@ test('Error: depth limit exceeded', () => {
   // Create a context with 6 levels of relationships (exceeds limit of 5)
   const deepContext = {
     tableName: 'submission',
-    columnList: { 'id': 'number' },
-    relationshipInfo: {
-      'a': {
-        tableName: 'table1',
-        joinColumn: 'id',
-        columnList: { 'id': 'number' },
-        relationshipInfo: {
-          'b': {
-            tableName: 'table2',
-            joinColumn: 'id',
-            columnList: { 'id': 'number' },
-            relationshipInfo: {
-              'c': {
-                tableName: 'table3',
-                joinColumn: 'id',
-                columnList: { 'id': 'number' },
-                relationshipInfo: {
-                  'd': {
-                    tableName: 'table4',
-                    joinColumn: 'id',
-                    columnList: { 'id': 'number' },
-                    relationshipInfo: {
-                      'e': {
-                        tableName: 'table5',
-                        joinColumn: 'id',
-                        columnList: { 'id': 'number' },
-                        relationshipInfo: {
-                          'f': {
-                            tableName: 'table6',
-                            joinColumn: 'id',
-                            columnList: { 'field': 'string' }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    tableInfos: [
+      { tableName: 'submission', columnList: { 'id': 'number' } },
+      { tableName: 'table1', columnList: { 'id': 'number' } },
+      { tableName: 'table2', columnList: { 'id': 'number' } },
+      { tableName: 'table3', columnList: { 'id': 'number' } },
+      { tableName: 'table4', columnList: { 'id': 'number' } },
+      { tableName: 'table5', columnList: { 'id': 'number' } },
+      { tableName: 'table6', columnList: { 'field': 'string' } }
+    ],
+    relationshipInfos: [
+      { name: 'a', fromTable: 'submission', toTable: 'table1', joinColumn: 'id' },
+      { name: 'b', fromTable: 'table1', toTable: 'table2', joinColumn: 'id' },
+      { name: 'c', fromTable: 'table2', toTable: 'table3', joinColumn: 'id' },
+      { name: 'd', fromTable: 'table3', toTable: 'table4', joinColumn: 'id' },
+      { name: 'e', fromTable: 'table4', toTable: 'table5', joinColumn: 'id' },
+      { name: 'f', fromTable: 'table5', toTable: 'table6', joinColumn: 'id' }
+    ]
   };
 
   assertError(

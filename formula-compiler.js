@@ -666,9 +666,28 @@ class Compiler {
     this.compilationContext = 'main'; // Track current compilation context
     this.idCounter = 1; // For generating unique IDs
     
-    // Normalize column names to uppercase for case-insensitive lookup
-    for (const [name, type] of Object.entries(context.columnList)) {
-      this.columnList[name.toUpperCase()] = type;
+    // Initialize column list from primary table
+    this.initializeColumnList();
+  }
+
+  /**
+   * Initialize column list for the primary table
+   */
+  initializeColumnList() {
+    // Support both old format (direct columnList) and new format (tableInfos)
+    if (this.context.columnList) {
+      // Old format - direct columnList property
+      for (const [name, type] of Object.entries(this.context.columnList)) {
+        this.columnList[name.toUpperCase()] = type;
+      }
+    } else if (this.context.tableInfos) {
+      // New format - find primary table in tableInfos array
+      const primaryTable = this.context.tableInfos.find(table => table.tableName === this.tableName);
+      if (primaryTable && primaryTable.columnList) {
+        for (const [name, type] of Object.entries(primaryTable.columnList)) {
+          this.columnList[name.toUpperCase()] = type;
+        }
+      }
     }
   }
 
@@ -902,27 +921,48 @@ class Compiler {
    * @returns {Object} Compiled relationship reference
    */
   compileMultiLevelRelationship(relationshipChain, fieldName, position) {
-    let currentContext = this.context;
     let currentTable = this.tableName;
     const allJoinSemanticIds = [];
     const joinIntents = [];
     
+    // Build a lookup map of relationships for efficient access
+    const relationshipLookup = new Map();
+    if (this.context.relationshipInfos) {
+      for (const rel of this.context.relationshipInfos) {
+        const key = `${rel.fromTable}:${rel.name}`;
+        relationshipLookup.set(key, rel);
+      }
+    }
+    
+    // Build a lookup map of table infos for efficient access
+    const tableLookup = new Map();
+    if (this.context.tableInfos) {
+      for (const table of this.context.tableInfos) {
+        tableLookup.set(table.tableName, table);
+      }
+    }
+    
     // Validate and traverse the relationship chain
     for (let i = 0; i < relationshipChain.length; i++) {
       const relationName = relationshipChain[i];
+      const lookupKey = `${currentTable}:${relationName}`;
       
-      // Check if relationship exists in current context
-      if (!currentContext.relationshipInfo || !currentContext.relationshipInfo[relationName]) {
-        const availableRelationships = Object.keys(currentContext.relationshipInfo || {}).slice(0, 10);
+      // Check if relationship exists from current table
+      const relInfo = relationshipLookup.get(lookupKey);
+      if (!relInfo) {
+        // Get available relationships for current table for error message
+        const availableRelationships = Array.from(relationshipLookup.keys())
+          .filter(key => key.startsWith(`${currentTable}:`))
+          .map(key => key.split(':')[1])
+          .slice(0, 10);
         const suggestionText = availableRelationships.length > 0 
-          ? ` Available relationships: ${availableRelationships.join(', ')}`
-          : '';
+          ? ` Available relationships from ${currentTable}: ${availableRelationships.join(', ')}`
+          : ` No relationships available from ${currentTable}`;
         const chainSoFar = relationshipChain.slice(0, i + 1).join('.');
         this.error(`Unknown relationship: ${chainSoFar}.${suggestionText}`, position);
       }
       
-      const relInfo = currentContext.relationshipInfo[relationName];
-      const targetTable = relInfo.tableName || relationName;
+      const targetTable = relInfo.toTable;
       
       // Generate join semantic ID for this level
       const joinSemanticId = this.generateMultiLevelJoinSemanticId(
@@ -950,20 +990,19 @@ class Compiler {
       allJoinSemanticIds.push(joinSemanticId);
       joinIntents.push(joinIntent);
       
-      // Update context for next iteration
+      // Update current table for next iteration
       currentTable = targetTable;
-      currentContext = {
-        tableName: targetTable,
-        columnList: relInfo.columnList,
-        relationshipInfo: relInfo.relationshipInfo || {}
-      };
     }
     
     // Validate final field exists in the target table
-    const finalContext = currentContext;
-    const fieldType = finalContext.columnList[fieldName.toLowerCase()];
+    const finalTableInfo = tableLookup.get(currentTable);
+    if (!finalTableInfo) {
+      this.error(`Unknown target table: ${currentTable}`, position);
+    }
+    
+    const fieldType = finalTableInfo.columnList[fieldName.toLowerCase()];
     if (!fieldType) {
-      const availableFields = Object.keys(finalContext.columnList).slice(0, 10);
+      const availableFields = Object.keys(finalTableInfo.columnList).slice(0, 10);
       const suggestionText = availableFields.length > 0 
         ? ` Available fields: ${availableFields.join(', ')}`
         : '';
@@ -1807,10 +1846,38 @@ class Compiler {
     const inverseRelInfo = this.context.inverseRelationshipInfo[matchingKey];
     
     // Create sub-compilation context for aggregate expression
+    // Build tableInfos and relationshipInfos for the sub-context from the nested structure
+    const subTableInfos = [
+      {
+        tableName: inverseRelInfo.tableName,
+        columnList: inverseRelInfo.columnList
+      }
+    ];
+    
+    const subRelationshipInfos = [];
+    if (inverseRelInfo.relationshipInfo) {
+      for (const [relName, relInfo] of Object.entries(inverseRelInfo.relationshipInfo)) {
+        subRelationshipInfos.push({
+          name: relName,
+          fromTable: inverseRelInfo.tableName,
+          toTable: relInfo.tableName || relName,
+          joinColumn: relInfo.joinColumn
+        });
+        
+        // Add target table info if not already present
+        if (!subTableInfos.find(t => t.tableName === (relInfo.tableName || relName))) {
+          subTableInfos.push({
+            tableName: relInfo.tableName || relName,
+            columnList: relInfo.columnList || {}
+          });
+        }
+      }
+    }
+    
     const subContext = {
       tableName: inverseRelInfo.tableName,
-      columnList: inverseRelInfo.columnList,
-      relationshipInfo: inverseRelInfo.relationshipInfo || {}
+      tableInfos: subTableInfos,
+      relationshipInfos: subRelationshipInfos
     };
     
     const subCompiler = new Compiler(subContext);
