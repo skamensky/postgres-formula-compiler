@@ -3,14 +3,14 @@
 
 ## AND
 
-**Signature:** `AND(condition...)`  
-**Returns:** boolean  
-**Description:** Returns true if all conditions are true
+**Signature:** `AND(argument...)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Returns true if all arguments are true
 
 **Arguments:**
-- `condition` (boolean): Boolean condition *(variadic)*
+- `argument` ([boolean](../types.md#boolean)): Boolean conditions to check *(variadic)*
 
-**Test References:** [tests/logical-operators-functions.test.js:15](../../tests/logical-operators-functions.test.js:15)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -21,14 +21,14 @@
 
 ## OR
 
-**Signature:** `OR(condition...)`  
-**Returns:** boolean  
-**Description:** Returns true if any condition is true
+**Signature:** `OR(argument...)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Returns true if any argument is true
 
 **Arguments:**
-- `condition` (boolean): Boolean condition *(variadic)*
+- `argument` ([boolean](../types.md#boolean)): Boolean conditions to check *(variadic)*
 
-**Test References:** [tests/logical-operators-functions.test.js:45](../../tests/logical-operators-functions.test.js:45)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -39,14 +39,14 @@
 
 ## NOT
 
-**Signature:** `NOT(condition)`  
-**Returns:** boolean  
-**Description:** Returns the logical negation of the condition
+**Signature:** `NOT(requires boolean argument)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Returns the opposite of a boolean value
 
 **Arguments:**
-- `condition` (boolean): Boolean condition to negate
+- `requires boolean argument` ([boolean](../types.md#boolean)): Boolean condition to negate
 
-**Test References:** [tests/logical-operators-functions.test.js:73](../../tests/logical-operators-functions.test.js:73)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -54,4 +54,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T17:41:34.479Z*
+*Documentation generated on 2025-06-22T20:47:56.011Z*

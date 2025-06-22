@@ -10,11 +10,29 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { 
   FUNCTION_METADATA, 
-  FUNCTION_CATEGORIES, 
   CATEGORIES, 
-  FUNCTIONS,
-  TYPES 
+  FUNCTIONS
 } from '../src/function-metadata.js';
+import { TYPE, typeToString } from '../src/types-unified.js';
+
+// Create TYPES mapping for backward compatibility
+const TYPES = {
+  STRING: typeToString(TYPE.STRING),
+  NUMBER: typeToString(TYPE.NUMBER),
+  BOOLEAN: typeToString(TYPE.BOOLEAN),
+  DATE: typeToString(TYPE.DATE),
+  NULL: typeToString(TYPE.NULL)
+};
+
+// Build FUNCTION_CATEGORIES from metadata
+const FUNCTION_CATEGORIES = {};
+Object.values(FUNCTION_METADATA).forEach(metadata => {
+  const category = metadata.category.toLowerCase().replace(/\s+/g, '-');
+  if (!FUNCTION_CATEGORIES[category]) {
+    FUNCTION_CATEGORIES[category] = [];
+  }
+  FUNCTION_CATEGORIES[category].push(metadata.name);
+});
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +50,22 @@ const langDir = path.join(docsDir, 'lang');
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+/**
+ * Convert type symbol to linked type name for documentation
+ */
+function formatTypeLink(typeSymbol, isUsageDoc = true) {
+  const typeString = typeToString(typeSymbol);
+  
+  if (isUsageDoc) {
+    // Link to types documentation with proper anchor formatting
+    const anchor = typeString.toLowerCase().replace(/\s+/g, '_');
+    return `[${typeString}](../types.md#${anchor})`;
+  } else {
+    // Just return the type string for language docs
+    return typeString;
   }
 }
 
@@ -72,7 +106,7 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 
 - [Functions by Category](#functions-by-category)
 - [All Functions A-Z](#all-functions-a-z)
-- [Data Types](#data-types)
+- [Data Types](./types.md) - Complete type reference
 - [Operators](#operators)
 
 ## Functions by Category
@@ -95,13 +129,9 @@ ${Object.keys(FUNCTION_METADATA).sort().map(funcName => {
 
 ## Data Types
 
-The formula language supports the following data types:
+The formula language supports several data types including basic types (string, number, boolean, date, null) and special types (expression, inverse_relationship).
 
-- **${TYPES.STRING}** - Text values, must be enclosed in double quotes
-- **${TYPES.NUMBER}** - Numeric values (integers and decimals)
-- **${TYPES.BOOLEAN}** - TRUE or FALSE values
-- **${TYPES.DATE}** - Date values, created with DATE("YYYY-MM-DD") or TODAY()
-- **${TYPES.NULL}** - NULL literal for missing values
+📖 **[Complete Data Types Reference](./types.md)** - Detailed information about all types, their operations, conversions, and compatibility rules.
 
 ## Operators
 
@@ -149,13 +179,13 @@ ${functions.map(funcName => {
 ## ${funcName}
 
 **Signature:** \`${generateSignature(metadata)}\`  
-**Returns:** ${metadata.returnType}  
+**Returns:** ${formatTypeLink(metadata.returnType)}  
 **Description:** ${metadata.description}
 
 ${metadata.arguments.length > 0 ? `**Arguments:**
-${metadata.arguments.map(arg => `- \`${arg.name}\` (${arg.type}): ${arg.description}${arg.optional ? ' *(optional)*' : ''}${arg.variadic ? ' *(variadic)*' : ''}`).join('\n')}
+${metadata.arguments.map(arg => `- \`${arg.name}\` (${formatTypeLink(arg.type)}): ${arg.description}${arg.optional ? ' *(optional)*' : ''}${arg.variadic ? ' *(variadic)*' : ''}`).join('\n')}
 ` : '**Arguments:** None\n'}
-**Test References:** ${metadata.testRefs.map(ref => `[${ref}](../../${ref})`).join(', ')}
+**Test References:** ${metadata.testRefs ? metadata.testRefs.map(ref => `[${ref}](../../${ref})`).join(', ') : 'Not specified'}
 
 **Example Usage:**
 \`\`\`

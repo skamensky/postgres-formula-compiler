@@ -6,138 +6,192 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 
 - [Functions by Category](#functions-by-category)
 - [All Functions A-Z](#all-functions-a-z)
-- [Data Types](#data-types)
+- [Data Types](./types.md) - Complete type reference
 - [Operators](#operators)
 
 ## Functions by Category
 
 
-### Core Functions
-
-- [`TODAY()`](./functions/core.md#today) - Returns the current date
-- [`ME()`](./functions/core.md#me) - Returns the current user identifier
-- [`DATE(dateString)`](./functions/core.md#date) - Converts a string literal to a date
-- [`STRING(value)`](./functions/core.md#string) - Converts any value to string representation
-- [`IF(condition, trueValue, [falseValue])`](./functions/core.md#if) - Conditional expression with optional else clause
-
-
-### Null handling Functions
-
-- [`ISNULL(value)`](./functions/null-handling.md#isnull) - Returns true if the value is NULL
-- [`NULLVALUE(value, defaultValue)`](./functions/null-handling.md#nullvalue) - Returns default value if first value is NULL
-- [`ISBLANK(value)`](./functions/null-handling.md#isblank) - Returns true if the value is NULL or empty string
-
-
-### Logical Functions
-
-- [`AND(condition...)`](./functions/logical.md#and) - Returns true if all conditions are true
-- [`OR(condition...)`](./functions/logical.md#or) - Returns true if any condition is true
-- [`NOT(condition)`](./functions/logical.md#not) - Returns the logical negation of the condition
-
-
 ### Math Functions
 
-- [`ABS(number)`](./functions/math.md#abs) - Returns the absolute value of a number
 - [`ROUND(number, decimals)`](./functions/math.md#round) - Rounds a number to specified decimal places
-- [`MIN(num1, num2)`](./functions/math.md#min) - Returns the smaller of two numbers
-- [`MAX(num1, num2)`](./functions/math.md#max) - Returns the larger of two numbers
-- [`MOD(dividend, divisor)`](./functions/math.md#mod) - Returns the remainder after division
+- [`ABS(number)`](./functions/math.md#abs) - Returns the absolute value of a number
+- [`CEIL(number)`](./functions/math.md#ceil) - Rounds a number up to the nearest integer
 - [`CEILING(number)`](./functions/math.md#ceiling) - Rounds a number up to the nearest integer
 - [`FLOOR(number)`](./functions/math.md#floor) - Rounds a number down to the nearest integer
+- [`POWER(base, exponent)`](./functions/math.md#power) - Raises a number to a power
+- [`SQRT(value)`](./functions/math.md#sqrt) - Returns the square root of a number
+- [`LOG(value)`](./functions/math.md#log) - Returns the natural logarithm of a number
+- [`LOG10(value)`](./functions/math.md#log10) - Returns the base-10 logarithm of a number
+- [`EXP(value)`](./functions/math.md#exp) - Returns e raised to the power of a number
+- [`SIN(angle)`](./functions/math.md#sin) - Returns the sine of an angle in radians
+- [`COS(angle)`](./functions/math.md#cos) - Returns the cosine of an angle in radians
+- [`TAN(angle)`](./functions/math.md#tan) - Returns the tangent of an angle in radians
+- [`RANDOM()`](./functions/math.md#random) - Returns a random number between 0 and 1
+- [`MIN(num1, num2)`](./functions/math.md#min) - Returns the minimum of two numbers
+- [`MAX(num1, num2)`](./functions/math.md#max) - Returns the maximum of two numbers
+- [`MOD(dividend, divisor)`](./functions/math.md#mod) - Returns the remainder of division
+- [`SIGN(value)`](./functions/math.md#sign) - Returns the sign of a number (-1, 0, or 1)
 
 
 ### String Functions
 
-- [`UPPER(text)`](./functions/string.md#upper) - Converts text to uppercase
-- [`LOWER(text)`](./functions/string.md#lower) - Converts text to lowercase
-- [`TRIM(text)`](./functions/string.md#trim) - Removes leading and trailing whitespace
-- [`LEN(text)`](./functions/string.md#len) - Returns the length of text
-- [`LEFT(text, count)`](./functions/string.md#left) - Returns the leftmost characters from text
-- [`RIGHT(text, count)`](./functions/string.md#right) - Returns the rightmost characters from text
-- [`MID(text, start, length)`](./functions/string.md#mid) - Returns characters from the middle of text
-- [`CONTAINS(text, searchText)`](./functions/string.md#contains) - Returns true if text contains the search string
-- [`SUBSTITUTE(text, oldText, newText)`](./functions/string.md#substitute) - Replaces old text with new text in a string
+- [`LENGTH(text)`](./functions/string.md#length) - Returns the length of a string
+- [`UPPER(requires string argument)`](./functions/string.md#upper) - Converts a string to uppercase
+- [`LOWER(requires string argument)`](./functions/string.md#lower) - Converts a string to lowercase
+- [`TRIM(requires string argument)`](./functions/string.md#trim) - Removes whitespace from both ends of a string
+- [`SUBSTR(text, start, [length])`](./functions/string.md#substr) - Extracts a substring from a string
+- [`CONCAT(strings...)`](./functions/string.md#concat) - Concatenates two or more strings
+- [`REPLACE(text, search, replacement)`](./functions/string.md#replace) - Replaces occurrences of a substring with another string
+- [`CONTAINS(text, second argument)`](./functions/string.md#contains) - Checks if a string contains a substring
+- [`STARTS_WITH(text, prefix)`](./functions/string.md#starts_with) - Checks if a string starts with a substring
+- [`LEN(requires string argument)`](./functions/string.md#len) - Returns the length of a string
+- [`LEFT(first argument, second argument)`](./functions/string.md#left) - Returns the leftmost characters from a string
+- [`RIGHT(first argument, numChars)`](./functions/string.md#right) - Returns the rightmost characters from a string
+- [`MID(first argument, start, length)`](./functions/string.md#mid) - Returns characters from the middle of a string
+- [`SUBSTITUTE(first argument, second argument, third argument)`](./functions/string.md#substitute) - Replaces occurrences of a substring with another string
+- [`ENDS_WITH(text, suffix)`](./functions/string.md#ends_with) - Checks if a string ends with a substring
 
 
 ### Date Functions
 
+- [`NOW()`](./functions/date.md#now) - Returns the current date and time
+- [`TODAY()`](./functions/date.md#today) - Returns the current date (without time)
 - [`YEAR(date)`](./functions/date.md#year) - Extracts the year from a date
-- [`MONTH(date)`](./functions/date.md#month) - Extracts the month from a date
-- [`DAY(date)`](./functions/date.md#day) - Extracts the day from a date
+- [`MONTH(date)`](./functions/date.md#month) - Extracts the month from a date (1-12)
+- [`DAY(date)`](./functions/date.md#day) - Extracts the day from a date (1-31)
+- [`HOUR(date)`](./functions/date.md#hour) - Extracts the hour from a date (0-23)
+- [`MINUTE(date)`](./functions/date.md#minute) - Extracts the minute from a date (0-59)
+- [`SECOND(date)`](./functions/date.md#second) - Extracts the second from a date (0-59)
+- [`DATE_ADD(date, amount, unit)`](./functions/date.md#date_add) - Adds a specified amount of time to a date
+- [`DATE_DIFF(date1, date2, unit)`](./functions/date.md#date_diff) - Calculates the difference between two dates
+- [`FORMAT_DATE(date, format)`](./functions/date.md#format_date) - Formats a date as a string
 - [`WEEKDAY(date)`](./functions/date.md#weekday) - Returns the day of the week as a number (1=Sunday)
 - [`ADDMONTHS(date, months)`](./functions/date.md#addmonths) - Adds months to a date
 - [`ADDDAYS(date, days)`](./functions/date.md#adddays) - Adds days to a date
-- [`DATEDIF(startDate, endDate, unit)`](./functions/date.md#datedif) - Returns the difference between two dates in specified units
+- [`DATEDIF(date1, date2, unit)`](./functions/date.md#datedif) - Returns the difference between two dates in specified units
+
+
+### Core Functions
+
+- [`ME()`](./functions/core.md#me) - Returns the current user identifier
+- [`STRING(value)`](./functions/core.md#string) - Converts a value to a string
+- [`DATE(dateString)`](./functions/core.md#date) - Creates a date from a string literal
+- [`IF(condition, trueValue, falseValue)`](./functions/core.md#if) - Returns one value if condition is true, another if false
+- [`EVAL(relationshipRef)`](./functions/core.md#eval) - Evaluates an expression from another table
+
+
+### Logical Functions
+
+- [`AND(argument...)`](./functions/logical.md#and) - Returns true if all arguments are true
+- [`OR(argument...)`](./functions/logical.md#or) - Returns true if any argument is true
+- [`NOT(requires boolean argument)`](./functions/logical.md#not) - Returns the opposite of a boolean value
+
+
+### Null handling Functions
+
+- [`ISNULL(value)`](./functions/null-handling.md#isnull) - Returns true if the value is null
+- [`ISBLANK(value)`](./functions/null-handling.md#isblank) - Returns true if the value is null or empty string
+- [`NULLVALUE(value, defaultValue)`](./functions/null-handling.md#nullvalue) - Returns the first value if not null, otherwise returns the second value
+- [`COALESCE(values...)`](./functions/null-handling.md#coalesce) - Returns the first non-null value from a list of expressions
 
 
 ### Aggregate Functions
 
-- [`STRING_AGG(relationship, expression, delimiter)`](./functions/aggregate.md#string_agg) - Concatenates values from related records with delimiter
-- [`STRING_AGG_DISTINCT(relationship, expression, delimiter)`](./functions/aggregate.md#string_agg_distinct) - Concatenates distinct values from related records with delimiter
-- [`SUM_AGG(relationship, expression)`](./functions/aggregate.md#sum_agg) - Sums numeric values from related records
-- [`COUNT_AGG(relationship, expression)`](./functions/aggregate.md#count_agg) - Counts related records
-- [`AVG_AGG(relationship, expression)`](./functions/aggregate.md#avg_agg) - Averages numeric values from related records
-- [`MIN_AGG(relationship, expression)`](./functions/aggregate.md#min_agg) - Finds minimum value from related records
-- [`MAX_AGG(relationship, expression)`](./functions/aggregate.md#max_agg) - Finds maximum value from related records
-- [`AND_AGG(relationship, expression)`](./functions/aggregate.md#and_agg) - Returns true if all values from related records are true
-- [`OR_AGG(relationship, expression)`](./functions/aggregate.md#or_agg) - Returns true if any value from related records is true
+- [`COUNT(relationship, value)`](./functions/aggregate.md#count) - Counts the number of non-null values
+- [`SUM(relationship, value)`](./functions/aggregate.md#sum) - Sums numeric values
+- [`AVG(relationship, value)`](./functions/aggregate.md#avg) - Calculates the average of numeric values
+- [`MIN_AGG(relationship, value)`](./functions/aggregate.md#min_agg) - Finds the minimum value
+- [`MAX_AGG(relationship, value)`](./functions/aggregate.md#max_agg) - Finds the maximum value
+- [`STRING_AGG(relationship, value, separator)`](./functions/aggregate.md#string_agg) - Concatenates string values with a separator
+- [`STRING_AGG_DISTINCT(relationship, value, separator)`](./functions/aggregate.md#string_agg_distinct) - Concatenates unique string values with a separator
+- [`SUM_AGG(relationship, value)`](./functions/aggregate.md#sum_agg) - Sums numeric values
+- [`COUNT_AGG(relationship, value)`](./functions/aggregate.md#count_agg) - Counts the number of non-null values
+- [`AVG_AGG(relationship, value)`](./functions/aggregate.md#avg_agg) - Calculates the average of numeric values
+- [`AND_AGG(relationship, value)`](./functions/aggregate.md#and_agg) - Returns true if all boolean values are true
+- [`OR_AGG(relationship, value)`](./functions/aggregate.md#or_agg) - Returns true if any boolean value is true
 
 
 ## All Functions A-Z
 
-- [`ABS(number)`](./functions/math.md#abs) - Returns the absolute value of a number
-- [`ADDDAYS(date, days)`](./functions/date.md#adddays) - Adds days to a date
-- [`ADDMONTHS(date, months)`](./functions/date.md#addmonths) - Adds months to a date
-- [`AND(condition...)`](./functions/logical.md#and) - Returns true if all conditions are true
-- [`AND_AGG(relationship, expression)`](./functions/aggregate.md#and_agg) - Returns true if all values from related records are true
-- [`AVG_AGG(relationship, expression)`](./functions/aggregate.md#avg_agg) - Averages numeric values from related records
-- [`CEILING(number)`](./functions/math.md#ceiling) - Rounds a number up to the nearest integer
-- [`CONTAINS(text, searchText)`](./functions/string.md#contains) - Returns true if text contains the search string
-- [`COUNT_AGG(relationship, expression)`](./functions/aggregate.md#count_agg) - Counts related records
-- [`DATE(dateString)`](./functions/core.md#date) - Converts a string literal to a date
-- [`DATEDIF(startDate, endDate, unit)`](./functions/date.md#datedif) - Returns the difference between two dates in specified units
-- [`DAY(date)`](./functions/date.md#day) - Extracts the day from a date
-- [`FLOOR(number)`](./functions/math.md#floor) - Rounds a number down to the nearest integer
-- [`IF(condition, trueValue, [falseValue])`](./functions/core.md#if) - Conditional expression with optional else clause
-- [`ISBLANK(value)`](./functions/null-handling.md#isblank) - Returns true if the value is NULL or empty string
-- [`ISNULL(value)`](./functions/null-handling.md#isnull) - Returns true if the value is NULL
-- [`LEFT(text, count)`](./functions/string.md#left) - Returns the leftmost characters from text
-- [`LEN(text)`](./functions/string.md#len) - Returns the length of text
-- [`LOWER(text)`](./functions/string.md#lower) - Converts text to lowercase
-- [`MAX(num1, num2)`](./functions/math.md#max) - Returns the larger of two numbers
-- [`MAX_AGG(relationship, expression)`](./functions/aggregate.md#max_agg) - Finds maximum value from related records
-- [`ME()`](./functions/core.md#me) - Returns the current user identifier
-- [`MID(text, start, length)`](./functions/string.md#mid) - Returns characters from the middle of text
-- [`MIN(num1, num2)`](./functions/math.md#min) - Returns the smaller of two numbers
-- [`MIN_AGG(relationship, expression)`](./functions/aggregate.md#min_agg) - Finds minimum value from related records
-- [`MOD(dividend, divisor)`](./functions/math.md#mod) - Returns the remainder after division
-- [`MONTH(date)`](./functions/date.md#month) - Extracts the month from a date
-- [`NOT(condition)`](./functions/logical.md#not) - Returns the logical negation of the condition
-- [`NULLVALUE(value, defaultValue)`](./functions/null-handling.md#nullvalue) - Returns default value if first value is NULL
-- [`OR(condition...)`](./functions/logical.md#or) - Returns true if any condition is true
-- [`OR_AGG(relationship, expression)`](./functions/aggregate.md#or_agg) - Returns true if any value from related records is true
-- [`RIGHT(text, count)`](./functions/string.md#right) - Returns the rightmost characters from text
-- [`ROUND(number, decimals)`](./functions/math.md#round) - Rounds a number to specified decimal places
-- [`STRING(value)`](./functions/core.md#string) - Converts any value to string representation
-- [`STRING_AGG(relationship, expression, delimiter)`](./functions/aggregate.md#string_agg) - Concatenates values from related records with delimiter
-- [`STRING_AGG_DISTINCT(relationship, expression, delimiter)`](./functions/aggregate.md#string_agg_distinct) - Concatenates distinct values from related records with delimiter
-- [`SUBSTITUTE(text, oldText, newText)`](./functions/string.md#substitute) - Replaces old text with new text in a string
-- [`SUM_AGG(relationship, expression)`](./functions/aggregate.md#sum_agg) - Sums numeric values from related records
-- [`TODAY()`](./functions/core.md#today) - Returns the current date
-- [`TRIM(text)`](./functions/string.md#trim) - Removes leading and trailing whitespace
-- [`UPPER(text)`](./functions/string.md#upper) - Converts text to uppercase
-- [`WEEKDAY(date)`](./functions/date.md#weekday) - Returns the day of the week as a number (1=Sunday)
-- [`YEAR(date)`](./functions/date.md#year) - Extracts the year from a date
+- [`ABS(number)`](./functions/Math.md#abs) - Returns the absolute value of a number
+- [`ADDDAYS(date, days)`](./functions/Date.md#adddays) - Adds days to a date
+- [`ADDMONTHS(date, months)`](./functions/Date.md#addmonths) - Adds months to a date
+- [`AND(argument...)`](./functions/Logical.md#and) - Returns true if all arguments are true
+- [`AND_AGG(relationship, value)`](./functions/Aggregate.md#and_agg) - Returns true if all boolean values are true
+- [`AVG(relationship, value)`](./functions/Aggregate.md#avg) - Calculates the average of numeric values
+- [`AVG_AGG(relationship, value)`](./functions/Aggregate.md#avg_agg) - Calculates the average of numeric values
+- [`CEIL(number)`](./functions/Math.md#ceil) - Rounds a number up to the nearest integer
+- [`CEILING(number)`](./functions/Math.md#ceiling) - Rounds a number up to the nearest integer
+- [`COALESCE(values...)`](./functions/Null Handling.md#coalesce) - Returns the first non-null value from a list of expressions
+- [`CONCAT(strings...)`](./functions/String.md#concat) - Concatenates two or more strings
+- [`CONTAINS(text, second argument)`](./functions/String.md#contains) - Checks if a string contains a substring
+- [`COS(angle)`](./functions/Math.md#cos) - Returns the cosine of an angle in radians
+- [`COUNT(relationship, value)`](./functions/Aggregate.md#count) - Counts the number of non-null values
+- [`COUNT_AGG(relationship, value)`](./functions/Aggregate.md#count_agg) - Counts the number of non-null values
+- [`DATE(dateString)`](./functions/Core.md#date) - Creates a date from a string literal
+- [`DATEDIF(date1, date2, unit)`](./functions/Date.md#datedif) - Returns the difference between two dates in specified units
+- [`DATE_ADD(date, amount, unit)`](./functions/Date.md#date_add) - Adds a specified amount of time to a date
+- [`DATE_DIFF(date1, date2, unit)`](./functions/Date.md#date_diff) - Calculates the difference between two dates
+- [`DAY(date)`](./functions/Date.md#day) - Extracts the day from a date (1-31)
+- [`ENDS_WITH(text, suffix)`](./functions/String.md#ends_with) - Checks if a string ends with a substring
+- [`EVAL(relationshipRef)`](./functions/Core.md#eval) - Evaluates an expression from another table
+- [`EXP(value)`](./functions/Math.md#exp) - Returns e raised to the power of a number
+- [`FLOOR(number)`](./functions/Math.md#floor) - Rounds a number down to the nearest integer
+- [`FORMAT_DATE(date, format)`](./functions/Date.md#format_date) - Formats a date as a string
+- [`HOUR(date)`](./functions/Date.md#hour) - Extracts the hour from a date (0-23)
+- [`IF(condition, trueValue, falseValue)`](./functions/Core.md#if) - Returns one value if condition is true, another if false
+- [`ISBLANK(value)`](./functions/Null Handling.md#isblank) - Returns true if the value is null or empty string
+- [`ISNULL(value)`](./functions/Null Handling.md#isnull) - Returns true if the value is null
+- [`LEFT(first argument, second argument)`](./functions/String.md#left) - Returns the leftmost characters from a string
+- [`LEN(requires string argument)`](./functions/String.md#len) - Returns the length of a string
+- [`LENGTH(text)`](./functions/String.md#length) - Returns the length of a string
+- [`LOG(value)`](./functions/Math.md#log) - Returns the natural logarithm of a number
+- [`LOG10(value)`](./functions/Math.md#log10) - Returns the base-10 logarithm of a number
+- [`LOWER(requires string argument)`](./functions/String.md#lower) - Converts a string to lowercase
+- [`MAX(num1, num2)`](./functions/Math.md#max) - Returns the maximum of two numbers
+- [`MAX_AGG(relationship, value)`](./functions/Aggregate.md#max_agg) - Finds the maximum value
+- [`ME()`](./functions/Core.md#me) - Returns the current user identifier
+- [`MID(first argument, start, length)`](./functions/String.md#mid) - Returns characters from the middle of a string
+- [`MIN(num1, num2)`](./functions/Math.md#min) - Returns the minimum of two numbers
+- [`MINUTE(date)`](./functions/Date.md#minute) - Extracts the minute from a date (0-59)
+- [`MIN_AGG(relationship, value)`](./functions/Aggregate.md#min_agg) - Finds the minimum value
+- [`MOD(dividend, divisor)`](./functions/Math.md#mod) - Returns the remainder of division
+- [`MONTH(date)`](./functions/Date.md#month) - Extracts the month from a date (1-12)
+- [`NOT(requires boolean argument)`](./functions/Logical.md#not) - Returns the opposite of a boolean value
+- [`NOW()`](./functions/Date.md#now) - Returns the current date and time
+- [`NULLVALUE(value, defaultValue)`](./functions/Null Handling.md#nullvalue) - Returns the first value if not null, otherwise returns the second value
+- [`OR(argument...)`](./functions/Logical.md#or) - Returns true if any argument is true
+- [`OR_AGG(relationship, value)`](./functions/Aggregate.md#or_agg) - Returns true if any boolean value is true
+- [`POWER(base, exponent)`](./functions/Math.md#power) - Raises a number to a power
+- [`RANDOM()`](./functions/Math.md#random) - Returns a random number between 0 and 1
+- [`REPLACE(text, search, replacement)`](./functions/String.md#replace) - Replaces occurrences of a substring with another string
+- [`RIGHT(first argument, numChars)`](./functions/String.md#right) - Returns the rightmost characters from a string
+- [`ROUND(number, decimals)`](./functions/Math.md#round) - Rounds a number to specified decimal places
+- [`SECOND(date)`](./functions/Date.md#second) - Extracts the second from a date (0-59)
+- [`SIGN(value)`](./functions/Math.md#sign) - Returns the sign of a number (-1, 0, or 1)
+- [`SIN(angle)`](./functions/Math.md#sin) - Returns the sine of an angle in radians
+- [`SQRT(value)`](./functions/Math.md#sqrt) - Returns the square root of a number
+- [`STARTS_WITH(text, prefix)`](./functions/String.md#starts_with) - Checks if a string starts with a substring
+- [`STRING(value)`](./functions/Core.md#string) - Converts a value to a string
+- [`STRING_AGG(relationship, value, separator)`](./functions/Aggregate.md#string_agg) - Concatenates string values with a separator
+- [`STRING_AGG_DISTINCT(relationship, value, separator)`](./functions/Aggregate.md#string_agg_distinct) - Concatenates unique string values with a separator
+- [`SUBSTITUTE(first argument, second argument, third argument)`](./functions/String.md#substitute) - Replaces occurrences of a substring with another string
+- [`SUBSTR(text, start, [length])`](./functions/String.md#substr) - Extracts a substring from a string
+- [`SUM(relationship, value)`](./functions/Aggregate.md#sum) - Sums numeric values
+- [`SUM_AGG(relationship, value)`](./functions/Aggregate.md#sum_agg) - Sums numeric values
+- [`TAN(angle)`](./functions/Math.md#tan) - Returns the tangent of an angle in radians
+- [`TODAY()`](./functions/Date.md#today) - Returns the current date (without time)
+- [`TRIM(requires string argument)`](./functions/String.md#trim) - Removes whitespace from both ends of a string
+- [`UPPER(requires string argument)`](./functions/String.md#upper) - Converts a string to uppercase
+- [`WEEKDAY(date)`](./functions/Date.md#weekday) - Returns the day of the week as a number (1=Sunday)
+- [`YEAR(date)`](./functions/Date.md#year) - Extracts the year from a date
 
 ## Data Types
 
-The formula language supports the following data types:
+The formula language supports several data types including basic types (string, number, boolean, date, null) and special types (expression, inverse_relationship).
 
-- **string** - Text values, must be enclosed in double quotes
-- **number** - Numeric values (integers and decimals)
-- **boolean** - TRUE or FALSE values
-- **date** - Date values, created with DATE("YYYY-MM-DD") or TODAY()
-- **null** - NULL literal for missing values
+📖 **[Complete Data Types Reference](./types.md)** - Detailed information about all types, their operations, conversions, and compatibility rules.
 
 ## Operators
 
@@ -164,4 +218,4 @@ Logical operations are implemented as functions rather than operators:
 - `OR(condition1, condition2, ...)` - Any condition must be true
 - `NOT(condition)` - Negates the condition
 
-*Documentation generated on 2025-06-22T17:41:34.478Z*
+*Documentation generated on 2025-06-22T20:47:56.010Z*

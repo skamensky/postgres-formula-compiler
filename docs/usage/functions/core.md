@@ -1,50 +1,15 @@
 # Core Functions
 
 
-## TODAY
-
-**Signature:** `TODAY()`  
-**Returns:** date  
-**Description:** Returns the current date
-
-**Arguments:** None
-
-**Test References:** [tests/core-functions.test.js:15](../../tests/core-functions.test.js:15)
-
-**Example Usage:**
-```
-// TODO: Add usage examples from test files
-```
-
----
-
 ## ME
 
 **Signature:** `ME()`  
-**Returns:** string  
+**Returns:** [string](../types.md#string)  
 **Description:** Returns the current user identifier
 
 **Arguments:** None
 
-**Test References:** [tests/core-functions.test.js:23](../../tests/core-functions.test.js:23)
-
-**Example Usage:**
-```
-// TODO: Add usage examples from test files
-```
-
----
-
-## DATE
-
-**Signature:** `DATE(dateString)`  
-**Returns:** date  
-**Description:** Converts a string literal to a date
-
-**Arguments:**
-- `dateString` (string_literal): String representation of date
-
-**Test References:** [tests/core-functions.test.js:31](../../tests/core-functions.test.js:31)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -56,13 +21,31 @@
 ## STRING
 
 **Signature:** `STRING(value)`  
-**Returns:** string  
-**Description:** Converts any value to string representation
+**Returns:** [string](../types.md#string)  
+**Description:** Converts a value to a string
 
 **Arguments:**
-- `value` (expression): Value to convert to string
+- `value` ([expression](../types.md#expression)): Value to convert to string
 
-**Test References:** [tests/string-functions-concatenation.test.js:15](../../tests/string-functions-concatenation.test.js:15)
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## DATE
+
+**Signature:** `DATE(dateString)`  
+**Returns:** [date](../types.md#date)  
+**Description:** Creates a date from a string literal
+
+**Arguments:**
+- `dateString` ([string literal](../types.md#string_literal)): Date string in ISO format
+
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -73,16 +56,34 @@
 
 ## IF
 
-**Signature:** `IF(condition, trueValue, [falseValue])`  
-**Returns:** expression  
-**Description:** Conditional expression with optional else clause
+**Signature:** `IF(condition, trueValue, falseValue)`  
+**Returns:** [expression](../types.md#expression)  
+**Description:** Returns one value if condition is true, another if false
 
 **Arguments:**
-- `condition` (boolean): Boolean condition to evaluate
-- `trueValue` (expression): Value when condition is true
-- `falseValue` (expression): Value when condition is false *(optional)*
+- `condition` ([boolean](../types.md#boolean)): Condition to evaluate
+- `trueValue` ([expression](../types.md#expression)): Value to return if condition is true
+- `falseValue` ([expression](../types.md#expression)): Value to return if condition is false
 
-**Test References:** [tests/if-function.test.js:15](../../tests/if-function.test.js:15)
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## EVAL
+
+**Signature:** `EVAL(relationshipRef)`  
+**Returns:** [expression](../types.md#expression)  
+**Description:** Evaluates an expression from another table
+
+**Arguments:**
+- `relationshipRef` ([inverse relationship](../types.md#inverse_relationship)): Reference to relationship and expression
+
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -90,4 +91,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T17:41:34.479Z*
+*Documentation generated on 2025-06-22T20:47:56.011Z*

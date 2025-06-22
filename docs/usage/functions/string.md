@@ -1,16 +1,34 @@
 # String Functions
 
 
-## UPPER
+## LENGTH
 
-**Signature:** `UPPER(text)`  
-**Returns:** string  
-**Description:** Converts text to uppercase
+**Signature:** `LENGTH(text)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Returns the length of a string
 
 **Arguments:**
-- `text` (string): Text to convert to uppercase
+- `text` ([string](../types.md#string)): String to get length of
 
-**Test References:** [tests/text-functions.test.js:15](../../tests/text-functions.test.js:15)
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## UPPER
+
+**Signature:** `UPPER(requires string argument)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Converts a string to uppercase
+
+**Arguments:**
+- `requires string argument` ([string](../types.md#string)): String to convert to uppercase
+
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -21,14 +39,14 @@
 
 ## LOWER
 
-**Signature:** `LOWER(text)`  
-**Returns:** string  
-**Description:** Converts text to lowercase
+**Signature:** `LOWER(requires string argument)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Converts a string to lowercase
 
 **Arguments:**
-- `text` (string): Text to convert to lowercase
+- `requires string argument` ([string](../types.md#string)): String to convert to lowercase
 
-**Test References:** [tests/text-functions.test.js:16](../../tests/text-functions.test.js:16)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -39,14 +57,14 @@
 
 ## TRIM
 
-**Signature:** `TRIM(text)`  
-**Returns:** string  
-**Description:** Removes leading and trailing whitespace
+**Signature:** `TRIM(requires string argument)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Removes whitespace from both ends of a string
 
 **Arguments:**
-- `text` (string): Text to trim whitespace from
+- `requires string argument` ([string](../types.md#string)): String to trim
 
-**Test References:** [tests/text-functions.test.js:17](../../tests/text-functions.test.js:17)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -55,16 +73,18 @@
 
 ---
 
-## LEN
+## SUBSTR
 
-**Signature:** `LEN(text)`  
-**Returns:** number  
-**Description:** Returns the length of text
+**Signature:** `SUBSTR(text, start, [length])`  
+**Returns:** [string](../types.md#string)  
+**Description:** Extracts a substring from a string
 
 **Arguments:**
-- `text` (string): Text to measure length of
+- `text` ([string](../types.md#string)): Source string
+- `start` ([number](../types.md#number)): Starting position (1-based)
+- `length` ([number](../types.md#number)): Length of substring (optional) *(optional)*
 
-**Test References:** [tests/text-functions.test.js:20](../../tests/text-functions.test.js:20)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -73,17 +93,16 @@
 
 ---
 
-## LEFT
+## CONCAT
 
-**Signature:** `LEFT(text, count)`  
-**Returns:** string  
-**Description:** Returns the leftmost characters from text
+**Signature:** `CONCAT(strings...)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Concatenates two or more strings
 
 **Arguments:**
-- `text` (string): Text to extract from
-- `count` (number): Number of characters to extract
+- `strings` ([string](../types.md#string)): Strings to concatenate *(variadic)*
 
-**Test References:** [tests/text-functions.test.js:40](../../tests/text-functions.test.js:40)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -92,37 +111,18 @@
 
 ---
 
-## RIGHT
+## REPLACE
 
-**Signature:** `RIGHT(text, count)`  
-**Returns:** string  
-**Description:** Returns the rightmost characters from text
-
-**Arguments:**
-- `text` (string): Text to extract from
-- `count` (number): Number of characters to extract
-
-**Test References:** [tests/text-functions.test.js:65](../../tests/text-functions.test.js:65)
-
-**Example Usage:**
-```
-// TODO: Add usage examples from test files
-```
-
----
-
-## MID
-
-**Signature:** `MID(text, start, length)`  
-**Returns:** string  
-**Description:** Returns characters from the middle of text
+**Signature:** `REPLACE(text, search, replacement)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Replaces occurrences of a substring with another string
 
 **Arguments:**
-- `text` (string): Text to extract from
-- `start` (number): Starting position (1-based)
-- `length` (number): Number of characters to extract
+- `text` ([string](../types.md#string)): Source string
+- `search` ([string](../types.md#string)): String to search for
+- `replacement` ([string](../types.md#string)): Replacement string
 
-**Test References:** [tests/text-functions.test.js:90](../../tests/text-functions.test.js:90)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -133,15 +133,110 @@
 
 ## CONTAINS
 
-**Signature:** `CONTAINS(text, searchText)`  
-**Returns:** boolean  
-**Description:** Returns true if text contains the search string
+**Signature:** `CONTAINS(text, second argument)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Checks if a string contains a substring
 
 **Arguments:**
-- `text` (string): Text to search in
-- `searchText` (string): Text to search for
+- `text` ([string](../types.md#string)): String to search in
+- `second argument` ([string](../types.md#string)): Substring to search for
 
-**Test References:** [tests/text-functions.test.js:119](../../tests/text-functions.test.js:119)
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## STARTS_WITH
+
+**Signature:** `STARTS_WITH(text, prefix)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Checks if a string starts with a substring
+
+**Arguments:**
+- `text` ([string](../types.md#string)): String to check
+- `prefix` ([string](../types.md#string)): Prefix to check for
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## LEN
+
+**Signature:** `LEN(requires string argument)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Returns the length of a string
+
+**Arguments:**
+- `requires string argument` ([string](../types.md#string)): String to get length of
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## LEFT
+
+**Signature:** `LEFT(first argument, second argument)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Returns the leftmost characters from a string
+
+**Arguments:**
+- `first argument` ([string](../types.md#string)): Source string
+- `second argument` ([number](../types.md#number)): Number of characters to extract
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## RIGHT
+
+**Signature:** `RIGHT(first argument, numChars)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Returns the rightmost characters from a string
+
+**Arguments:**
+- `first argument` ([string](../types.md#string)): Source string
+- `numChars` ([number](../types.md#number)): Number of characters to extract
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## MID
+
+**Signature:** `MID(first argument, start, length)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Returns characters from the middle of a string
+
+**Arguments:**
+- `first argument` ([string](../types.md#string)): Source string
+- `start` ([number](../types.md#number)): Starting position (1-based)
+- `length` ([number](../types.md#number)): Number of characters to extract
+
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -152,16 +247,35 @@
 
 ## SUBSTITUTE
 
-**Signature:** `SUBSTITUTE(text, oldText, newText)`  
-**Returns:** string  
-**Description:** Replaces old text with new text in a string
+**Signature:** `SUBSTITUTE(first argument, second argument, third argument)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Replaces occurrences of a substring with another string
 
 **Arguments:**
-- `text` (string): Text to perform substitution in
-- `oldText` (string): Text to replace
-- `newText` (string): Replacement text
+- `first argument` ([string](../types.md#string)): Source string
+- `second argument` ([string](../types.md#string)): Text to replace
+- `third argument` ([string](../types.md#string)): Replacement text
 
-**Test References:** [tests/text-functions.test.js:144](../../tests/text-functions.test.js:144)
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## ENDS_WITH
+
+**Signature:** `ENDS_WITH(text, suffix)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Checks if a string ends with a substring
+
+**Arguments:**
+- `text` ([string](../types.md#string)): String to check
+- `suffix` ([string](../types.md#string)): Suffix to check for
+
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -169,4 +283,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T17:41:34.479Z*
+*Documentation generated on 2025-06-22T20:47:56.011Z*

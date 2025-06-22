@@ -4,32 +4,13 @@
 ## ISNULL
 
 **Signature:** `ISNULL(value)`  
-**Returns:** boolean  
-**Description:** Returns true if the value is NULL
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Returns true if the value is null
 
 **Arguments:**
-- `value` (expression): Value to check for NULL
+- `value` ([expression](../types.md#expression)): Value to check for null
 
-**Test References:** [tests/null-handling.test.js:15](../../tests/null-handling.test.js:15)
-
-**Example Usage:**
-```
-// TODO: Add usage examples from test files
-```
-
----
-
-## NULLVALUE
-
-**Signature:** `NULLVALUE(value, defaultValue)`  
-**Returns:** expression  
-**Description:** Returns default value if first value is NULL
-
-**Arguments:**
-- `value` (expression): Value to check for NULL
-- `defaultValue` (expression): Default value if first is NULL
-
-**Test References:** [tests/null-handling.test.js:33](../../tests/null-handling.test.js:33)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -41,13 +22,50 @@
 ## ISBLANK
 
 **Signature:** `ISBLANK(value)`  
-**Returns:** boolean  
-**Description:** Returns true if the value is NULL or empty string
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Returns true if the value is null or empty string
 
 **Arguments:**
-- `value` (expression): Value to check for blank
+- `value` ([expression](../types.md#expression)): Value to check for blank
 
-**Test References:** [tests/null-handling.test.js:55](../../tests/null-handling.test.js:55)
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## NULLVALUE
+
+**Signature:** `NULLVALUE(value, defaultValue)`  
+**Returns:** [expression](../types.md#expression)  
+**Description:** Returns the first value if not null, otherwise returns the second value
+
+**Arguments:**
+- `value` ([expression](../types.md#expression)): Value to check for null
+- `defaultValue` ([expression](../types.md#expression)): Value to return if first is null
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## COALESCE
+
+**Signature:** `COALESCE(values...)`  
+**Returns:** [expression](../types.md#expression)  
+**Description:** Returns the first non-null value from a list of expressions
+
+**Arguments:**
+- `values` ([expression](../types.md#expression)): Values to check (returns first non-null) *(variadic)*
+
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -55,4 +73,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T17:41:34.479Z*
+*Documentation generated on 2025-06-22T20:47:56.011Z*

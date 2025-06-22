@@ -1,18 +1,17 @@
 # Aggregate Functions
 
 
-## STRING_AGG
+## COUNT
 
-**Signature:** `STRING_AGG(relationship, expression, delimiter)`  
-**Returns:** string  
-**Description:** Concatenates values from related records with delimiter
+**Signature:** `COUNT(relationship, value)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Counts the number of non-null values
 
 **Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Expression to evaluate for each record
-- `delimiter` (string): String delimiter to separate values
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([expression](../types.md#expression)): Expression to count
 
-**Test References:** [tests/aggregate-functions.test.js:15](../../tests/aggregate-functions.test.js:15)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -21,18 +20,17 @@
 
 ---
 
-## STRING_AGG_DISTINCT
+## SUM
 
-**Signature:** `STRING_AGG_DISTINCT(relationship, expression, delimiter)`  
-**Returns:** string  
-**Description:** Concatenates distinct values from related records with delimiter
+**Signature:** `SUM(relationship, value)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Sums numeric values
 
 **Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Expression to evaluate for each record
-- `delimiter` (string): String delimiter to separate values
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([number](../types.md#number)): Numeric expression to sum
 
-**Test References:** [tests/aggregate-functions.test.js:33](../../tests/aggregate-functions.test.js:33)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -41,55 +39,17 @@
 
 ---
 
-## SUM_AGG
+## AVG
 
-**Signature:** `SUM_AGG(relationship, expression)`  
-**Returns:** number  
-**Description:** Sums numeric values from related records
-
-**Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Numeric expression to sum
-
-**Test References:** [tests/aggregate-functions.test.js:45](../../tests/aggregate-functions.test.js:45)
-
-**Example Usage:**
-```
-// TODO: Add usage examples from test files
-```
-
----
-
-## COUNT_AGG
-
-**Signature:** `COUNT_AGG(relationship, expression)`  
-**Returns:** number  
-**Description:** Counts related records
+**Signature:** `AVG(relationship, value)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Calculates the average of numeric values
 
 **Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to count
-- `expression` (expression): Expression to evaluate (value ignored)
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([number](../types.md#number)): Numeric expression to average
 
-**Test References:** [tests/aggregate-functions.test.js:55](../../tests/aggregate-functions.test.js:55)
-
-**Example Usage:**
-```
-// TODO: Add usage examples from test files
-```
-
----
-
-## AVG_AGG
-
-**Signature:** `AVG_AGG(relationship, expression)`  
-**Returns:** number  
-**Description:** Averages numeric values from related records
-
-**Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Numeric expression to average
-
-**Test References:** [tests/aggregate-functions.test.js:65](../../tests/aggregate-functions.test.js:65)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -100,15 +60,15 @@
 
 ## MIN_AGG
 
-**Signature:** `MIN_AGG(relationship, expression)`  
-**Returns:** number  
-**Description:** Finds minimum value from related records
+**Signature:** `MIN_AGG(relationship, value)`  
+**Returns:** [expression](../types.md#expression)  
+**Description:** Finds the minimum value
 
 **Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Expression to find minimum of
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([expression](../types.md#expression)): Expression to find minimum of
 
-**Test References:** [tests/aggregate-functions.test.js:75](../../tests/aggregate-functions.test.js:75)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -119,15 +79,112 @@
 
 ## MAX_AGG
 
-**Signature:** `MAX_AGG(relationship, expression)`  
-**Returns:** number  
-**Description:** Finds maximum value from related records
+**Signature:** `MAX_AGG(relationship, value)`  
+**Returns:** [expression](../types.md#expression)  
+**Description:** Finds the maximum value
 
 **Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Expression to find maximum of
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([expression](../types.md#expression)): Expression to find maximum of
 
-**Test References:** [tests/aggregate-functions.test.js:85](../../tests/aggregate-functions.test.js:85)
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## STRING_AGG
+
+**Signature:** `STRING_AGG(relationship, value, separator)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Concatenates string values with a separator
+
+**Arguments:**
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([string](../types.md#string)): String expression to concatenate
+- `separator` ([string](../types.md#string)): Separator between values
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## STRING_AGG_DISTINCT
+
+**Signature:** `STRING_AGG_DISTINCT(relationship, value, separator)`  
+**Returns:** [string](../types.md#string)  
+**Description:** Concatenates unique string values with a separator
+
+**Arguments:**
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([string](../types.md#string)): String expression to concatenate
+- `separator` ([string](../types.md#string)): Separator between values
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## SUM_AGG
+
+**Signature:** `SUM_AGG(relationship, value)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Sums numeric values
+
+**Arguments:**
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([number](../types.md#number)): Numeric expression to sum
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## COUNT_AGG
+
+**Signature:** `COUNT_AGG(relationship, value)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Counts the number of non-null values
+
+**Arguments:**
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([expression](../types.md#expression)): Expression to count
+
+**Test References:** Not specified
+
+**Example Usage:**
+```
+// TODO: Add usage examples from test files
+```
+
+---
+
+## AVG_AGG
+
+**Signature:** `AVG_AGG(relationship, value)`  
+**Returns:** [number](../types.md#number)  
+**Description:** Calculates the average of numeric values
+
+**Arguments:**
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([number](../types.md#number)): Numeric expression to average
+
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -138,15 +195,15 @@
 
 ## AND_AGG
 
-**Signature:** `AND_AGG(relationship, expression)`  
-**Returns:** boolean  
-**Description:** Returns true if all values from related records are true
+**Signature:** `AND_AGG(relationship, value)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Returns true if all boolean values are true
 
 **Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Boolean expression to evaluate
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([boolean](../types.md#boolean)): Boolean expression to check
 
-**Test References:** [tests/aggregate-functions.test.js:95](../../tests/aggregate-functions.test.js:95)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -157,15 +214,15 @@
 
 ## OR_AGG
 
-**Signature:** `OR_AGG(relationship, expression)`  
-**Returns:** boolean  
-**Description:** Returns true if any value from related records is true
+**Signature:** `OR_AGG(relationship, value)`  
+**Returns:** [boolean](../types.md#boolean)  
+**Description:** Returns true if any boolean value is true
 
 **Arguments:**
-- `relationship` (inverse_relationship): Inverse relationship to aggregate
-- `expression` (expression): Boolean expression to evaluate
+- `relationship` ([inverse relationship](../types.md#inverse_relationship)): Inverse relationship to aggregate
+- `value` ([boolean](../types.md#boolean)): Boolean expression to check
 
-**Test References:** [tests/aggregate-functions.test.js:105](../../tests/aggregate-functions.test.js:105)
+**Test References:** Not specified
 
 **Example Usage:**
 ```
@@ -173,4 +230,4 @@
 ```
 
 
-*Documentation generated on 2025-06-22T17:41:34.479Z*
+*Documentation generated on 2025-06-22T20:47:56.011Z*
