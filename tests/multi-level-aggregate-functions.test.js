@@ -214,7 +214,7 @@ test('Multi-level aggregate in string concatenation', () => {
 test('Error: Multi-level relationship with invalid pattern', () => {
   assertError(
     () => evaluateFormula('STRING_AGG(invalid_pattern, commission_percentage, ",")', multiLevelAggregateContext),
-    /Multi-level aggregate relationship must follow pattern/,
+    /Unknown inverse relationship: invalid_pattern/,
     'Should throw error for invalid pattern'
   );
 });
@@ -222,7 +222,7 @@ test('Error: Multi-level relationship with invalid pattern', () => {
 test('Error: Multi-level relationship with too few parts', () => {
   assertError(
     () => evaluateFormula('STRING_AGG(too_few, commission_percentage, ",")', multiLevelAggregateContext),
-    /Multi-level aggregate relationship must follow pattern/,
+    /Unknown inverse relationship: too_few/,
     'Should throw error for too few parts'
   );
 });

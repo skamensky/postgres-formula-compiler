@@ -1,0 +1,736 @@
+#!/usr/bin/env node
+
+/**
+ * Formula Executor - Reads multiple formula files and executes them with deduplication
+ * Usage: ./exec-formula [--output format] path/to/formula1.formula path/to/formula2.formula ...
+ * Formats: json, html, markdown (default: console)
+ * All formulas must be from the same table (determined by directory structure)
+ */
+
+import { readFileSync } from 'fs';
+import { evaluateFormula, generateSQL, mapPostgresType } from './formula-compiler.js';
+import { basename, dirname } from 'path';
+import pkg from 'pg';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+const { Client } = pkg;
+
+// Database connection string from environment
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ Error: DATABASE_URL environment variable is not set');
+  console.error('   Please create a .env file with: DATABASE_URL=your_connection_string');
+  process.exit(1);
+}
+
+// Parse command line arguments
+function parseArguments() {
+  const args = process.argv.slice(2);
+  let outputFormat = 'console';
+  let formulaPaths = [];
+  
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--output' && i + 1 < args.length) {
+      outputFormat = args[i + 1];
+      i++; // Skip the next argument as it's the format value
+    } else if (args[i].endsWith('.formula')) {
+      formulaPaths.push(args[i]);
+    }
+  }
+  
+  // Validate output format
+  const validFormats = ['console', 'json', 'html', 'markdown'];
+  if (!validFormats.includes(outputFormat)) {
+    console.error(`❌ Error: Invalid output format '${outputFormat}'`);
+    console.error(`   Valid formats: ${validFormats.join(', ')}`);
+    process.exit(1);
+  }
+  
+  return { outputFormat, formulaPaths };
+}
+
+// Output formatters
+const formatters = {
+  console: {
+    // Current console output - will be handled in main function
+    format: (data) => data
+  },
+  
+  json: {
+    format: (data) => {
+      return JSON.stringify(data, null, 2);
+    }
+  },
+  
+  html: {
+    format: (data) => {
+      const { metadata, results, sql, analysis } = data;
+      
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formula Execution Results</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { background: #f4f4f4; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .section { margin-bottom: 30px; }
+        .section h2 { color: #333; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+        .formula { background: #f9f9f9; padding: 10px; margin: 10px 0; border-left: 4px solid #007cba; }
+        .sql { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .sql code { font-family: 'Courier New', monospace; white-space: pre; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .metric { display: inline-block; margin: 10px 20px 10px 0; }
+        .metric strong { color: #007cba; }
+        .null { color: #999; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Formula Execution Results</h1>
+        <p><strong>Table:</strong> ${metadata.tableName}</p>
+        <p><strong>Formulas Processed:</strong> ${metadata.formulaCount}</p>
+        <p><strong>Execution Time:</strong> ${new Date().toISOString()}</p>
+    </div>
+
+    <div class="section">
+        <h2>📄 Formulas</h2>
+        ${metadata.formulas.map((formula, i) => `
+        <div class="formula">
+            <strong>${i + 1}. ${formula.fieldName}</strong><br>
+            <code>${formula.content}</code><br>
+            <small>Source: ${formula.path}</small>
+        </div>
+        `).join('')}
+    </div>
+
+    <div class="section">
+        <h2>📈 Analysis</h2>
+        <div class="metric"><strong>Join Intents:</strong> ${analysis.totalJoinIntents}</div>
+        <div class="metric"><strong>Aggregate Intents:</strong> ${analysis.totalAggregateIntents}</div>
+        <div class="metric"><strong>Actual JOINs:</strong> ${analysis.actualJoins}</div>
+        <div class="metric"><strong>Subqueries:</strong> ${analysis.subqueries}</div>
+        <div class="metric"><strong>SELECT Expressions:</strong> ${analysis.selectExpressions}</div>
+    </div>
+
+    <div class="section">
+        <h2>📝 Generated SQL</h2>
+        <div class="sql">
+            <code>${sql.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📊 Results</h2>
+        ${results.length === 0 ? '<p>No results found</p>' : `
+        <table>
+            <thead>
+                <tr>
+                    ${Object.keys(results[0]).map(key => `<th>${key}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+                ${results.map(row => `
+                <tr>
+                    ${Object.keys(row).map(key => `<td>${row[key] === null ? '<span class="null">NULL</span>' : row[key]}</td>`).join('')}
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        `}
+    </div>
+</body>
+</html>`;
+    }
+  },
+  
+  markdown: {
+    format: (data) => {
+      const { metadata, results, sql, analysis } = data;
+      
+      return `# 🚀 Formula Execution Results
+
+## 📋 Metadata
+- **Table:** ${metadata.tableName}
+- **Formulas Processed:** ${metadata.formulaCount}
+- **Execution Time:** ${new Date().toISOString()}
+
+## 📄 Formulas
+
+${metadata.formulas.map((formula, i) => `### ${i + 1}. ${formula.fieldName}
+${'```'}
+${formula.content}
+${'```'}
+**Source:** ${formula.path}
+`).join('\n')}
+
+## 📈 Analysis
+
+| Metric | Value |
+|--------|-------|
+| Join Intents | ${analysis.totalJoinIntents} |
+| Aggregate Intents | ${analysis.totalAggregateIntents} |
+| Actual JOINs | ${analysis.actualJoins} |
+| Subqueries | ${analysis.subqueries} |
+| SELECT Expressions | ${analysis.selectExpressions} |
+
+## 📝 Generated SQL
+
+${'```'}sql
+${sql}
+${'```'}
+
+## 📊 Results
+
+${results.length === 0 ? 'No results found' : `
+| ${Object.keys(results[0]).join(' | ')} |
+| ${Object.keys(results[0]).map(() => '---').join(' | ')} |
+${results.map(row => `| ${Object.keys(row).map(key => row[key] === null ? '*NULL*' : row[key]).join(' | ')} |`).join('\n')}
+`}
+
+---
+*Generated by Formula Executor*
+`;
+    }
+  }
+};
+
+// Extract table name from formula file path
+function extractTableName(filePath) {
+  // Expected structure: examples/table/{table_name}/formula.formula
+  const pathParts = filePath.split('/');
+  const tableIndex = pathParts.indexOf('table');
+  
+  if (tableIndex >= 0 && tableIndex + 1 < pathParts.length) {
+    return pathParts[tableIndex + 1];
+  }
+  
+  // Fallback: use directory name if not in expected structure
+  const dir = dirname(filePath);
+  const dirName = basename(dir);
+  return dirName === '.' ? 'submission' : dirName; // Default to submission
+}
+
+// Generate field name from formula file path
+function generateFieldName(filePath) {
+  const fileName = basename(filePath, '.formula');
+  return fileName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+}
+
+// Build column lists for multiple tables using metadata system (BULKIFIED)
+async function getColumnListForTables(tableNames, client) {
+  if (tableNames.length === 0) {
+    return {};
+  }
+  
+  const query = `
+    SELECT ti.table_name, tf.name, tf.data_type
+    FROM table_field tf
+    JOIN table_info ti ON tf.table_info = ti.id
+    WHERE ti.table_name = ANY($1)
+    ORDER BY ti.table_name, tf.name
+  `;
+  
+  const result = await client.query(query, [tableNames]);
+  
+  const columnLists = {};
+  
+  // Initialize empty objects for all requested tables
+  for (const tableName of tableNames) {
+    columnLists[tableName] = {};
+  }
+  
+  // Populate column lists from results
+  for (const row of result.rows) {
+    columnLists[row.table_name][row.name] = mapPostgresType(row.data_type);
+  }
+  
+  // Check if any tables were not found
+  for (const tableName of tableNames) {
+    if (Object.keys(columnLists[tableName]).length === 0) {
+      throw new Error(`Table '${tableName}' not found in metadata system`);
+    }
+  }
+  
+  return columnLists;
+}
+
+// Build column list for a single table (compatibility wrapper)
+async function getColumnListForTable(tableName, client) {
+  const columnLists = await getColumnListForTables([tableName], client);
+  return columnLists[tableName];
+}
+
+// Build relationship info for a table using metadata system (NEW FLAT STRUCTURE)
+async function getRelationshipsForTable(tableName, client) {
+  const query = `
+    SELECT rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    WHERE rl.source_table_name = $1
+  `;
+  
+  const result = await client.query(query, [tableName]);
+  const relationships = [];
+  
+  for (const row of result.rows) {
+    // Use the base name (without _id suffix) as the relationship name
+    const relationshipName = row.col_name.replace(/_id$/, '');
+    
+    relationships.push({
+      name: relationshipName,
+      fromTable: tableName,
+      toTable: row.target_table_name,
+      joinColumn: row.col_name
+    });
+  }
+  
+  return relationships;
+}
+
+// Build all relationship infos from database (NEW FLAT STRUCTURE)
+async function getAllRelationshipInfos(client) {
+  const query = `
+    SELECT rl.source_table_name, rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    ORDER BY rl.source_table_name, rl.col_name
+  `;
+  
+  const result = await client.query(query);
+  const relationships = [];
+  
+  for (const row of result.rows) {
+    // Use the base name (without _id suffix) as the relationship name
+    const relationshipName = row.col_name.replace(/_id$/, '');
+    
+    relationships.push({
+      name: relationshipName,
+      fromTable: row.source_table_name,
+      toTable: row.target_table_name,
+      joinColumn: row.col_name
+    });
+  }
+  
+  return relationships;
+}
+
+
+
+// Build inverse relationship info for multiple tables using metadata system (BULKIFIED)
+async function getInverseRelationshipsForTables(tableNames, client) {
+  if (tableNames.length === 0) {
+    return {};
+  }
+  
+  // Get all inverse relationships for the given tables
+  const inverseQuery = `
+    SELECT rl.source_table_name, rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    WHERE rl.target_table_name = ANY($1)
+  `;
+  
+  const inverseResult = await client.query(inverseQuery, [tableNames]);
+  
+  // Collect all unique source tables that need column information
+  const sourceTableNames = [...new Set(inverseResult.rows.map(row => row.source_table_name))];
+  
+  // Get all forward relationships for source tables
+  const forwardQuery = `
+    SELECT rl.source_table_name, rl.col_name, rl.target_table_name
+    FROM relationship_lookups rl
+    WHERE rl.source_table_name = ANY($1)
+  `;
+  
+  const forwardResult = await client.query(forwardQuery, [sourceTableNames]);
+  
+  // Collect all unique tables that need column information
+  const allTablesNeeded = new Set([
+    ...sourceTableNames,
+    ...forwardResult.rows.map(row => row.target_table_name)
+  ]);
+  
+  // Get column lists for all tables in one call
+  const columnLists = await getColumnListForTables([...allTablesNeeded], client);
+  
+  // Build relationship maps
+  const sourceRelationshipsMap = new Map();
+  for (const row of forwardResult.rows) {
+    const sourceTable = row.source_table_name;
+    if (!sourceRelationshipsMap.has(sourceTable)) {
+      sourceRelationshipsMap.set(sourceTable, []);
+    }
+    
+    const relationshipName = row.col_name.replace(/_id$/, '');
+    sourceRelationshipsMap.get(sourceTable).push({
+      name: relationshipName,
+      fromTable: sourceTable,
+      toTable: row.target_table_name,
+      joinColumn: row.col_name
+    });
+  }
+  
+  // Build inverse relationships for all requested tables
+  const allInverseRelationships = {};
+  for (const tableName of tableNames) {
+    allInverseRelationships[tableName] = {};
+  }
+  
+  for (const row of inverseResult.rows) {
+    const targetTable = row.target_table_name;
+    const sourceTable = row.source_table_name;
+    
+    // Use naming pattern: {source_table_name}s_{col_name}
+    const relationshipName = `${sourceTable}s_${row.col_name}`;
+    
+    const sourceColumnList = columnLists[sourceTable];
+    const sourceRelationships = sourceRelationshipsMap.get(sourceTable) || [];
+    
+    // Convert flat relationships to old nested format for backward compatibility
+    const nestedRelationshipInfo = {};
+    for (const rel of sourceRelationships) {
+      const targetColumnList = columnLists[rel.toTable];
+      if (targetColumnList) {
+        nestedRelationshipInfo[rel.name] = {
+          joinColumn: rel.joinColumn,
+          columnList: targetColumnList
+        };
+      }
+    }
+    
+    allInverseRelationships[targetTable][relationshipName] = {
+      tableName: sourceTable,
+      columnList: sourceColumnList,
+      joinColumn: row.col_name,
+      relationshipInfo: nestedRelationshipInfo
+    };
+  }
+  
+  return allInverseRelationships;
+}
+
+// Build inverse relationship info for a single table (compatibility wrapper)
+async function getInverseRelationshipsForTable(tableName, client) {
+  const allInverseRelationships = await getInverseRelationshipsForTables([tableName], client);
+  return allInverseRelationships[tableName] || {};
+}
+
+async function main() {
+  try {
+    // Parse command line arguments
+    const { outputFormat, formulaPaths } = parseArguments();
+    
+    if (formulaPaths.length === 0) {
+      console.error('❌ Usage: ./exec-formula [--output format] path/to/formula1.formula [path/to/formula2.formula ...]');
+      console.error('   Example: ./exec-formula examples/table/submission/business_summary.formula examples/table/submission/risk_assessment.formula');
+      console.error('   Formats: console (default), json, html, markdown');
+      if (process.argv.length > 4) {
+        console.error(`   Note: ${process.argv.length - 4} non-formula files were filtered out`);
+      }
+      process.exit(1);
+    }
+    
+    // Only show progress messages for console output
+    if (outputFormat === 'console') {
+      console.log(`🚀 Formula Executor - Processing ${formulaPaths.length} formula(s)\n`);
+    }
+    
+    // Extract table names and validate they're all the same
+    const tableNames = formulaPaths.map(extractTableName);
+    const uniqueTableNames = [...new Set(tableNames)];
+    
+    if (uniqueTableNames.length > 1) {
+      console.error('❌ Error: All formulas must be from the same table');
+      console.error(`   Found formulas from tables: ${uniqueTableNames.join(', ')}`);
+      console.error('   Please ensure all formula files are from the same table directory');
+      process.exit(1);
+    }
+    
+    const tableName = uniqueTableNames[0];
+    if (outputFormat === 'console') {
+      console.log(`📋 Target table: ${tableName}`);
+    }
+    
+    // Read and parse formulas
+    if (outputFormat === 'console') {
+      console.log('📄 Reading formulas from files...');
+    }
+    const formulas = [];
+    const formulaData = {};
+    
+    for (let i = 0; i < formulaPaths.length; i++) {
+      const filePath = formulaPaths[i];
+      const fieldName = generateFieldName(filePath);
+      const formulaContent = readFileSync(filePath, 'utf8').trim();
+      
+      formulas.push({
+        path: filePath,
+        fieldName: fieldName,
+        content: formulaContent
+      });
+      
+      if (outputFormat === 'console') {
+        console.log(`  ${i + 1}. ${fieldName}: ${formulaContent}`);
+      }
+    }
+    
+    // Connect to database for metadata lookup
+    if (outputFormat === 'console') {
+      console.log('\n🔌 Connecting to PostgreSQL database...');
+    }
+    const client = new Client({ connectionString });
+    await client.connect();
+    
+    // Build context for the table using metadata system (NEW FLAT STRUCTURE + BACKWARD COMPATIBILITY)
+    if (outputFormat === 'console') {
+      console.log('📋 Loading table metadata...');
+    }
+    
+    if (outputFormat === 'console') {
+      console.log('🔗 Loading relationship metadata...');
+    }
+    
+    // NEW: Get all relationships from database for multi-level support
+    const allRelationships = await getAllRelationshipInfos(client);
+    
+    // Collect all unique table names needed for bulkified column loading
+    const allTableNames = new Set([tableName]);
+    const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRels) {
+      allTableNames.add(rel.toTable);
+    }
+    
+    // Bulkified: Get column lists for all tables in one call
+    const allColumnLists = await getColumnListForTables([...allTableNames], client);
+    const columnList = allColumnLists[tableName];
+    
+    // Build table infos using bulkified results
+    const tableInfos = [
+      {
+        tableName: tableName,
+        columnList: columnList
+      }
+    ];
+    
+    // Add table infos for direct relationships from this table
+    for (const rel of directRels) {
+      if (allColumnLists[rel.toTable]) {
+        tableInfos.push({
+          tableName: rel.toTable,
+          columnList: allColumnLists[rel.toTable]
+        });
+      }
+    }
+    
+    if (outputFormat === 'console') {
+      console.log('🔗 Loading inverse relationship metadata...');
+    }
+    const inverseRelationshipInfo = await getInverseRelationshipsForTable(tableName, client);
+    
+    // Build context with BOTH new flat structure AND old structure for backward compatibility
+    const context = {
+      tableName: tableName,
+      // NEW flat structure
+      tableInfos: tableInfos,
+      relationshipInfos: allRelationships,
+      // OLD structure for backward compatibility (needed for aggregates)
+      columnList: columnList,
+      relationshipInfo: {}, // Will be populated below for backward compatibility
+      inverseRelationshipInfo: inverseRelationshipInfo
+    };
+    
+    // Build old-style relationshipInfo for backward compatibility with aggregates
+    const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRelationships) {
+      const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+      if (targetTable) {
+        context.relationshipInfo[rel.name] = {
+          joinColumn: rel.joinColumn,
+          columnList: targetTable.columnList
+        };
+      }
+    }
+    
+    if (outputFormat === 'console') {
+      console.log('\n🔄 Compiling formulas to intents...');
+    }
+    
+    // Compile each formula to intents
+    const results = {};
+    const compilationResults = [];
+    
+    for (const formula of formulas) {
+      try {
+        const result = evaluateFormula(formula.content, context);
+        results[formula.fieldName] = result;
+        compilationResults.push({
+          ...formula,
+          result: result,
+          success: true
+        });
+        if (outputFormat === 'console') {
+          console.log(`  ✅ ${formula.fieldName}: Compiled successfully`);
+        }
+      } catch (error) {
+        if (outputFormat === 'console') {
+          console.log(`  ❌ ${formula.fieldName}: ${error.message}`);
+        }
+        compilationResults.push({
+          ...formula,
+          error: error,
+          success: false
+        });
+      }
+    }
+    
+    // Check if any formulas failed
+    const failedFormulas = compilationResults.filter(r => !r.success);
+    if (failedFormulas.length > 0) {
+      console.error(`\n❌ ${failedFormulas.length} formula(s) failed to compile. Aborting.`);
+      process.exit(1);
+    }
+    
+    let totalJoinIntents = new Set();
+    let totalAggregateIntents = new Set();
+    
+    if (outputFormat === 'console') {
+      console.log('\n📊 Compilation Analysis:');
+      console.log('='.repeat(60));
+    }
+    
+    compilationResults.forEach((formula, index) => {
+      if (formula.success) {
+        if (outputFormat === 'console') {
+          console.log(`\n${index + 1}. ${formula.fieldName}:`);
+          console.log(`   Expression ID: ${formula.result.expression.semanticId}`);
+          console.log(`   Join Intents: ${formula.result.joinIntents.length}`);
+          formula.result.joinIntents.forEach((join, i) => {
+            console.log(`     ${i+1}. ${join.semanticId}`);
+          });
+          console.log(`   Aggregate Intents: ${formula.result.aggregateIntents.length}`);
+          formula.result.aggregateIntents.forEach((agg, i) => {
+            console.log(`     ${i+1}. ${agg.semanticId}`);
+          });
+        }
+        
+        // Collect intents for analysis (needed for all formats)
+        formula.result.joinIntents.forEach(join => totalJoinIntents.add(join.semanticId));
+        formula.result.aggregateIntents.forEach(agg => {
+          totalAggregateIntents.add(agg.semanticId);
+          agg.internalJoins.forEach(join => totalJoinIntents.add(join.semanticId));
+        });
+      }
+    });
+    
+    if (outputFormat === 'console') {
+      console.log('\n🔧 Generating optimized SQL with deduplication...');
+    }
+    const sqlResult = generateSQL(results, tableName);
+    
+    if (outputFormat === 'console') {
+      console.log('\n📈 Deduplication Analysis:');
+      console.log('='.repeat(60));
+      console.log(`Total Unique Join Intents: ${totalJoinIntents.size}`);
+      console.log(`Total Unique Aggregate Intents: ${totalAggregateIntents.size}`);
+      console.log(`Actual JOINs in Generated SQL: ${(sqlResult.fromClause.match(/LEFT JOIN/g) || []).length}`);
+      console.log(`Actual Aggregate Subqueries: ${sqlResult.aggregateSubqueries.length}`);
+      console.log(`SELECT Expressions: ${sqlResult.selectExpressions.length}`);
+      
+      console.log('\n📝 Generated Optimized SQL:');
+      console.log('='.repeat(60));
+      console.log(sqlResult.sql);
+      
+      console.log('\n⚡ Executing SQL query...\n');
+    }
+    
+    const queryResult = await client.query(sqlResult.sql + ' LIMIT 5');
+    
+    if (outputFormat === 'console') {
+      console.log('📊 Results:');
+      console.log('='.repeat(60));
+      
+      if (queryResult.rows.length === 0) {
+        console.log('No results found');
+      } else {
+        console.log(`Found ${queryResult.rows.length} rows:\n`);
+        queryResult.rows.forEach((row, index) => {
+          console.log(`Row ${index + 1}:`);
+          Object.keys(results).forEach(fieldName => {
+            console.log(`  ${fieldName}: ${row[fieldName] || 'NULL'}`);
+          });
+          console.log('');
+        });
+      }
+      
+      console.log('='.repeat(60));
+      console.log(`\n✅ Multi-formula execution completed successfully!`);
+      console.log(`\n🎯 Processed ${formulaPaths.length} formula(s) from table '${tableName}':`);
+      formulas.forEach((formula, index) => {
+        console.log(`  ${index + 1}. ${formula.fieldName} (${basename(formula.path)})`);
+      });
+      console.log('\n🎯 Deduplication Benefits:');
+      console.log('  ✓ Shared joins between formulas are deduplicated');
+      console.log('  ✓ Shared expressions within same joins are reused');
+      console.log('  ✓ Aggregate subqueries are optimized across all formulas');
+      console.log('  ✓ Single query execution for multiple formula results');
+    }
+    
+    await client.end();
+    
+    // For non-console formats, prepare and output structured data
+    if (outputFormat !== 'console') {
+      const metadata = {
+        tableName: tableName,
+        formulaCount: formulaPaths.length,
+        formulas: formulas.map(f => ({
+          fieldName: f.fieldName,
+          content: f.content,
+          path: f.path
+        }))
+      };
+      
+      const analysis = {
+        totalJoinIntents: totalJoinIntents.size,
+        totalAggregateIntents: totalAggregateIntents.size,
+        actualJoins: (sqlResult.fromClause.match(/LEFT JOIN/g) || []).length,
+        subqueries: sqlResult.aggregateSubqueries.length,
+        selectExpressions: sqlResult.selectExpressions.length
+      };
+      
+      const results = queryResult.rows.map(row => {
+        const result = {};
+        Object.keys(row).forEach(key => {
+          result[key] = row[key];
+        });
+        return result;
+      });
+      
+      const outputData = {
+        metadata,
+        results,
+        sql: sqlResult.sql,
+        analysis
+      };
+      
+      const formattedOutput = formatters[outputFormat].format(outputData);
+      console.log(formattedOutput);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    if (error.position !== undefined) {
+      console.error(`   Position: ${error.position}`);
+    }
+    if (error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
+    process.exit(1);
+  }
+}
+
+main(); 

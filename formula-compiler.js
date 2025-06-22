@@ -2009,19 +2009,8 @@ class Compiler {
       }
       
       if (!foundMatch) {
-                 // If we haven't found any relationships yet, this is an unknown single-level relationship
+                 // If we haven't found any relationships yet, this is an unknown inverse relationship
          if (relationshipChain.length === 0) {
-           // For multi-level aggregate context, pattern names should get pattern error
-           // Exception: clearly single-level names like "unknown_relationship" get standard error
-           const parts = relationshipName.split('_');
-           const isLikelyMultiLevelAttempt = parts.length >= 2 && 
-             !relationshipName.startsWith('unknown_') && // Exception for test names starting with "unknown_"
-             !relationshipName.endsWith('_relationship'); // Exception for names ending with "_relationship"
-           
-           if (isLikelyMultiLevelAttempt) {
-             this.error(`Multi-level aggregate relationship must follow pattern: {inverse1}_{inverse2}[_{inverse3}]`, position);
-           }
-           
            const availableRelationships = availableInverseRels.slice(0, 10);
            const suggestionText = availableRelationships.length > 0 
              ? ` Available inverse relationships: ${availableRelationships.join(', ')}${availableInverseRels.length > 10 ? ' (and ' + (availableInverseRels.length - 10) + ' more)' : ''}`
