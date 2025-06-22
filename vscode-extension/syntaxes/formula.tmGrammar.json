@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Formula Language",
+  "scopeName": "source.formula",
+  "fileTypes": [
+    "formula"
+  ],
+  "patterns": [
+    {
+      "name": "comment.line.double-slash.formula",
+      "match": "\\/\\/.*$"
+    },
+    {
+      "name": "comment.block.formula",
+      "begin": "/\\*",
+      "end": "\\*/"
+    },
+    {
+      "name": "string.quoted.double.formula",
+      "match": "\"[^\"]*\""
+    },
+    {
+      "name": "support.function.formula",
+      "match": "\\b(TODAY|ME|DATE|STRING|IF|ISNULL|NULLVALUE|ISBLANK|AND|OR|NOT|ABS|ROUND|MIN|MAX|MOD|CEILING|FLOOR|UPPER|LOWER|TRIM|LEN|LEFT|RIGHT|MID|CONTAINS|SUBSTITUTE|YEAR|MONTH|DAY|WEEKDAY|ADDMONTHS|ADDDAYS|DATEDIF|STRING_AGG|STRING_AGG_DISTINCT|SUM_AGG|COUNT_AGG|AVG_AGG|MIN_AGG|MAX_AGG|AND_AGG|OR_AGG)\\b"
+    },
+    {
+      "name": "constant.language.formula",
+      "match": "\\b(TRUE|FALSE|NULL)\\b"
+    },
+    {
+      "name": "constant.numeric.formula",
+      "match": "\\d+(\\.\\d+)?"
+    },
+    {
+      "name": "keyword.operator.comparison.formula",
+      "match": "(>=|<=|<>|!=|>|<|=)"
+    },
+    {
+      "name": "keyword.operator.arithmetic.formula",
+      "match": "[+\\-*/]"
+    },
+    {
+      "name": "keyword.operator.string.formula",
+      "match": "&"
+    },
+    {
+      "name": "punctuation.parenthesis.formula",
+      "match": "[()]"
+    },
+    {
+      "name": "punctuation.separator.comma.formula",
+      "match": ","
+    },
+    {
+      "name": "punctuation.accessor.dot.formula",
+      "match": "\\."
+    },
+    {
+      "name": "variable.other.formula",
+      "match": "[a-zA-Z_]\\w*"
+    }
+  ]
+}

@@ -1,6 +1,111 @@
 import { TokenType } from './types.js';
 
 /**
+ * Token Definitions with TextMate Grammar Metadata
+ * Used for both lexing and VSCode syntax highlighting generation
+ */
+export const TOKEN_DEFINITIONS = {
+  // Core function names - these are the built-in functions
+  FUNCTIONS: {
+    pattern: /\b(TODAY|ME|DATE|STRING|IF|ISNULL|NULLVALUE|ISBLANK|AND|OR|NOT|ABS|ROUND|MIN|MAX|MOD|CEILING|FLOOR|UPPER|LOWER|TRIM|LEN|LEFT|RIGHT|MID|CONTAINS|SUBSTITUTE|YEAR|MONTH|DAY|WEEKDAY|ADDMONTHS|ADDDAYS|DATEDIF|STRING_AGG|STRING_AGG_DISTINCT|SUM_AGG|COUNT_AGG|AVG_AGG|MIN_AGG|MAX_AGG|AND_AGG|OR_AGG)\b/i,
+    textMateScope: 'support.function.formula',
+    description: 'Built-in formula functions',
+    tokenType: TokenType.IDENTIFIER
+  },
+  
+  // Boolean and null literals
+  LITERALS: {
+    pattern: /\b(TRUE|FALSE|NULL)\b/i,
+    textMateScope: 'constant.language.formula',
+    description: 'Boolean and null literals',
+    tokenType: TokenType.IDENTIFIER
+  },
+  
+  // String literals in double quotes
+  STRING_LITERAL: {
+    pattern: /"[^"]*"/,
+    textMateScope: 'string.quoted.double.formula',
+    description: 'String literals in double quotes',
+    tokenType: TokenType.STRING
+  },
+  
+  // Numeric literals
+  NUMBER: {
+    pattern: /\d+(\.\d+)?/,
+    textMateScope: 'constant.numeric.formula',
+    description: 'Numeric literals',
+    tokenType: TokenType.NUMBER
+  },
+  
+  // Column references and identifiers (catch-all for unknown identifiers)
+  IDENTIFIER: {
+    pattern: /[a-zA-Z_]\w*/,
+    textMateScope: 'variable.other.formula',
+    description: 'Column references and identifiers',
+    tokenType: TokenType.IDENTIFIER
+  },
+  
+  // Operators
+  COMPARISON_OPERATORS: {
+    pattern: /(>=|<=|<>|!=|>|<|=)/,
+    textMateScope: 'keyword.operator.comparison.formula',
+    description: 'Comparison operators',
+    tokenType: 'COMPARISON'
+  },
+  
+  ARITHMETIC_OPERATORS: {
+    pattern: /[+\-*/]/,
+    textMateScope: 'keyword.operator.arithmetic.formula',
+    description: 'Arithmetic operators',
+    tokenType: 'ARITHMETIC'
+  },
+  
+  STRING_OPERATOR: {
+    pattern: /&/,
+    textMateScope: 'keyword.operator.string.formula',
+    description: 'String concatenation operator',
+    tokenType: TokenType.AMPERSAND
+  },
+  
+  // Punctuation
+  PARENTHESES: {
+    pattern: /[()]/,
+    textMateScope: 'punctuation.parenthesis.formula',
+    description: 'Parentheses',
+    tokenType: 'PAREN'
+  },
+  
+  COMMA: {
+    pattern: /,/,
+    textMateScope: 'punctuation.separator.comma.formula',
+    description: 'Comma separator',
+    tokenType: TokenType.COMMA
+  },
+  
+  DOT: {
+    pattern: /\./,
+    textMateScope: 'punctuation.accessor.dot.formula',
+    description: 'Dot notation for relationships',
+    tokenType: TokenType.DOT
+  },
+  
+  // Comments
+  LINE_COMMENT: {
+    pattern: /\/\/.*$/,
+    textMateScope: 'comment.line.double-slash.formula',
+    description: 'Line comment',
+    tokenType: 'COMMENT'
+  },
+  
+  BLOCK_COMMENT: {
+    pattern: /\/\*[\s\S]*?\*\//,
+    textMateScope: 'comment.block.formula',
+    description: 'Block comment',
+    tokenType: 'COMMENT'
+  }
+};
+
+/**
  * Lexer - converts formula string into tokens
  */
 class Lexer {

@@ -1,0 +1,119 @@
+// Formula Language Syntax Highlighting Demo
+// This file demonstrates all the syntax elements supported by the VSCode extension
+
+/* 
+ * Block comment example
+ * Multi-line comments are supported
+ */
+
+// Core functions with different return types
+TODAY()
+ME()
+DATE("2023-03-15")
+STRING(amount)
+
+// Boolean and null literals
+TRUE
+FALSE
+NULL
+
+// Math functions with numeric literals
+ABS(-42.5)
+ROUND(3.14159, 2)
+MIN(100, 200, 300)
+MAX(amount, lender_fee)
+MOD(15, 4)
+CEILING(3.2)
+FLOOR(3.8)
+
+// String functions with string literals
+UPPER("hello world")
+LOWER(merchant_rel.business_name)
+TRIM("  spaces  ")
+LEN("test string")
+LEFT("substring", 3)
+RIGHT("substring", 4)
+MID("middle", 2, 3)
+CONTAINS("search text", "text")
+SUBSTITUTE("old text", "old", "new")
+
+// Date functions
+YEAR(created_at)
+MONTH(TODAY())
+DAY(updated_at)
+WEEKDAY(DATE("2023-01-01"))
+ADDMONTHS(created_at, 6)
+ADDDAYS(TODAY(), -30)
+DATEDIF(created_at, updated_at, "days")
+
+// Logical functions with comparison operators
+AND(amount > 1000, status = "approved")
+OR(priority = "high", amount >= 50000)
+NOT(ISNULL(merchant_rel.business_name))
+
+// Null handling functions
+ISNULL(note)
+NULLVALUE(description, "No description available")
+ISBLANK(comment)
+
+// Aggregate functions with relationship syntax
+STRING_AGG(rep_links_submission, rep_rel.name, ", ")
+STRING_AGG_DISTINCT(rep_links_submission, commission_percentage, " | ")
+SUM_AGG(rep_links_submission, commission_percentage)
+COUNT_AGG(rep_links_submission, id)
+AVG_AGG(rep_links_submission, performance_score)
+MIN_AGG(rep_links_submission, start_date)
+MAX_AGG(rep_links_submission, end_date)
+AND_AGG(rep_links_submission, is_active)
+OR_AGG(rep_links_submission, needs_review)
+
+// Multi-level relationships with dot notation
+merchant_rel.main_rep_rel.app_user_rel.email
+merchant_rel.business_address.city
+customer_rel.contact_info.phone
+
+// Complex expression with all operators
+IF(
+  AND(
+    amount > 5000,
+    status = "approved",
+    NOT(ISNULL(merchant_rel.business_name))
+  ),
+  "HIGH VALUE: " & UPPER(merchant_rel.business_name) & " - $" & STRING(ROUND(amount, 0)),
+  "Standard: " & NULLVALUE(merchant_rel.business_name, "Unknown") & " (" & STRING(amount) & ")"
+)
+
+// Arithmetic with parentheses and precedence
+(amount + lender_fee) * commission_rate / 100
+amount - (processing_fee + (discount * 0.1))
+ROUND((revenue - cost) / revenue * 100, 1)
+
+// String concatenation with various data types
+merchant_rel.first_name & " " & merchant_rel.last_name & 
+" | Amount: $" & STRING(amount) &
+" | Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) &
+" | Status: " & UPPER(status)
+
+// Nested function calls
+STRING(ROUND(ABS(amount - NULLVALUE(previous_amount, 0)), 2))
+UPPER(LEFT(TRIM(NULLVALUE(business_name, "N/A")), 10))
+IF(CONTAINS(LOWER(industry), "tech"), "Technology Sector", "Other Sector")
+
+// Date calculations and comparisons
+DATEDIF(created_at, TODAY(), "days") <= 30
+WEEKDAY(created_at) >= 2 AND WEEKDAY(created_at) <= 6
+YEAR(created_at) = YEAR(TODAY())
+
+// Boolean expressions with multiple conditions
+AND(
+  amount > 10000,
+  DATEDIF(created_at, TODAY(), "days") < 60,
+  OR(
+    priority = "urgent",
+    merchant_rel.tier = "platinum"
+  ),
+  NOT(OR(
+    status = "cancelled",
+    status = "rejected"
+  ))
+)

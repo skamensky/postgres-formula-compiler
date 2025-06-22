@@ -1,0 +1,43 @@
+{
+  "name": "formula-language-support",
+  "displayName": "Formula Language Support",
+  "description": "Syntax highlighting for JavaScript-to-SQL Formula Language (.formula files)",
+  "version": "1.0.0",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "formula",
+        "aliases": [
+          "Formula Language",
+          "formula"
+        ],
+        "extensions": [
+          ".formula"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "formula",
+        "scopeName": "source.formula",
+        "path": "./syntaxes/formula.tmGrammar.json"
+      }
+    ]
+  },
+  "scripts": {
+    "generate-grammar": "node ../scripts/generate-vscode-grammar.js"
+  },
+  "devDependencies": {},
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:formula"
+  ]
+}

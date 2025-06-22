@@ -28,7 +28,8 @@ const testFiles = [
   './relationships.test.js',
   './multi-level-relationships.test.js',
   './aggregate-functions.test.js',
-  './error-handling-basic.test.js'
+  './error-handling-basic.test.js',
+  './vscode-syntax-highlighter.test.js'
   // TODO: Add remaining test files as they are created:
   // './column-references.test.js'
 ];

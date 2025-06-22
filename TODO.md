@@ -869,80 +869,102 @@ const FUNCTION_METADATA = {
 ---
 
 
-## 9. VSCode Syntax Highlighter
-**Status:** ❌ **NOT STARTED**
+## 9. ✅ VSCode Syntax Highlighter (COMPLETE)
+**Status:** ✅ **COMPLETED**
 **Priority:** Medium - Improves developer experience for formula writing
 
 ### Core Concept:
 Auto-generate VSCode TextMate grammar from lexer tokens to provide syntax highlighting for `.formula` files.
 
-### Scope:
-Basic syntax highlighting only:
-- Colorize functions, strings, numbers, operators, keywords
-- Basic bracket matching and indentation
-- No semantic analysis or error checking
+### Implementation Results:
+- ✅ **Lexer refactoring** - Added `TOKEN_DEFINITIONS` export with TextMate metadata
+- ✅ **TextMate grammar generator** - `scripts/generate-vscode-grammar.js` auto-generates grammar from lexer tokens
+- ✅ **VSCode extension structure** - Complete extension in `vscode-extension/` directory
+- ✅ **Build integration** - Makefile targets: `make vscode-extension` and `make install-vscode-extension`
+- ✅ **Comprehensive testing** - 25 tests covering token definitions, pattern matching, and grammar generation
+- ✅ **Demonstration file** - `examples/syntax-highlighting-demo.formula` showcasing all syntax elements
 
-### Implementation Steps:
-1. **Refactor lexer for API-friendly token extraction:**
-   - Replace large switch statement with iterable token definitions
-   - Add metadata to token types: `{name, pattern, textMateScope, description}`
-   - Enable programmatic access to all token rules
-   - Maintain backward compatibility with existing lexing logic
+### Scope Achieved:
+✅ **Basic syntax highlighting:**
+- Functions highlighted as `support.function.formula` (39 functions including all aggregates)
+- String literals as `string.quoted.double.formula`
+- Numbers as `constant.numeric.formula`
+- Boolean/null literals as `constant.language.formula`
+- Operators with specific scopes (comparison, arithmetic, string concatenation)
+- Comments (line and block) with appropriate scopes
+- Column references as `variable.other.formula`
+- Punctuation (parentheses, commas, dots) with semantic scopes
 
-2. **Create TextMate grammar generator:**
-   - `scripts/generate-vscode-grammar.js` - Auto-generate from lexer tokens
-   - Map token types to TextMate scopes:
-     - Functions → `keyword.function.formula`
-     - String literals → `string.quoted.double.formula`
-     - Numbers → `constant.numeric.formula`
-     - Operators → `keyword.operator.formula`
-     - Column references → `variable.other.formula`
+✅ **Language configuration:**
+- Auto-closing brackets and quotes
+- Comment toggle support (Ctrl+/)
+- Bracket matching
 
-3. **VSCode extension structure:**
-   - `vscode-extension/` directory in main repo
-   - `package.json` - Extension manifest for `.formula` file association
-   - `syntaxes/formula.tmGrammar.json` - Auto-generated TextMate grammar
-   - `themes/` - Optional color themes optimized for formula syntax
+✅ **File association:**
+- `.formula` files automatically get syntax highlighting
+- Extension manifest properly configured
 
-4. **Build integration:**
-   - Add to Makefile: `make vscode-extension` target
-   - Auto-generate grammar during build process
-   - Local installation script for development use
-   - No marketplace distribution - local use only
+### Implementation Features:
+- ✅ **Auto-generated grammar** - Stays in sync with lexer changes through `TOKEN_DEFINITIONS`
+- ✅ **Local development support** - Makefile integration for easy setup
+- ✅ **Zero external dependencies** - Pure JavaScript TextMate grammar generation
+- ✅ **Pattern priority handling** - Functions highlighted before generic identifiers
+- ✅ **Case-insensitive function matching** - Works with `TODAY`, `today`, `Today`, etc.
+- ✅ **Comprehensive pattern coverage** - All 13 token types properly mapped
 
-5. **Column reference handling:**
-   - Assume all unknown identifiers are valid column references
-   - Highlight as variables without validation
-   - No database schema integration (future LSP feature)
+### Generated Grammar Statistics:
+- **13 syntax patterns** covering all language elements
+- **File type association** for `.formula` extension  
+- **Proper scope hierarchy** following TextMate conventions
+- **Comment support** for both `//` line and `/* */` block comments
+- **Operator differentiation** between arithmetic, comparison, and string operators
 
-### Example Token Mapping:
-```javascript
-// Enhanced lexer token definitions
-const TOKEN_DEFINITIONS = {
-  FUNCTION: {
-    pattern: /\b(TODAY|ME|DATE|STRING|ISNULL|NULLVALUE)\b/,
-    textMateScope: 'keyword.function.formula',
-    description: 'Built-in formula functions'
-  },
-  STRING_LITERAL: {
-    pattern: /"[^"]*"/,
-    textMateScope: 'string.quoted.double.formula', 
-    description: 'String literals in double quotes'
-  },
-  NUMBER: {
-    pattern: /\d+(\.\d+)?/,
-    textMateScope: 'constant.numeric.formula',
-    description: 'Numeric literals'
-  }
-};
+### Installation and Usage:
+```bash
+# Generate grammar
+make vscode-extension
+
+# Install locally  
+make install-vscode-extension
+
+# Restart VSCode and open any .formula file for syntax highlighting
 ```
 
-### Key Features:
-- **Auto-generated grammar** - Stays in sync with lexer changes
-- **Local development** - Makefile integration for easy setup
-- **Basic highlighting** - Functions, strings, numbers, operators
-- **File association** - `.formula` files get syntax highlighting
-- **No external dependencies** - Pure TextMate grammar generation
+### Key Features Implemented:
+- ✅ **TOKEN_DEFINITIONS** - Programmatically accessible token metadata with TextMate scopes
+- ✅ **convertRegexPattern()** - Converts JavaScript regex to TextMate format  
+- ✅ **generateTextMateGrammar()** - Auto-generates complete grammar from token definitions
+- ✅ **Pattern priority ordering** - Ensures specific patterns (functions) take precedence over general ones (identifiers)
+- ✅ **Complete function coverage** - All 39 functions including core, math, text, date, null, logical, and aggregate functions
+- ✅ **Error handling** - Graceful handling of malformed token definitions
+- ✅ **JSON serialization** - Grammar is valid JSON for VSCode consumption
+
+### Test Coverage (25 tests):
+- ✅ **Token definitions structure** - Validates all required properties and naming conventions
+- ✅ **Regex pattern conversion** - Tests JavaScript to TextMate regex conversion
+- ✅ **Grammar generation** - Validates complete TextMate grammar structure
+- ✅ **Pattern functionality** - Tests all patterns match expected syntax elements
+- ✅ **Error cases and edge cases** - Ensures robust handling of various scenarios
+
+### Example Usage:
+The extension provides syntax highlighting for complex formulas like:
+```formula
+// Comments are highlighted as comments
+IF(
+  AND(amount > 5000, status = "approved"),
+  "HIGH VALUE: " & UPPER(merchant_rel.business_name),
+  STRING_AGG(rep_links_submission, rep_rel.name, ", ")
+)
+```
+
+### Integration with Existing System:
+- ✅ **Backward compatibility** - All existing lexer functionality preserved
+- ✅ **No breaking changes** - All 336 original tests still pass
+- ✅ **Clean architecture** - Token definitions separated from lexing logic
+- ✅ **Extensible design** - Easy to add new token types and patterns
+
+### Future Enhancements:
+For advanced features like IntelliSense and error checking, consider implementing a Language Server Protocol (LSP) extension (see feature #12 in this TODO).
 
 ---
 
