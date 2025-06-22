@@ -1,4 +1,5 @@
 import { NodeType } from './types.js';
+import { compileRelationshipRef } from './relationship-compiler.js';
 
 /**
  * Intent-based Formula Compiler
@@ -178,7 +179,7 @@ class Compiler {
         return this.compileFunction(node);
 
       case NodeType.RELATIONSHIP_REF:
-        return this.compileRelationshipRef(node);
+        return compileRelationshipRef(this, node);
 
       default:
         this.error(`Unknown node type: ${node.type}`, node.position);
@@ -294,183 +295,7 @@ class Compiler {
     };
   }
 
-  compileRelationshipRef(node) {
-    // Handle both single-level (backward compatibility) and multi-level relationships
-    const relationshipChain = node.relationshipChain || [node.relationName];
-    
-    if (relationshipChain.length > this.maxRelationshipDepth) {
-      this.error(`Relationship chain too deep (max ${this.maxRelationshipDepth} levels): ${relationshipChain.join('.')}.${node.fieldName}`, node.position);
-    }
-    
-    return this.compileMultiLevelRelationship(relationshipChain, node.fieldName, node.position);
-  }
 
-  /**
-   * Compile multi-level relationship chains
-   * @param {Array<string>} relationshipChain - Array of relationship names
-   * @param {string} fieldName - Final field name to access
-   * @param {number} position - Position for error reporting
-   * @returns {Object} Compiled relationship reference
-   */
-  compileMultiLevelRelationship(relationshipChain, fieldName, position) {
-    let currentTable = this.tableName;
-    const allJoinSemanticIds = [];
-    const joinIntents = [];
-    
-    // Build a lookup map of relationships for efficient access
-    const relationshipLookup = new Map();
-    if (this.context.relationshipInfos) {
-      for (const rel of this.context.relationshipInfos) {
-        const key = `${rel.fromTable}:${rel.name}`;
-        relationshipLookup.set(key, rel);
-      }
-    }
-    
-    // Build a lookup map of table infos for efficient access
-    const tableLookup = new Map();
-    if (this.context.tableInfos) {
-      for (const table of this.context.tableInfos) {
-        tableLookup.set(table.tableName, table);
-      }
-    }
-    
-    // Validate and traverse the relationship chain
-    for (let i = 0; i < relationshipChain.length; i++) {
-      const relationName = relationshipChain[i];
-      const lookupKey = `${currentTable}:${relationName}`;
-      
-      // Check if relationship exists from current table
-      const relInfo = relationshipLookup.get(lookupKey);
-      if (!relInfo) {
-        // Get available relationships for current table for error message
-        const availableRelationships = Array.from(relationshipLookup.keys())
-          .filter(key => key.startsWith(`${currentTable}:`))
-          .map(key => key.split(':')[1])
-          .slice(0, 10);
-        const suggestionText = availableRelationships.length > 0 
-          ? ` Available relationships from ${currentTable}: ${availableRelationships.join(', ')}`
-          : ` No relationships available from ${currentTable}`;
-        const chainSoFar = relationshipChain.slice(0, i + 1).join('.');
-        this.error(`Unknown relationship: ${chainSoFar}.${suggestionText}`, position);
-      }
-      
-      const targetTable = relInfo.toTable;
-      
-      // Generate join semantic ID for this level
-      const joinSemanticId = this.generateMultiLevelJoinSemanticId(
-        this.tableName, 
-        relationshipChain.slice(0, i + 1), 
-        relInfo.joinColumn
-      );
-      
-      // Create join intent for this relationship level
-      const joinIntent = {
-        relationshipType: 'direct_relationship',
-        sourceTable: currentTable,
-        targetTable: targetTable,
-        joinField: relInfo.joinColumn,
-        semanticId: joinSemanticId,
-        compilationContext: this.compilationContext,
-        relationshipChain: relationshipChain.slice(0, i + 1) // Track the chain up to this point
-      };
-      
-      // Track join intent (deduplicated by semanticId)
-      if (!this.joinIntents.has(joinSemanticId)) {
-        this.joinIntents.set(joinSemanticId, joinIntent);
-      }
-      
-      allJoinSemanticIds.push(joinSemanticId);
-      joinIntents.push(joinIntent);
-      
-      // Update current table for next iteration
-      currentTable = targetTable;
-    }
-    
-    // Validate final field exists in the target table
-    const finalTableInfo = tableLookup.get(currentTable);
-    if (!finalTableInfo) {
-      // If using old format, fall back to checking relationshipInfo
-      if (this.context.relationshipInfo) {
-        // Try to find the field type through old relationship traversal
-        const fieldType = this.getFieldTypeFromOldFormat(relationshipChain, fieldName);
-        if (fieldType) {
-          // Generate semantic ID for backward compatibility
-          const relationshipRefSemanticId = this.generateSemanticId(
-            'multi_relationship_ref', 
-            `${relationshipChain.join('.')}.${fieldName}`, 
-            allJoinSemanticIds
-          );
-          
-          return {
-            type: 'RELATIONSHIP_REF',
-            semanticId: relationshipRefSemanticId,
-            dependentJoins: allJoinSemanticIds,
-            returnType: fieldType,
-            compilationContext: this.compilationContext,
-            value: { 
-              relationshipChain: relationshipChain,
-              fieldName: fieldName.toLowerCase(),
-              finalTable: currentTable
-            }
-          };
-        }
-      }
-      this.error(`Unknown target table: ${currentTable}`, position);
-    }
-    
-    const fieldType = finalTableInfo.columnList[fieldName.toLowerCase()];
-    if (!fieldType) {
-      const availableFields = Object.keys(finalTableInfo.columnList).slice(0, 10);
-      const suggestionText = availableFields.length > 0 
-        ? ` Available fields: ${availableFields.join(', ')}`
-        : '';
-      const fullChain = relationshipChain.join('.') + '.' + fieldName;
-      this.error(`Unknown field ${fieldName} in relationship chain ${fullChain}.${suggestionText}`, position);
-    }
-    
-    // Generate semantic ID for the entire relationship reference
-    const relationshipRefSemanticId = this.generateSemanticId(
-      'multi_relationship_ref', 
-      `${relationshipChain.join('.')}.${fieldName}`, 
-      allJoinSemanticIds
-    );
-    
-    return {
-      type: 'RELATIONSHIP_REF',
-      semanticId: relationshipRefSemanticId,
-      dependentJoins: allJoinSemanticIds,
-      returnType: fieldType,
-      compilationContext: this.compilationContext,
-      value: { 
-        relationshipChain: relationshipChain,
-        fieldName: fieldName.toLowerCase(),
-        finalTable: currentTable
-      }
-    };
-  }
-
-  /**
-   * Generate semantic ID for multi-level join intent
-   * @param {string} baseTable - Base table name
-   * @param {Array<string>} chainSoFar - Relationship chain up to this point
-   * @param {string} joinField - Join field for this level
-   * @returns {string} Semantic ID for this join level
-   */
-  generateMultiLevelJoinSemanticId(baseTable, chainSoFar, joinField) {
-    const chainPath = chainSoFar.join('→');
-    return `direct:${baseTable}→${chainPath}[${joinField}]@${this.compilationContext}`;
-  }
-
-  /**
-   * Generate semantic ID for join intent
-   */
-  generateJoinSemanticId(relationshipType, sourceTable, targetTable, joinField) {
-    if (relationshipType === 'direct_relationship') {
-      return `direct:${sourceTable}→${targetTable}[${joinField}]@${this.compilationContext}`;
-    } else {
-      return `inverse:${sourceTable}←${targetTable}[${joinField}]@${this.compilationContext}`;
-    }
-  }
 
   getJoinIntents() {
     return Array.from(this.joinIntents.values());
@@ -480,36 +305,7 @@ class Compiler {
     return Array.from(this.aggregateIntents.values());
   }
 
-  /**
-   * Get field type from old nested relationship format (fallback)
-   * @param {Array<string>} relationshipChain - Chain of relationship names
-   * @param {string} fieldName - Final field name
-   * @returns {string|null} Field type or null if not found
-   */
-  getFieldTypeFromOldFormat(relationshipChain, fieldName) {
-    let currentRelationshipInfo = this.context.relationshipInfo;
-    
-    // Traverse the relationship chain using old format
-    for (let i = 0; i < relationshipChain.length; i++) {
-      const relationName = relationshipChain[i];
-      
-      if (!currentRelationshipInfo || !currentRelationshipInfo[relationName]) {
-        return null; // Relationship not found
-      }
-      
-      const relInfo = currentRelationshipInfo[relationName];
-      
-      if (i === relationshipChain.length - 1) {
-        // Last relationship in chain - check for field in target table
-        return relInfo.columnList ? relInfo.columnList[fieldName.toLowerCase()] : null;
-      } else {
-        // Continue traversing - move to nested relationships
-        currentRelationshipInfo = relInfo.relationshipInfo || {};
-      }
-    }
-    
-    return null;
-  }
+
 }
 
 // Export for ES modules
