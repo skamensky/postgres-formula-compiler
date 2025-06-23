@@ -19,6 +19,7 @@
         <div class="main-content">
             <div class="tabs">
                 <button class="tab active" data-tab="compiler">Formula Compiler</button>
+                <button class="tab" data-tab="reports">Report Builder</button>
                 <button class="tab" data-tab="examples">Examples</button>
                 <button class="tab" data-tab="schema">Schema</button>
             </div>
@@ -58,6 +59,50 @@
                     <label>Recent Formulas:</label>
                     <div id="recentFormulas">
                         <p class="loading">No recent formulas yet</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Report Builder Tab -->
+            <div id="reports" class="tab-content">
+                <h3>Report Builder</h3>
+                <p>Build multi-formula reports that combine multiple calculations into a single query:</p>
+                
+                <div class="form-group">
+                    <label for="reportTableSelect">Select Table:</label>
+                    <select id="reportTableSelect">
+                        <option value="">Loading tables...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="reportName">Report Name:</label>
+                    <input type="text" id="reportName" placeholder="Enter report name (e.g., 'Customer Analysis Report')" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Formulas:</label>
+                    <div id="formulaBuilder" class="formula-builder">
+                        <!-- Formula rows will be added here dynamically -->
+                    </div>
+                    <div class="button-group">
+                        <button id="addFormulaBtn" class="btn btn-secondary">+ Add Formula</button>
+                        <button id="loadExampleReportBtn" class="btn btn-outline">Load Example Report</button>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="executeReportBtn" class="btn btn-primary">Generate Report</button>
+                    <button id="clearReportBtn" class="btn btn-secondary">Clear All</button>
+                    <button id="saveReportBtn" class="btn btn-outline">Save Report</button>
+                </div>
+                
+                <div id="reportResults"></div>
+                
+                <div class="form-group" style="margin-top: 30px;">
+                    <label>Saved Reports:</label>
+                    <div id="savedReports">
+                        <p class="loading">No saved reports yet</p>
                     </div>
                 </div>
             </div>

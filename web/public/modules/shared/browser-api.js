@@ -216,79 +216,82 @@ export async function initializeBrowserAPI() {
 export async function executeFormula(formula, tableName) {
     try {
         if (!dbClient) {
-            throw new Error('Database not initialized - call initializeBrowserAPI() first');
+            throw new Error('Database not initialized');
         }
         
-        // Get context using the same logic as server
-        const allTableNames = await getTableNames(dbClient);
-        const columnLists = await getColumnListsForTables(allTableNames, dbClient);
-        const allRelationships = await getAllRelationships(dbClient);
+        console.log(`🔧 Executing formula: ${formula}`);
         
-        // Build relationship context - recursively load all relationship targets
-        const allTableNamesForContext = new Set([tableName]);
-        const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
-        
-        console.log(`🔍 [Browser API] Direct relationships from ${tableName}:`, directRels.map(r => `${r.name} → ${r.toTable}`));
-        
-        // Add direct relationship targets
-        for (const rel of directRels) {
-            allTableNamesForContext.add(rel.toTable);
-        }
-        
-        // RECURSIVELY add second-level relationship targets (for multi-level relationships)
-        const secondLevelTables = [...allTableNamesForContext];
-        for (const targetTable of secondLevelTables) {
-            if (targetTable !== tableName) { // Skip the original table to avoid cycles
-                const secondLevelRels = allRelationships.filter(rel => rel.fromTable === targetTable);
-                console.log(`🔍 [Browser API] Second-level relationships from ${targetTable}:`, secondLevelRels.map(r => `${r.name} → ${r.toTable}`));
-                for (const rel of secondLevelRels) {
-                    allTableNamesForContext.add(rel.toTable);
+        // Use cached schema if available and table matches
+        if (!currentSchema || currentSchema.tableName !== tableName) {
+            console.log(`📋 Loading schema for table: ${tableName}`);
+            
+            // Get all table information for relationship support
+            const tableNames = await getTableNames(dbClient);
+            const tableInfos = [];
+            
+            for (const table of tableNames) {
+                const columns = await getTableColumns(dbClient, table);
+                tableInfos.push({
+                    tableName: table,
+                    columnList: columns
+                });
+            }
+            
+            // Create column lists mapping
+            const columnLists = {};
+            tableInfos.forEach(info => {
+                columnLists[info.tableName] = info.columnList;
+            });
+            
+            // Get all relationships for advanced relationship support
+            const allRelationships = await getAllRelationships(dbClient);
+            const allInverseRelationships = await getInverseRelationshipsForTables(tableNames, dbClient);
+            
+            // Build relationship mappings for the current table
+            const relationshipInfo = {};
+            const inverseRelationshipInfo = {};
+            
+            // Direct relationships (what the current table points to)
+            const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+            for (const rel of directRelationships) {
+                const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+                if (targetTable) {
+                    relationshipInfo[rel.name] = {
+                        joinColumn: rel.joinColumn,
+                        columnList: targetTable.columnList
+                    };
                 }
             }
-        }
-        
-        console.log(`🔍 [Browser API] Tables available in database:`, allTableNames);
-        console.log(`🔍 [Browser API] Tables needed for context:`, [...allTableNamesForContext]);
-        
-        const tablesToLoadInverseRels = new Set([tableName]);
-        const directInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
-        for (const rel of directInverseRels) {
-            tablesToLoadInverseRels.add(rel.fromTable);
-        }
-        
-        const allInverseRelationships = await getInverseRelationshipsForTables([...tablesToLoadInverseRels], dbClient);
-        const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
-        
-        // Build table infos for ALL tables in context (including multi-level)
-        const tableInfos = [{
-            tableName: tableName,
-            columnList: columnLists[tableName]
-        }];
-        
-        // Add all tables from the expanded context
-        for (const contextTableName of allTableNamesForContext) {
-            if (contextTableName !== tableName) { // Skip the main table (already added)
-                if (columnLists[contextTableName]) {
-                    tableInfos.push({
-                        tableName: contextTableName,
-                        columnList: columnLists[contextTableName]
-                    });
-                    console.log(`✅ [Browser API] Loaded table info for ${contextTableName} (${Object.keys(columnLists[contextTableName]).length} columns)`);
-                } else {
-                    const errorMsg = `❌ Table '${contextTableName}' needed for relationships was not found in the database.`;
-                    console.error(errorMsg);
-                    console.error(`   Available tables: ${allTableNames.join(', ')}`);
-                    console.error(`   Tables with column data: ${Object.keys(columnLists).join(', ')}`);
-                    throw new Error(errorMsg);
+            
+            // Inverse relationships (what points to the current table)
+            const inverseRelationships = allInverseRelationships.filter(rel => rel.targetTable === tableName);
+            for (const rel of inverseRelationships) {
+                const sourceTable = tableInfos.find(t => t.tableName === rel.sourceTable);
+                if (sourceTable) {
+                    inverseRelationshipInfo[rel.name] = {
+                        joinColumn: rel.joinColumn,
+                        columnList: sourceTable.columnList
+                    };
                 }
             }
+            
+            // Cache the complete schema
+            currentSchema = {
+                tableName: tableName,
+                tableInfos: tableInfos,
+                columnLists: columnLists,
+                relationshipInfos: allRelationships,
+                columnList: columnLists[tableName],
+                relationshipInfo: relationshipInfo,
+                inverseRelationshipInfo: inverseRelationshipInfo,
+                allInverseRelationships: allInverseRelationships
+            };
         }
-        
-        // Build relationship info for backward compatibility
-        const relationshipInfo = {};
-        const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+
+        // Use the cached schema for relationship info
+        const directRelationships = currentSchema.relationshipInfos.filter(rel => rel.fromTable === tableName);
         for (const rel of directRelationships) {
-            const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+            const targetTable = currentSchema.tableInfos.find(t => t.tableName === rel.toTable);
             if (targetTable) {
                 relationshipInfo[rel.name] = {
                     joinColumn: rel.joinColumn,
@@ -300,12 +303,12 @@ export async function executeFormula(formula, tableName) {
         // Build complete context
         const context = {
             tableName: tableName,
-            tableInfos: tableInfos,
-            relationshipInfos: allRelationships,
-            columnList: columnLists[tableName],
-            relationshipInfo: relationshipInfo,
-            inverseRelationshipInfo: inverseRelationshipInfo,
-            allInverseRelationships: allInverseRelationships
+            tableInfos: currentSchema.tableInfos,
+            relationshipInfos: currentSchema.relationshipInfos,
+            columnList: currentSchema.columnLists[tableName],
+            relationshipInfo: currentSchema.relationshipInfo,
+            inverseRelationshipInfo: currentSchema.inverseRelationshipInfo,
+            allInverseRelationships: currentSchema.allInverseRelationships
         };
         
         // Compile formula
@@ -344,6 +347,190 @@ export async function executeFormula(formula, tableName) {
             success: false,
             error: error.message || error.toString(),
             formula: formula
+        };
+    }
+}
+
+/**
+ * Execute multiple formulas and combine them into a single report
+ * @param {Array<{name: string, formula: string}>} formulas - Array of named formulas
+ * @param {string} tableName - Base table name
+ * @returns {Promise<Object>} Combined execution result
+ */
+export async function executeMultipleFormulas(formulas, tableName) {
+    try {
+        if (!dbClient) {
+            throw new Error('Database not initialized');
+        }
+        
+        if (!formulas || formulas.length === 0) {
+            throw new Error('No formulas provided');
+        }
+        
+        console.log(`🔧 Executing ${formulas.length} formulas for table: ${tableName}`);
+        
+        // Use cached schema or load if needed
+        if (!currentSchema || currentSchema.tableName !== tableName) {
+            console.log(`📋 Loading schema for table: ${tableName}`);
+            
+            // Get all table information for relationship support
+            const tableNames = await getTableNames(dbClient);
+            const tableInfos = [];
+            
+            for (const table of tableNames) {
+                const columns = await getTableColumns(dbClient, table);
+                tableInfos.push({
+                    tableName: table,
+                    columnList: columns
+                });
+            }
+            
+            // Create column lists mapping
+            const columnLists = {};
+            tableInfos.forEach(info => {
+                columnLists[info.tableName] = info.columnList;
+            });
+            
+            // Get all relationships for advanced relationship support
+            const allRelationships = await getAllRelationships(dbClient);
+            const allInverseRelationships = await getInverseRelationshipsForTables(tableNames, dbClient);
+            
+            // Build relationship mappings for the current table
+            const relationshipInfo = {};
+            const inverseRelationshipInfo = {};
+            
+            // Direct relationships (what the current table points to)
+            const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+            for (const rel of directRelationships) {
+                const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+                if (targetTable) {
+                    relationshipInfo[rel.name] = {
+                        joinColumn: rel.joinColumn,
+                        columnList: targetTable.columnList
+                    };
+                }
+            }
+            
+            // Inverse relationships (what points to the current table)
+            const inverseRelationships = allInverseRelationships.filter(rel => rel.targetTable === tableName);
+            for (const rel of inverseRelationships) {
+                const sourceTable = tableInfos.find(t => t.tableName === rel.sourceTable);
+                if (sourceTable) {
+                    inverseRelationshipInfo[rel.name] = {
+                        joinColumn: rel.joinColumn,
+                        columnList: sourceTable.columnList
+                    };
+                }
+            }
+            
+            // Cache the complete schema
+            currentSchema = {
+                tableName: tableName,
+                tableInfos: tableInfos,
+                columnLists: columnLists,
+                relationshipInfos: allRelationships,
+                columnList: columnLists[tableName],
+                relationshipInfo: relationshipInfo,
+                inverseRelationshipInfo: inverseRelationshipInfo,
+                allInverseRelationships: allInverseRelationships
+            };
+        }
+        
+        // Build complete context
+        const context = {
+            tableName: tableName,
+            tableInfos: currentSchema.tableInfos,
+            relationshipInfos: currentSchema.relationshipInfos,
+            columnList: currentSchema.columnLists[tableName],
+            relationshipInfo: currentSchema.relationshipInfo,
+            inverseRelationshipInfo: currentSchema.inverseRelationshipInfo,
+            allInverseRelationships: currentSchema.allInverseRelationships
+        };
+        
+        // Compile all formulas
+        const namedResults = {};
+        const compilationResults = [];
+        const errors = [];
+        
+        for (const { name, formula } of formulas) {
+            console.log(`📝 Compiling formula '${name}': ${formula}`);
+            
+            const compilation = evaluateFormula(formula, context);
+            
+            if (compilation.error) {
+                errors.push({
+                    name: name,
+                    formula: formula,
+                    error: compilation.error
+                });
+            } else {
+                // Use the name as the field name, sanitizing it for SQL
+                const fieldName = name.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
+                namedResults[fieldName] = compilation;
+                compilationResults.push({
+                    name: name,
+                    fieldName: fieldName,
+                    formula: formula,
+                    compilation: compilation
+                });
+            }
+        }
+        
+        // If there are any compilation errors, return them
+        if (errors.length > 0) {
+            return {
+                success: false,
+                error: `Formula compilation errors: ${errors.map(e => `${e.name}: ${e.error}`).join('; ')}`,
+                formulas: formulas,
+                errors: errors
+            };
+        }
+        
+        // Generate optimized SQL with deduplication
+        console.log(`🔧 Generating optimized SQL for ${Object.keys(namedResults).length} formulas...`);
+        const sqlResult = generateSQL(namedResults, tableName);
+        
+        // Execute the combined SQL
+        console.log(`🚀 Executing combined SQL query...`);
+        const result = await dbClient.query(sqlResult.sql);
+        
+        // Calculate metadata for analysis
+        const totalJoinIntents = new Set();
+        const totalAggregateIntents = new Set();
+        
+        compilationResults.forEach(compResult => {
+            compResult.compilation.joinIntents.forEach(join => totalJoinIntents.add(join.semanticId));
+            compResult.compilation.aggregateIntents.forEach(agg => {
+                totalAggregateIntents.add(agg.semanticId);
+                agg.internalJoins.forEach(join => totalJoinIntents.add(join.semanticId));
+            });
+        });
+        
+        return {
+            success: true,
+            formulas: compilationResults.map(cr => ({
+                name: cr.name,
+                fieldName: cr.fieldName,
+                formula: cr.formula
+            })),
+            sql: sqlResult.sql,
+            results: result.rows,
+            metadata: {
+                formulaCount: formulas.length,
+                totalJoinIntents: totalJoinIntents.size,
+                totalAggregateIntents: totalAggregateIntents.size,
+                actualJoins: (sqlResult.fromClause.match(/LEFT JOIN/g) || []).length,
+                subqueries: sqlResult.aggregateSubqueries.length,
+                selectExpressions: sqlResult.selectExpressions.length
+            }
+        };
+        
+    } catch (error) {
+        console.error('Multi-formula execution error:', error);
+        return {
+            success: false,
+            error: error.message || error.toString(),
+            formulas: formulas
         };
     }
 }

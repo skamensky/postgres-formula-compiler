@@ -462,6 +462,14 @@ textarea {
 }
 
 /* Report Builder Styles */
+.formula-builder {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f8f9fa;
+}
+
 .formula-row {
     display: grid;
     grid-template-columns: 200px 1fr 40px;
@@ -471,17 +479,20 @@ textarea {
 }
 
 .formula-name {
-    padding: 8px;
+    padding: 8px 12px;
     border: 2px solid #e9ecef;
     border-radius: 6px;
+    font-weight: 500;
 }
 
 .formula-input {
-    padding: 8px;
+    padding: 8px 12px;
     border: 2px solid #e9ecef;
     border-radius: 6px;
     resize: vertical;
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9rem;
+    min-height: 40px;
 }
 
 .formula-input.error {
@@ -499,49 +510,68 @@ textarea {
     color: white;
     border: none;
     border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+    font-weight: bold;
     cursor: pointer;
-    font-size: 14px;
-    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
 }
 
 .btn-remove:hover {
     background: #c82333;
+    transform: scale(1.1);
 }
 
-/* Error tooltip */
 .error-tooltip {
-    position: absolute;
-    background: #dc3545;
+    position: relative;
+    display: inline-block;
+}
+
+.error-tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #dc3545;
     color: white;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    z-index: 1000;
-    max-width: 300px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 .error-tooltip::before {
-    content: '';
+    content: "";
     position: absolute;
-    top: -4px;
-    left: 10px;
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-bottom: 4px solid #dc3545;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #dc3545 transparent transparent transparent;
 }
 
-/* Recent formulas */
+.error-tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
 .recent-item {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 6px;
-    padding: 12px;
+    padding: 10px;
     margin: 8px 0;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .recent-item:hover {
@@ -551,79 +581,81 @@ textarea {
 
 .recent-formula {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #495057;
-    margin: 4px 0;
+    margin-bottom: 4px;
 }
 
 .recent-meta {
     font-size: 0.8rem;
     color: #6c757d;
-    display: flex;
-    justify-content: space-between;
 }
 
-/* Clickable relationships */
+.formula-preview {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.85rem;
+    color: #495057;
+    margin-top: 4px;
+}
+
 .relationship-link {
-    color: #007bff;
+    color: #667eea;
+    text-decoration: none;
     cursor: pointer;
-    text-decoration: underline;
 }
 
 .relationship-link:hover {
-    color: #0056b3;
+    text-decoration: underline;
 }
 
 .relationship-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    margin: 2px;
-    background: #e7f3ff;
-    border: 1px solid #b8daff;
+    background: #e9ecef;
+    border: 1px solid #dee2e6;
     border-radius: 12px;
+    padding: 4px 8px;
     font-size: 0.8rem;
+    color: #495057;
+    margin: 2px;
+    display: inline-block;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .relationship-badge:hover {
-    background: #cce7ff;
+    background: #667eea;
+    color: white;
     transform: translateY(-1px);
 }
 
 .relationship-badge.reverse {
     background: #fff3cd;
     border-color: #ffeaa7;
+    color: #856404;
 }
 
 .relationship-badge.reverse:hover {
-    background: #ffe8a1;
+    background: #ffc107;
+    color: #212529;
 }
 
-/* Clickable table names in schema viewer */
 .clickable-table {
     color: #667eea;
     cursor: pointer;
-    font-weight: 600;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
     text-decoration: none;
-    border: 1px solid transparent;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
 .clickable-table:hover {
-    background: #f0f4ff;
-    border-color: #667eea;
-    color: #5a67d8;
+    background: #e3f2fd;
     text-decoration: underline;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.15);
 }
 
 .clickable-table:active {
-    transform: translateY(0px);
-    box-shadow: 0 1px 2px rgba(102, 126, 234, 0.2);
+    transform: translateY(0);
+    background: #bbdefb;
 }
 
 /* Database tab styles */

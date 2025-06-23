@@ -3,7 +3,7 @@
  * Uses client-side modules for all processing - no server APIs needed!
  */
 
-import { initializeBrowserAPI, executeFormula, getTables, getTableSchema, validateFormula, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
+import { initializeBrowserAPI, executeFormula, executeMultipleFormulas, getTables, getTableSchema, validateFormula, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
 import { getExamplesForTable, getAllExamples, getExampleStats } from './modules/shared/examples.js';
 
 // =============================================================================
@@ -261,10 +261,11 @@ async function loadTables() {
 }
 
 function populateTableSelectors() {
-    const selectors = ['tableSelect', 'schemaTableSelect'];
+    const selectors = ['tableSelect', 'schemaTableSelect', 'reportTableSelect'];
     const options = {
         tableSelect: 'Select a table...',
-        schemaTableSelect: 'Choose a table to view its schema'
+        schemaTableSelect: 'Choose a table to view its schema',
+        reportTableSelect: 'Select a table for the report...'
     };
     
     selectors.forEach(selectorId => {
@@ -537,66 +538,488 @@ const FormulaCompiler = {
 
 const RecentFormulas = {
     save(formula, tableName) {
-        const recent = this.load();
-        const newEntry = {
+        const item = {
             id: Utils.generateUniqueId(),
             formula: formula,
             tableName: tableName,
-            timestamp: new Date().toISOString()
+            timestamp: Date.now()
         };
         
-        // Remove duplicates and add to front
-        const filtered = recent.filter(item => 
-            item.formula !== formula || item.tableName !== tableName
-        );
-        const updated = [newEntry, ...filtered].slice(0, 10); // Keep only 10
+        // Load existing items
+        const existing = this.load();
+        existing.unshift(item);
         
-        localStorage.setItem(CONFIG.RECENT_FORMULAS_KEY, JSON.stringify(updated));
+        // Keep only the most recent items
+        const maxItems = 10;
+        const trimmed = existing.slice(0, maxItems);
+        
+        // Save back to localStorage
+        localStorage.setItem(CONFIG.RECENT_FORMULAS_KEY, JSON.stringify(trimmed));
+        
+        // Re-render
         this.render();
     },
-
+    
     load() {
         try {
-            const stored = localStorage.getItem(CONFIG.RECENT_FORMULAS_KEY);
-            return stored ? JSON.parse(stored) : [];
-        } catch (error) {
+            return JSON.parse(localStorage.getItem(CONFIG.RECENT_FORMULAS_KEY) || '[]');
+        } catch (e) {
             return [];
         }
     },
-
+    
     render() {
         const container = document.getElementById('recentFormulas');
         if (!container) return;
         
-        const recent = this.load();
+        const items = this.load();
         
-        if (recent.length === 0) {
-            container.innerHTML = '<p class="no-recent">No recent formulas</p>';
+        if (items.length === 0) {
+            container.innerHTML = '<p class="loading">No recent formulas yet</p>';
             return;
         }
         
-        const html = recent.map(item => `
+        const html = items.map(item => `
             <div class="recent-formula" onclick="RecentFormulas.loadFormula('${item.id}')">
-                <div class="recent-formula-text">${Utils.escapeHtml(item.formula)}</div>
-                <div class="recent-formula-meta">
-                    ${item.tableName} • ${Utils.formatTimeAgo(new Date(item.timestamp))}
+                <div class="recent-meta">
+                    <strong>${item.tableName}</strong> • ${Utils.formatTimeAgo(new Date(item.timestamp))}
+                </div>
+                <div class="formula-preview">${Utils.escapeHtml(item.formula)}</div>
+            </div>
+        `).join('');
+        
+        container.innerHTML = html;
+    },
+    
+    loadFormula(id) {
+        const items = this.load();
+        const item = items.find(f => f.id === id);
+        if (!item) return;
+        
+        // Update table selector
+        document.getElementById('tableSelect').value = item.tableName;
+        AppState.currentTable = item.tableName;
+        
+        // Load formula
+        document.getElementById('formulaInput').value = item.formula;
+        
+        // Switch to compiler tab
+        UI.switchTab('compiler');
+    }
+};
+
+// =============================================================================
+// REPORT BUILDER
+// =============================================================================
+
+const ReportBuilder = {
+    formulaRowCounter: 0,
+    initialized: false,
+    
+    init() {
+        this.setupEventListeners();
+        this.addFormulaRow(); // Start with one empty row
+        this.loadSavedReports();
+        this.initialized = true;
+    },
+    
+    setupEventListeners() {
+        // Add formula row button
+        document.getElementById('addFormulaBtn').addEventListener('click', () => {
+            this.addFormulaRow();
+        });
+        
+        // Execute report button
+        document.getElementById('executeReportBtn').addEventListener('click', () => {
+            this.executeReport();
+        });
+        
+        // Clear report button
+        document.getElementById('clearReportBtn').addEventListener('click', () => {
+            this.clearReport();
+        });
+        
+        // Save report button
+        document.getElementById('saveReportBtn').addEventListener('click', () => {
+            this.saveReport();
+        });
+        
+        // Load example report button
+        document.getElementById('loadExampleReportBtn').addEventListener('click', () => {
+            this.loadExampleReport();
+        });
+        
+        // Sync report table selector with main table selector
+        document.getElementById('reportTableSelect').addEventListener('change', (e) => {
+            AppState.currentTable = e.target.value;
+            
+            // Sync other table selectors
+            const tableSelect = document.getElementById('tableSelect');
+            if (tableSelect) {
+                tableSelect.value = e.target.value;
+            }
+            const schemaTableSelect = document.getElementById('schemaTableSelect');
+            if (schemaTableSelect) {
+                schemaTableSelect.value = e.target.value;
+            }
+            
+            // Update UI enhancements
+            this.updateFormulaInputsEnhancement(e.target.value);
+        });
+    },
+    
+    addFormulaRow() {
+        const formulaBuilder = document.getElementById('formulaBuilder');
+        this.formulaRowCounter++;
+        
+        const rowId = `formula-row-${this.formulaRowCounter}`;
+        const nameId = `formula-name-${this.formulaRowCounter}`;
+        const inputId = `formula-input-${this.formulaRowCounter}`;
+        
+        const row = document.createElement('div');
+        row.className = 'formula-row';
+        row.id = rowId;
+        row.innerHTML = `
+            <input type="text" class="formula-name" id="${nameId}" placeholder="Column Name" value="Column_${this.formulaRowCounter}" />
+            <textarea class="formula-input" id="${inputId}" placeholder="Enter formula..." rows="2"></textarea>
+            <button type="button" class="btn-remove" onclick="ReportBuilder.removeFormulaRow('${rowId}')" title="Remove Formula">×</button>
+        `;
+        
+        formulaBuilder.appendChild(row);
+        
+        // Enhance the new formula input with developer tools
+        const formulaInput = document.getElementById(inputId);
+        if (formulaInput) {
+            // Add validation on input
+            formulaInput.addEventListener('input', () => {
+                this.validateFormulaInput(formulaInput);
+            });
+            
+            // Enhance with developer tools if available
+            setTimeout(() => {
+                enhanceFormulaInput(formulaInput, AppState.currentTable);
+            }, 100);
+        }
+    },
+    
+    removeFormulaRow(rowId) {
+        const row = document.getElementById(rowId);
+        if (row) {
+            row.remove();
+        }
+        
+        // Ensure at least one row remains
+        const formulaBuilder = document.getElementById('formulaBuilder');
+        if (formulaBuilder.children.length === 0) {
+            this.addFormulaRow();
+        }
+    },
+    
+    async validateFormulaInput(input) {
+        const formula = input.value.trim();
+        const tableName = document.getElementById('reportTableSelect').value;
+        
+        if (!formula || !tableName) {
+            input.classList.remove('error', 'success');
+            return;
+        }
+        
+        try {
+            const result = await validateFormula(formula, tableName);
+            if (result.valid) {
+                input.classList.remove('error');
+                input.classList.add('success');
+            } else {
+                input.classList.remove('success');
+                input.classList.add('error');
+                input.title = result.error || 'Invalid formula';
+            }
+        } catch (error) {
+            input.classList.remove('success');
+            input.classList.add('error');
+            input.title = error.message;
+        }
+    },
+    
+    async executeReport() {
+        const tableName = document.getElementById('reportTableSelect').value;
+        const reportName = document.getElementById('reportName').value.trim() || 'Unnamed Report';
+        const formulaRows = document.querySelectorAll('#formulaBuilder .formula-row');
+        
+        if (!tableName) {
+            UI.showResult('reportResults', 'Please select a table', 'error');
+            return;
+        }
+        
+        if (formulaRows.length === 0) {
+            UI.showResult('reportResults', 'Please add at least one formula', 'error');
+            return;
+        }
+        
+        const formulas = [];
+        let hasErrors = false;
+        
+        formulaRows.forEach((row, index) => {
+            const nameInput = row.querySelector('.formula-name');
+            const formulaInput = row.querySelector('.formula-input');
+            
+            const name = nameInput.value.trim() || `Column_${index + 1}`;
+            const formula = formulaInput.value.trim();
+            
+            if (!formula) {
+                hasErrors = true;
+                formulaInput.classList.add('error');
+                return;
+            }
+            
+            formulas.push({ name, formula });
+        });
+        
+        if (hasErrors || formulas.length === 0) {
+            UI.showResult('reportResults', 'Please fill in all formulas', 'error');
+            return;
+        }
+        
+        UI.setButtonState('executeReportBtn', true, 'Generating Report...');
+        
+        try {
+            const result = await executeMultipleFormulas(formulas, tableName);
+            
+            if (result.success) {
+                const displayResult = {
+                    title: `📊 ${reportName}`,
+                    metadata: {
+                        '📈 Formulas': result.formulas.length,
+                        '📊 Results': `${result.results.length} rows`,
+                        '🔗 JOINs': result.metadata.actualJoins,
+                        '📊 Aggregates': result.metadata.totalAggregateIntents,
+                        '⚡ Optimization': `${result.metadata.totalJoinIntents} → ${result.metadata.actualJoins} joins`
+                    },
+                    sql: result.sql,
+                    results: result.results
+                };
+                UI.showResult('reportResults', displayResult, 'success');
+                
+                // Save successful formulas to recents
+                formulas.forEach(f => RecentFormulas.save(f.formula, tableName));
+            } else {
+                UI.showResult('reportResults', result.error, 'error');
+            }
+        } catch (error) {
+            UI.showResult('reportResults', `Network error: ${error.message}`, 'error');
+        } finally {
+            UI.setButtonState('executeReportBtn', false, 'Generate Report');
+        }
+    },
+    
+    clearReport() {
+        document.getElementById('reportName').value = '';
+        document.getElementById('formulaBuilder').innerHTML = '';
+        document.getElementById('reportResults').innerHTML = '';
+        this.formulaRowCounter = 0;
+        this.addFormulaRow();
+    },
+    
+    saveReport() {
+        const reportName = document.getElementById('reportName').value.trim();
+        const tableName = document.getElementById('reportTableSelect').value;
+        const formulaRows = document.querySelectorAll('#formulaBuilder .formula-row');
+        
+        if (!reportName) {
+            alert('Please enter a report name');
+            return;
+        }
+        
+        if (!tableName) {
+            alert('Please select a table');
+            return;
+        }
+        
+        const formulas = [];
+        formulaRows.forEach(row => {
+            const name = row.querySelector('.formula-name').value.trim();
+            const formula = row.querySelector('.formula-input').value.trim();
+            
+            if (name && formula) {
+                formulas.push({ name, formula });
+            }
+        });
+        
+        if (formulas.length === 0) {
+            alert('Please add at least one formula');
+            return;
+        }
+        
+        const report = {
+            id: Utils.generateUniqueId(),
+            name: reportName,
+            tableName: tableName,
+            formulas: formulas,
+            timestamp: Date.now()
+        };
+        
+        // Save to localStorage
+        const savedReports = this.getSavedReports();
+        savedReports.unshift(report);
+        
+        // Keep only the most recent 20 reports
+        const trimmed = savedReports.slice(0, 20);
+        localStorage.setItem('saved_reports', JSON.stringify(trimmed));
+        
+        this.loadSavedReports();
+        alert(`Report "${reportName}" saved successfully!`);
+    },
+    
+    getSavedReports() {
+        try {
+            return JSON.parse(localStorage.getItem('saved_reports') || '[]');
+        } catch (e) {
+            return [];
+        }
+    },
+    
+    loadSavedReports() {
+        const container = document.getElementById('savedReports');
+        if (!container) return;
+        
+        const reports = this.getSavedReports();
+        
+        if (reports.length === 0) {
+            container.innerHTML = '<p class="loading">No saved reports yet</p>';
+            return;
+        }
+        
+        const html = reports.map(report => `
+            <div class="example-card" onclick="ReportBuilder.loadReport('${report.id}')">
+                <h4>${Utils.escapeHtml(report.name)}</h4>
+                <div class="example-table">Table: ${report.tableName}</div>
+                <div class="example-description">${report.formulas.length} formulas • ${Utils.formatTimeAgo(new Date(report.timestamp))}</div>
+                <div class="example-actions">
+                    <span class="example-action" onclick="event.stopPropagation(); ReportBuilder.deleteReport('${report.id}')">🗑️ Delete</span>
                 </div>
             </div>
         `).join('');
         
         container.innerHTML = html;
     },
-
-    loadFormula(id) {
-        const recent = this.load();
-        const formula = recent.find(item => item.id === id);
+    
+    loadReport(reportId) {
+        const reports = this.getSavedReports();
+        const report = reports.find(r => r.id === reportId);
+        if (!report) return;
         
-        if (formula) {
-            document.getElementById('formulaInput').value = formula.formula;
-            document.getElementById('tableSelect').value = formula.tableName;
-            AppState.currentTable = formula.tableName;
-            UI.switchTab('compiler');
+        // Set table
+        document.getElementById('reportTableSelect').value = report.tableName;
+        AppState.currentTable = report.tableName;
+        
+        // Set report name
+        document.getElementById('reportName').value = report.name;
+        
+        // Clear existing formulas
+        document.getElementById('formulaBuilder').innerHTML = '';
+        this.formulaRowCounter = 0;
+        
+        // Add formulas
+        report.formulas.forEach(formula => {
+            this.addFormulaRow();
+            const rows = document.querySelectorAll('#formulaBuilder .formula-row');
+            const lastRow = rows[rows.length - 1];
+            
+            lastRow.querySelector('.formula-name').value = formula.name;
+            lastRow.querySelector('.formula-input').value = formula.formula;
+        });
+        
+        // Switch to reports tab
+        UI.switchTab('reports');
+    },
+    
+    deleteReport(reportId) {
+        if (confirm('Are you sure you want to delete this report?')) {
+            const reports = this.getSavedReports();
+            const filtered = reports.filter(r => r.id !== reportId);
+            localStorage.setItem('saved_reports', JSON.stringify(filtered));
+            this.loadSavedReports();
         }
+    },
+    
+    loadExampleReport() {
+        const tableName = document.getElementById('reportTableSelect').value;
+        
+        if (!tableName) {
+            alert('Please select a table first');
+            return;
+        }
+        
+        // Create example report based on table
+        const exampleReports = {
+            customer: {
+                name: 'Customer Analysis Report',
+                formulas: [
+                    { name: 'Customer_Name', formula: 'first_name & " " & last_name' },
+                    { name: 'Budget_Range', formula: 'STRING(budget_min) & " - " & STRING(budget_max)' },
+                    { name: 'Budget_Flexibility', formula: 'ROUND((budget_max - budget_min) / budget_min * 100, 1) & "%"' }
+                ]
+            },
+            listing: {
+                name: 'Listing Analysis Report',
+                formulas: [
+                    { name: 'Property_Address', formula: 'address' },
+                    { name: 'Price_Per_SqFt', formula: 'ROUND(listing_price / square_feet, 2)' },
+                    { name: 'Market_Status', formula: 'IF(days_on_market < 30, "HOT", IF(days_on_market < 60, "NORMAL", "SLOW"))' },
+                    { name: 'Days_Listed', formula: 'days_on_market & " days"' }
+                ]
+            },
+            opportunity: {
+                name: 'Opportunity Analysis Report',
+                formulas: [
+                    { name: 'Deal_Value', formula: 'STRING(estimated_value)' },
+                    { name: 'Commission_Est', formula: 'ROUND(estimated_value * 0.03, 0)' },
+                    { name: 'Stage_Status', formula: 'stage' }
+                ]
+            },
+            rep: {
+                name: 'Rep Performance Report',
+                formulas: [
+                    { name: 'Rep_Name', formula: 'first_name & " " & last_name' },
+                    { name: 'Email_Contact', formula: 'email' },
+                    { name: 'Phone_Contact', formula: 'phone' }
+                ]
+            }
+        };
+        
+        const example = exampleReports[tableName];
+        if (!example) {
+            alert(`No example report available for table "${tableName}"`);
+            return;
+        }
+        
+        // Load the example
+        document.getElementById('reportName').value = example.name;
+        
+        // Clear existing formulas
+        document.getElementById('formulaBuilder').innerHTML = '';
+        this.formulaRowCounter = 0;
+        
+        // Add example formulas
+        example.formulas.forEach(formula => {
+            this.addFormulaRow();
+            const rows = document.querySelectorAll('#formulaBuilder .formula-row');
+            const lastRow = rows[rows.length - 1];
+            
+            lastRow.querySelector('.formula-name').value = formula.name;
+            lastRow.querySelector('.formula-input').value = formula.formula;
+        });
+    },
+    
+    updateFormulaInputsEnhancement(tableName) {
+        // Update all formula inputs with new table context
+        const formulaInputs = document.querySelectorAll('#formulaBuilder .formula-input');
+        formulaInputs.forEach(input => {
+            if (input.hasAttribute('data-enhanced')) {
+                // Re-enhance with new table context
+                enhanceFormulaInput(input, tableName);
+            }
+        });
     }
 };
 
@@ -842,6 +1265,12 @@ function setupEventListeners() {
                 if (schemaTableSelect && schemaTableSelect.value) {
                     loadSchemaDetails(schemaTableSelect.value);
                 }
+            } else if (tabName === 'reports') {
+                // Initialize report builder if not already done
+                if (!ReportBuilder.initialized) {
+                    ReportBuilder.init();
+                    ReportBuilder.initialized = true;
+                }
             }
         });
     });
@@ -854,10 +1283,14 @@ function setupEventListeners() {
     document.getElementById('tableSelect').addEventListener('change', (e) => {
         AppState.currentTable = e.target.value;
         
-        // Also sync schema table selector
+        // Also sync other table selectors
         const schemaTableSelect = document.getElementById('schemaTableSelect');
         if (schemaTableSelect) {
             schemaTableSelect.value = e.target.value;
+        }
+        const reportTableSelect = document.getElementById('reportTableSelect');
+        if (reportTableSelect) {
+            reportTableSelect.value = e.target.value;
         }
         
         // Update UI enhancements with new table context
@@ -874,11 +1307,15 @@ function setupEventListeners() {
     document.getElementById('schemaTableSelect').addEventListener('change', (e) => {
         loadSchemaDetails(e.target.value);
         
-        // Also sync main table selector
+        // Also sync other table selectors
         const tableSelect = document.getElementById('tableSelect');
         if (tableSelect) {
             tableSelect.value = e.target.value;
             AppState.currentTable = e.target.value;
+        }
+        const reportTableSelect = document.getElementById('reportTableSelect');
+        if (reportTableSelect) {
+            reportTableSelect.value = e.target.value;
         }
     });
     
@@ -1267,32 +1704,28 @@ window.loadAndExecuteExample = loadAndExecuteExample;
 
 function updateUIEnhancementsForTable(tableName) {
     try {
-        // Update autocomplete with new table context
+        // Update individual tools with new table context
         if (window.autocomplete) {
             const formulaInput = document.getElementById('formulaInput');
             if (formulaInput) {
-                // Reattach with new table name
                 window.autocomplete.attachTo(formulaInput, tableName);
             }
         }
         
-        // Update syntax highlighting with new table context
         if (window.syntaxHighlighting) {
             const formulaInput = document.getElementById('formulaInput');
             if (formulaInput) {
-                // Update table name and re-highlight
-                const data = window.syntaxHighlighting.highlightedElements.get(formulaInput);
-                if (data) {
-                    data.tableName = tableName;
-                    window.syntaxHighlighting.updateHighlighting(formulaInput, tableName);
-                }
+                window.syntaxHighlighting.attachTo(formulaInput, tableName);
             }
         }
         
-        console.log(`🔄 UI enhancements updated for table: ${tableName}`);
+        // Update report builder formula inputs as well
+        if (ReportBuilder && ReportBuilder.updateFormulaInputsEnhancement) {
+            ReportBuilder.updateFormulaInputsEnhancement(tableName);
+        }
         
     } catch (error) {
-        console.warn('⚠️ Failed to update UI enhancements for table:', error);
+        console.warn('Failed to update UI enhancements for table:', tableName, error);
     }
 }
 
