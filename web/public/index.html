@@ -457,6 +457,42 @@
         .relationship-badge.reverse:hover {
             background: #ffe8a1;
         }
+        
+        /* Database tab styles */
+        .current-db-info {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-bottom: 15px;
+        }
+        
+        .current-db-info.connected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .current-db-info.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .db-status {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .db-type {
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        
+        .db-connection {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.8rem;
+            color: #6c757d;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -472,6 +508,7 @@
                 <button class="tab" data-tab="report-builder">Report Builder</button>
                 <button class="tab" data-tab="examples">Examples</button>
                 <button class="tab" data-tab="schema">Database Schema</button>
+                <button class="tab" data-tab="database">Database</button>
             </div>
             
             <div class="tab-content active" id="compiler">
@@ -551,6 +588,43 @@
                     <p class="loading">Select a table to view its schema and sample data</p>
                 </div>
             </div>
+            
+            <div class="tab-content" id="database">
+                <div class="form-group">
+                    <h3>🗄️ Database Connection</h3>
+                    <p>Choose your database source. PGlite provides an in-memory database with sample data, while PostgreSQL connects to your own database.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Current Connection:</label>
+                    <div id="currentDbInfo" class="current-db-info">
+                        <div class="loading">Loading database info...</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dbType">Database Type:</label>
+                    <select id="dbType">
+                        <option value="pglite">PGlite (In-Memory with Sample Data)</option>
+                        <option value="postgresql">PostgreSQL (External Database)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="connectionStringGroup" style="display: none;">
+                    <label for="connectionString">PostgreSQL Connection String:</label>
+                    <input type="text" id="connectionString" placeholder="postgresql://username:password@localhost:5432/database_name" />
+                    <small style="display: block; margin-top: 5px; color: #6c757d;">
+                        Example: postgresql://user:pass@localhost:5432/mydb
+                    </small>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="testConnectionBtn">Test Connection</button>
+                    <button class="btn btn-primary" id="switchDatabaseBtn">Switch Database</button>
+                </div>
+                
+                <div id="databaseResults"></div>
+            </div>
         </div>
     </div>
 
@@ -577,6 +651,8 @@
                     loadExamples();
                 } else if (tab.dataset.tab === 'report-builder') {
                     loadReportBuilder();
+                } else if (tab.dataset.tab === 'database') {
+                    loadDatabaseInfo();
                 }
             });
         });
@@ -1192,6 +1268,159 @@
             return `${diffDays}d ago`;
         }
         
+        // Database management functions
+        async function loadDatabaseInfo() {
+            try {
+                const response = await fetch('/api/database/info');
+                const data = await response.json();
+                
+                const currentDbInfo = document.getElementById('currentDbInfo');
+                const dbType = document.getElementById('dbType');
+                const connectionStringGroup = document.getElementById('connectionStringGroup');
+                const connectionString = document.getElementById('connectionString');
+                
+                if (data.status === 'connected') {
+                    currentDbInfo.className = 'current-db-info connected';
+                    currentDbInfo.innerHTML = `
+                        <div class="db-status">✅ Connected</div>
+                        <div class="db-type">Database Type: ${data.type.toUpperCase()}</div>
+                        ${data.connectionString ? `<div class="db-connection">Connection: ${data.connectionString}</div>` : ''}
+                    `;
+                    
+                    // Update form to reflect current connection
+                    dbType.value = data.type;
+                    if (data.type === 'postgresql') {
+                        connectionStringGroup.style.display = 'block';
+                        connectionString.value = data.connectionString ? data.connectionString.replace(':****@', ':password@') : '';
+                    } else {
+                        connectionStringGroup.style.display = 'none';
+                    }
+                } else {
+                    currentDbInfo.className = 'current-db-info error';
+                    currentDbInfo.innerHTML = `
+                        <div class="db-status">❌ Error</div>
+                        <div class="db-type">Error: ${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                const currentDbInfo = document.getElementById('currentDbInfo');
+                currentDbInfo.className = 'current-db-info error';
+                currentDbInfo.innerHTML = `
+                    <div class="db-status">❌ Failed to load database info</div>
+                    <div class="db-type">Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function testDatabaseConnection() {
+            const dbType = document.getElementById('dbType').value;
+            const connectionString = document.getElementById('connectionString').value;
+            const testBtn = document.getElementById('testConnectionBtn');
+            const resultsDiv = document.getElementById('databaseResults');
+            
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/database/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        connectionString: dbType === 'postgresql' ? connectionString : ''
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="results success">
+                            <h4>✅ Connection Test Successful</h4>
+                            <p><strong>Type:</strong> ${result.type.toUpperCase()}</p>
+                            <p><strong>Message:</strong> ${result.message}</p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="results error">
+                            <h4>❌ Connection Test Failed</h4>
+                            <p><strong>Error:</strong> ${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="results error">
+                        <h4>❌ Connection Test Failed</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = 'Test Connection';
+            }
+        }
+        
+        async function switchDatabase() {
+            const dbType = document.getElementById('dbType').value;
+            const connectionString = document.getElementById('connectionString').value;
+            const switchBtn = document.getElementById('switchDatabaseBtn');
+            const resultsDiv = document.getElementById('databaseResults');
+            
+            switchBtn.disabled = true;
+            switchBtn.textContent = 'Switching...';
+            
+            try {
+                const response = await fetch('/api/database/switch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        connectionString: dbType === 'postgresql' ? connectionString : ''
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="results success">
+                            <h4>✅ Database Switch Successful</h4>
+                            <p><strong>New Type:</strong> ${result.type.toUpperCase()}</p>
+                            <p><strong>Message:</strong> ${result.message}</p>
+                            ${result.connectionString ? `<p><strong>Connection:</strong> ${result.connectionString}</p>` : ''}
+                        </div>
+                    `;
+                    
+                    // Refresh database info and reload tables
+                    setTimeout(() => {
+                        loadDatabaseInfo();
+                        loadTables();
+                    }, 1000);
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="results error">
+                            <h4>❌ Database Switch Failed</h4>
+                            <p><strong>Error:</strong> ${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="results error">
+                        <h4>❌ Database Switch Failed</h4>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            } finally {
+                switchBtn.disabled = false;
+                switchBtn.textContent = 'Switch Database';
+            }
+        }
+        
         // Utility function to escape HTML
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -1235,6 +1464,19 @@
             const textarea = document.querySelector('.formula-input');
             addValidation(textarea);
         });
+        
+        // Database management event listeners
+        document.getElementById('dbType').addEventListener('change', (e) => {
+            const connectionStringGroup = document.getElementById('connectionStringGroup');
+            if (e.target.value === 'postgresql') {
+                connectionStringGroup.style.display = 'block';
+            } else {
+                connectionStringGroup.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('testConnectionBtn').addEventListener('click', testDatabaseConnection);
+        document.getElementById('switchDatabaseBtn').addEventListener('click', switchDatabase);
         
         // Allow Enter key to execute (Ctrl+Enter for newline)
         document.getElementById('formulaInput').addEventListener('keydown', (e) => {

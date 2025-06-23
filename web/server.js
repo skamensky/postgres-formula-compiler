@@ -32,9 +32,16 @@ let dbClient = null;
 
 // Initialize database connection
 async function initializeDatabase() {
-  dbClient = createDatabaseClient();
-  await dbClient.connect();
-  console.log('🔌 Database connected');
+  try {
+    dbClient = createDatabaseClient();
+    await dbClient.connect();
+    
+    const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
+    console.log(`🔌 Connected to ${isPostgres ? 'PostgreSQL' : 'PGlite'} database`);
+  } catch (error) {
+    console.error('❌ Failed to connect to database:', error);
+    throw error;
+  }
 }
 
 // Get available tables from database introspection
@@ -521,6 +528,111 @@ app.get('/api/examples', async (req, res) => {
 // Serve the main application
 app.get('/', (req, res) => {
   res.sendFile(join(__dirname, 'public', 'index.html'));
+});
+
+// Get current database info
+app.get('/api/database/info', (req, res) => {
+  try {
+    const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
+    
+    res.json({
+      type: isPostgres ? 'postgresql' : 'pglite',
+      connectionString: isPostgres ? process.env.DATABASE_URL.replace(/:[^:@]*@/, ':****@') : null,
+      status: 'connected'
+    });
+  } catch (error) {
+    res.json({
+      type: 'unknown',
+      status: 'error',
+      error: error.message
+    });
+  }
+});
+
+// Test database connection
+app.post('/api/database/test', async (req, res) => {
+  try {
+    const { connectionString } = req.body;
+    
+    if (!connectionString || connectionString.trim() === '') {
+      return res.json({
+        success: true,
+        type: 'pglite',
+        message: 'PGlite connection will be used (in-memory database)'
+      });
+    }
+    
+    // Test PostgreSQL connection
+    const { Client } = require('pg');
+    const testClient = new Client({ connectionString });
+    
+    try {
+      await testClient.connect();
+      await testClient.query('SELECT 1');
+      await testClient.end();
+      
+      res.json({
+        success: true,
+        type: 'postgresql', 
+        message: 'PostgreSQL connection successful'
+      });
+    } catch (error) {
+      res.json({
+        success: false,
+        type: 'postgresql',
+        error: error.message
+      });
+    }
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Switch database connection
+app.post('/api/database/switch', async (req, res) => {
+  try {
+    const { connectionString } = req.body;
+    
+    // Close current connection if it exists
+    if (dbClient && typeof dbClient.close === 'function') {
+      try {
+        await dbClient.close();
+      } catch (err) {
+        console.warn('Warning closing previous connection:', err.message);
+      }
+    }
+    
+    // Update environment variable
+    if (!connectionString || connectionString.trim() === '') {
+      delete process.env.DATABASE_URL;
+    } else {
+      process.env.DATABASE_URL = connectionString;
+    }
+    
+    // Reinitialize database client
+    dbClient = createDatabaseClient();
+    await dbClient.connect();
+    
+    const isPostgres = connectionString && connectionString.trim() !== '';
+    
+    res.json({
+      success: true,
+      type: isPostgres ? 'postgresql' : 'pglite',
+      message: isPostgres ? 'Switched to PostgreSQL' : 'Switched to PGlite',
+      connectionString: isPostgres ? connectionString.replace(/:[^:@]*@/, ':****@') : null
+    });
+    
+  } catch (error) {
+    console.error('Error switching database:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 // Health check
