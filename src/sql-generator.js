@@ -135,7 +135,7 @@ function generateSQL(namedResults, baseTableName) {
   }
   
   // Build FROM clause with joins
-  let fromClause = `${baseTableName} s`;
+  let fromClause = `"${baseTableName}" s`;
   
   // Add main context joins - handle both single and multi-level relationships
   for (const [semanticId, joinIntent] of allJoinIntents) {
@@ -147,7 +147,7 @@ function generateSQL(namedResults, baseTableName) {
           const chainIndex = joinIntent.relationshipChain.length - 1;
           if (chainIndex === 0) {
             // First level: join from base table
-            fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON s.${joinIntent.joinField} = ${alias}.id`;
+            fromClause += `\n  LEFT JOIN "${joinIntent.targetTable}" ${alias} ON s."${joinIntent.joinField}" = ${alias}.id`;
           } else {
             // Subsequent levels: join from previous relationship in chain
             const parentChain = joinIntent.relationshipChain.slice(0, chainIndex);
@@ -163,21 +163,21 @@ function generateSQL(namedResults, baseTableName) {
             if (parentJoinSemanticId) {
               const parentAlias = joinAliases.get(parentJoinSemanticId);
               if (parentAlias) {
-                fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAlias}.${joinIntent.joinField} = ${alias}.id`;
+                fromClause += `\n  LEFT JOIN "${joinIntent.targetTable}" ${alias} ON ${parentAlias}."${joinIntent.joinField}" = ${alias}.id`;
               } else {
                 // Fallback: construct the full parent alias name
                 const parentAliasName = `rel_${baseTableName}_${parentChain.join('_')}`;
-                fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAliasName}.${joinIntent.joinField} = ${alias}.id`;
+                fromClause += `\n  LEFT JOIN "${joinIntent.targetTable}" ${alias} ON ${parentAliasName}."${joinIntent.joinField}" = ${alias}.id`;
               }
             } else {
               // Fallback: construct the full parent alias name
               const parentAliasName = `rel_${baseTableName}_${parentChain.join('_')}`;
-              fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${parentAliasName}.${joinIntent.joinField} = ${alias}.id`;
+              fromClause += `\n  LEFT JOIN "${joinIntent.targetTable}" ${alias} ON ${parentAliasName}."${joinIntent.joinField}" = ${alias}.id`;
             }
           }
         } else {
           // Single-level relationship: use simple JOIN
-          fromClause += `\n  LEFT JOIN ${joinIntent.targetTable} ${alias} ON s.${joinIntent.joinField} = ${alias}.id`;
+          fromClause += `\n  LEFT JOIN "${joinIntent.targetTable}" ${alias} ON s."${joinIntent.joinField}" = ${alias}.id`;
         }
       }
     }
@@ -235,7 +235,7 @@ function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableN
   // Build the complex FROM clause by traversing the relationship chain
   // Start with the first table in the chain (closest to the base table)
   const firstChainStep = chainInfo[0];
-  let subFromClause = firstChainStep.targetTable;
+  let subFromClause = `"${firstChainStep.targetTable}"`;
   let currentAlias = firstChainStep.targetTable;
   
   // Build the chain of JOINs by traversing through intermediate tables
@@ -246,7 +246,7 @@ function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableN
     // Join the next table in the chain
     // Note: This is a simplified approach - in a full implementation,
     // we'd need to properly resolve the join relationships
-    subFromClause += `\n    JOIN ${chainStep.targetTable} ${nextAlias} ON ${currentAlias}.id = ${nextAlias}.${chainStep.joinColumn}`;
+    subFromClause += `\n    JOIN "${chainStep.targetTable}" ${nextAlias} ON ${currentAlias}.id = ${nextAlias}."${chainStep.joinColumn}"`;
     currentAlias = nextAlias;
   }
   
@@ -262,7 +262,7 @@ function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableN
   for (const joinIntent of allInternalJoins.values()) {
     const alias = joinAliases.get(joinIntent.semanticId);
     if (alias && joinIntent.relationshipType === 'direct_relationship') {
-      subFromClause += `\n    JOIN ${joinIntent.targetTable} ${alias} ON ${currentAlias}.${joinIntent.joinField} = ${alias}.id`;
+      subFromClause += `\n    JOIN "${joinIntent.targetTable}" ${alias} ON ${currentAlias}."${joinIntent.joinField}" = ${alias}.id`;
     }
   }
   
@@ -326,9 +326,9 @@ function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableN
   const groupingTable = firstChainStep.targetTable;
   
   // Add the grouping column to the SELECT clause
-  selectExpressions.unshift(`${groupingTable}.${groupingColumn} AS submission`);
+  selectExpressions.unshift(`"${groupingTable}"."${groupingColumn}" AS submission`);
   
-  return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY ${groupingTable}.${groupingColumn}`;
+  return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY "${groupingTable}"."${groupingColumn}"`;
 }
 
 /**
@@ -355,7 +355,7 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   // Single-level aggregate (existing logic)
   // Build subquery FROM clause with internal joins
   const baseTableName_sub = firstIntent.expression.compilationContext.match(/agg:.*?→(.*?)\[/)[1];
-  let subFromClause = baseTableName_sub;
+  let subFromClause = `"${baseTableName_sub}"`;
   
   // Collect all unique internal joins from all intents
   const allInternalJoins = new Map();
@@ -369,7 +369,7 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   for (const joinIntent of allInternalJoins.values()) {
     const alias = joinAliases.get(joinIntent.semanticId);
     if (alias && joinIntent.relationshipType === 'direct_relationship') {
-      subFromClause += `\n    JOIN ${joinIntent.targetTable} ${alias} ON ${baseTableName_sub}.${joinIntent.joinField} = ${alias}.id`;
+      subFromClause += `\n    JOIN "${joinIntent.targetTable}" ${alias} ON "${baseTableName_sub}"."${joinIntent.joinField}" = ${alias}.id`;
     }
   }
   
@@ -432,9 +432,9 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   const joinColumn = joinColumnMatch ? joinColumnMatch[1] : 'id';
   
   // Add the grouping column to the SELECT clause
-  selectExpressions.unshift(`${baseTableName_sub}.${joinColumn} AS submission`);
+  selectExpressions.unshift(`"${baseTableName_sub}"."${joinColumn}" AS submission`);
   
-  return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY ${baseTableName_sub}.${joinColumn}`;
+  return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY "${baseTableName_sub}"."${joinColumn}"`;
 }
 
 /**
@@ -449,18 +449,19 @@ function generateAggregateSubquery(aggIntent, joinAliases, baseTableName) {
   const sourceTable = baseTableName;
   
   // Build subquery FROM clause with internal joins
-  let subFromClause = aggIntent.expression.compilationContext.match(/agg:.*?→(.*?)\[/)[1];
+  const baseTableName_sub = aggIntent.expression.compilationContext.match(/agg:.*?→(.*?)\[/)[1];
+  let subFromClause = `"${baseTableName_sub}"`;
   
   // Add internal joins within the subquery
   for (const joinIntent of aggIntent.internalJoins) {
     const alias = joinAliases.get(joinIntent.semanticId);
     if (alias && joinIntent.relationshipType === 'direct_relationship') {
-      subFromClause += `\n    LEFT JOIN ${joinIntent.targetTable} ${alias} ON ${subFromClause.split(' ')[0]}.${joinIntent.joinField} = ${alias}.id`;
+      subFromClause += `\n    LEFT JOIN "${joinIntent.targetTable}" ${alias} ON "${baseTableName_sub}"."${joinIntent.joinField}" = ${alias}.id`;
     }
   }
   
   // Generate expression SQL for the aggregate
-  const exprSQL = generateExpressionSQL(aggIntent.expression, joinAliases, new Map(), subFromClause.split(' ')[0]);
+  const exprSQL = generateExpressionSQL(aggIntent.expression, joinAliases, new Map(), baseTableName_sub);
   
   // Build aggregate function SQL
   let aggSQL;
@@ -502,7 +503,7 @@ function generateAggregateSubquery(aggIntent, joinAliases, baseTableName) {
   const joinColumnMatch = aggIntent.expression.compilationContext.match(/\[([^\]]+)\]$/);
   const joinColumn = joinColumnMatch ? joinColumnMatch[1] : 'id';
   
-  return `SELECT ${aggSQL}\n  FROM ${subFromClause}\n  WHERE ${subFromClause.split(' ')[0]}.${joinColumn} = ${sourceTable}.id`;
+  return `SELECT ${aggSQL}\n  FROM ${subFromClause}\n  WHERE "${baseTableName_sub}"."${joinColumn}" = "${sourceTable}".id`;
 }
 
 /**
@@ -569,16 +570,16 @@ function generateExpressionSQL(expr, joinAliases, aggregateColumnMappings, baseT
       } else if (expr.value.op === TokenValue.PLUS) {
         // Handle date arithmetic for addition
         if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
-          return `(${leftSQL} + INTERVAL '${rightSQL} days')`;
+          return `(${leftSQL} + ${rightSQL} * INTERVAL '1 day')`;
         } else if (leftType === TYPE.NUMBER && rightType === TYPE.DATE) {
-          return `(${rightSQL} + INTERVAL '${leftSQL} days')`;
+          return `(${rightSQL} + ${leftSQL} * INTERVAL '1 day')`;
         } else {
           return `(${leftSQL} + ${rightSQL})`;
         }
       } else if (expr.value.op === TokenValue.MINUS) {
         // Handle date arithmetic for subtraction
         if (leftType === TYPE.DATE && rightType === TYPE.NUMBER) {
-          return `(${leftSQL} - INTERVAL '${rightSQL} days')`;
+          return `(${leftSQL} - ${rightSQL} * INTERVAL '1 day')`;
         } else {
           return `(${leftSQL} - ${rightSQL})`;
         }
@@ -640,8 +641,8 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
       return "(select auth().uid())";
       
     case FUNCTIONS.DATE:
-      // Use the string value stored during compilation
-      return `DATE('${expr.value.stringValue}')`;
+      // Use the string value stored during compilation - escape single quotes
+      return `DATE('${expr.value.stringValue.replace(/'/g, "''")}')`;
       
     case FUNCTIONS.STRING:
       const argSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
@@ -781,12 +782,12 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
     case FUNCTIONS.ADDMONTHS:
       const addMonthsDateSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const addMonthsNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
-      return `(${addMonthsDateSQL} + INTERVAL '${addMonthsNumSQL} months')`;
+      return `(${addMonthsDateSQL} + ${addMonthsNumSQL} * INTERVAL '1 month')`;
       
     case FUNCTIONS.ADDDAYS:
       const addDaysDateSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       const addDaysNumSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
-      return `(${addDaysDateSQL} + INTERVAL '${addDaysNumSQL} days')`;
+      return `(${addDaysDateSQL} + ${addDaysNumSQL} * INTERVAL '1 day')`;
       
     case FUNCTIONS.DATEDIF:
       const datedifDate1SQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
