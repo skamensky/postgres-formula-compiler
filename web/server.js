@@ -17,8 +17,7 @@ const port = process.env.PORT || 3000;
 // Middleware for static files only
 app.use(express.static(join(__dirname, 'public')));
 
-// Serve Monaco Editor files
-app.use('/node_modules/monaco-editor', express.static(join(__dirname, '..', 'node_modules', 'monaco-editor')));
+// Monaco Editor now served from CDN - no local serving needed
 
 // Serve the main application
 app.get('/', (req, res) => {

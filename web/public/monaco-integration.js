@@ -10,10 +10,10 @@ async function initializeWorkingMonaco() {
     console.log('🔧 Setting up working Monaco Editor...');
     
     try {
-        // Configure Monaco (if not already done)
+        // Configure Monaco CDN path
         require.config({ 
             paths: { 
-                'vs': '/node_modules/monaco-editor/min/vs' 
+                'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' 
             } 
         });
         
