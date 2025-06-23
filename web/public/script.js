@@ -384,16 +384,17 @@ const Validation = {
 
 const FormulaCompiler = {
     async execute() {
-        const formula = document.getElementById('formulaInput').value.trim();
+        const formulaInput = window.formulaEditor || document.getElementById('formulaInput');
+        const formula = formulaInput.value ? formulaInput.value.trim() : '';
         const tableName = document.getElementById('tableSelect').value;
         
         if (!formula) {
-            UI.showResult('results', 'Please enter a formula', 'error');
+            UI.showResult('formulaResults', 'Please enter a formula', 'error');
             return;
         }
         
         if (!tableName) {
-            UI.showResult('results', 'Please select a table', 'error');
+            UI.showResult('formulaResults', 'Please select a table', 'error');
             return;
         }
         
@@ -413,21 +414,26 @@ const FormulaCompiler = {
                     sql: result.sql,
                     results: result.results
                 };
-                UI.showResult('results', displayResult, 'success');
+                UI.showResult('formulaResults', displayResult, 'success');
                 RecentFormulas.save(formula, tableName);
             } else {
-                UI.showResult('results', result.error, 'error');
+                UI.showResult('formulaResults', result.error, 'error');
             }
         } catch (error) {
-            UI.showResult('results', `Network error: ${error.message}`, 'error');
+            UI.showResult('formulaResults', `Network error: ${error.message}`, 'error');
         } finally {
             UI.setButtonState('executeBtn', false, 'Execute Formula');
         }
     },
 
     clear() {
-        document.getElementById('formulaInput').value = '';
-        document.getElementById('results').innerHTML = '';
+        const formulaInput = window.formulaEditor || document.getElementById('formulaInput');
+        if (formulaInput.clear) {
+            formulaInput.clear();
+        } else {
+            formulaInput.value = '';
+        }
+        document.getElementById('formulaResults').innerHTML = '';
     }
 };
 
@@ -915,16 +921,7 @@ const EventListeners = {
         document.getElementById('testConnectionBtn').addEventListener('click', DatabaseManager.testConnection);
         document.getElementById('switchDatabaseBtn').addEventListener('click', DatabaseManager.switchDatabase);
         
-        // Formula input - Enter key handling
-        document.getElementById('formulaInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
-                e.preventDefault();
-                FormulaCompiler.execute();
-            }
-        });
-        
-        // Add validation to main formula input
-        Validation.addToElement(document.getElementById('formulaInput'));
+        // Note: Formula input event handling is now done in Monaco setup
     },
 
     handleTabSwitch(tab) {
@@ -961,12 +958,10 @@ const DeveloperToolsIntegration = {
             // Initialize the developer tools client
             await window.developerTools.initialize();
             
-            // Set up features for existing inputs
-            this.setupSyntaxHighlighting();
-            this.setupAutocomplete();
-            this.setupFormatting();
+            // Initialize Monaco Editor
+            await this.setupMonacoEditor();
             
-            // Watch for new inputs
+            // Watch for new inputs (legacy support)
             this.setupDynamicAttachment();
             
             // Update schema
@@ -976,6 +971,142 @@ const DeveloperToolsIntegration = {
             
         } catch (error) {
             console.warn('⚠️ Failed to initialize developer tools:', error);
+        }
+    },
+
+    async setupMonacoEditor() {
+        try {
+            // Wait for Monaco wrapper to be ready
+            while (!window.monacoWrapper) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            // Initialize Monaco editor for the main formula input
+            const formulaInputContainer = document.getElementById('formulaInput');
+            if (formulaInputContainer) {
+                const editorWrapper = window.monacoWrapper.createEditor('formulaInput');
+                
+                // Store reference for later access
+                window.formulaEditor = editorWrapper;
+                
+                // Attach tooling
+                await this.attachToolingToEditor(editorWrapper);
+                
+                // Set up event handlers for compatibility
+                this.setupEditorEventHandlers(editorWrapper);
+                
+                console.log('🚀 Monaco Editor initialized');
+            }
+        } catch (error) {
+            console.error('Failed to setup Monaco editor:', error);
+        }
+    },
+
+    async attachToolingToEditor(editorWrapper) {
+        const tableName = this.getTableContext();
+        
+        // Wait for tooling to be ready
+        while (!window.syntaxHighlighting || !window.autocomplete || !window.formatterIntegration) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Syntax highlighting
+        if (window.syntaxHighlighting) {
+            window.syntaxHighlighting.attachTo(editorWrapper, tableName);
+        }
+        
+        // Autocomplete
+        if (window.autocomplete) {
+            window.autocomplete.attachTo(editorWrapper, tableName);
+        }
+        
+        // Formatting
+        if (window.formatterIntegration) {
+            window.formatterIntegration.attachTo(editorWrapper, {
+                showButton: true,
+                keyboardShortcut: true,
+                autoFormat: {
+                    onBlur: false,
+                    onSave: true
+                }
+            });
+        }
+    },
+
+    setupEditorEventHandlers(editorWrapper) {
+        // Set up validation
+        editorWrapper.addEventListener('input', () => {
+            const formula = editorWrapper.value.trim();
+            const tableName = this.getTableContext();
+            
+            if (formula && tableName) {
+                this.scheduleValidation(editorWrapper, formula, tableName);
+            }
+        });
+        
+        // Set up Enter key handling
+        editorWrapper.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                FormulaCompiler.execute();
+            }
+        });
+        
+        // Set up focus/blur events
+        editorWrapper.addEventListener('focus', () => {
+            console.log('Monaco editor focused');
+        });
+        
+        editorWrapper.addEventListener('blur', () => {
+            console.log('Monaco editor blurred');
+        });
+    },
+
+    scheduleValidation(editorWrapper, formula, tableName) {
+        // Clear previous timeout
+        if (this.validationTimeout) {
+            clearTimeout(this.validationTimeout);
+        }
+        
+        // Schedule validation
+        this.validationTimeout = setTimeout(() => {
+            this.validateFormula(formula, tableName, editorWrapper);
+        }, 500);
+    },
+
+    async validateFormula(formula, tableName, editorWrapper) {
+        try {
+            const result = await ApiService.validateFormula(formula, tableName);
+            
+            // Update visual feedback
+            const container = editorWrapper._monaco.getDomNode().parentElement;
+            if (result.valid) {
+                container.classList.remove('error');
+                container.classList.add('success');
+                this.hideErrorMessage();
+            } else {
+                container.classList.remove('success');
+                container.classList.add('error');
+                this.showErrorMessage(result.error);
+            }
+        } catch (error) {
+            console.warn('Validation failed:', error);
+            this.showErrorMessage('Validation failed');
+        }
+    },
+
+    showErrorMessage(message) {
+        const errorDiv = document.getElementById('formulaError');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+    },
+
+    hideErrorMessage() {
+        const errorDiv = document.getElementById('formulaError');
+        if (errorDiv) {
+            errorDiv.classList.add('hidden');
         }
     },
 
@@ -1139,17 +1270,25 @@ const DeveloperToolsIntegration = {
 
     getTableContext(textarea) {
         // Try to get table context from various sources
-        const form = textarea.closest('form') || document.body;
-        
-        // Look for table select in same form/context
-        const tableSelect = form.querySelector('select[id*="table"]');
-        if (tableSelect && tableSelect.value) {
-            return tableSelect.value;
+        if (textarea && textarea.closest) {
+            const form = textarea.closest('form') || document.body;
+            
+            // Look for table select in same form/context
+            const tableSelect = form.querySelector('select[id*="table"]');
+            if (tableSelect && tableSelect.value) {
+                return tableSelect.value;
+            }
+            
+            // Check data attribute
+            if (textarea.dataset && textarea.dataset.tableName) {
+                return textarea.dataset.tableName;
+            }
         }
         
-        // Check data attribute
-        if (textarea.dataset.tableName) {
-            return textarea.dataset.tableName;
+        // For Monaco editor or when no textarea context available
+        const tableSelect = document.getElementById('tableSelect');
+        if (tableSelect && tableSelect.value) {
+            return tableSelect.value;
         }
         
         // Use app state

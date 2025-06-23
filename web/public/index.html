@@ -35,7 +35,7 @@
                 <div class="form-group">
                     <label for="formulaInput">Enter Formula:</label>
                     <div class="formula-input-container">
-                        <textarea id="formulaInput" placeholder="Type your formula here... (executes automatically)"></textarea>
+                        <div id="formulaInput" class="monaco-editor-container" style="height: 120px; border: 2px solid #e9ecef; border-radius: 8px;"></div>
                         <div id="formulaStatus" class="formula-status">
                             <div class="status-indicator" id="statusIndicator">
                                 <span class="status-icon">⚪</span>
@@ -90,11 +90,17 @@
         </div>
         </div>
 
+    <!-- Monaco Editor -->
+    <script src="/node_modules/monaco-editor/min/vs/loader.js"></script>
+    
+    <!-- Monaco Editor Integration -->
+    <script type="module" src="monaco-integration.js"></script>
+    
     <!-- Developer Tools Client -->
     <script type="module" src="tooling-client/developer-tools-client.js"></script>
-    <script type="module" src="tooling-client/autocomplete.js"></script>
-    <script type="module" src="tooling-client/syntax-highlighting.js"></script>
-    <script type="module" src="tooling-client/formatter-integration.js"></script>
+    <script type="module" src="tooling-client/monaco-autocomplete.js"></script>
+    <script type="module" src="tooling-client/monaco-syntax-highlighting.js"></script>
+    <script type="module" src="tooling-client/monaco-formatter-integration.js"></script>
     
     <!-- Client-Side Application (ES6 Modules) -->
     <script type="module" src="browser-script.js"></script>
