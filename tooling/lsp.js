@@ -285,7 +285,7 @@ export class FormulaLanguageServer {
           documentation: func.description,
           insertText: `${func.name}($1)`,
           category: func.category,
-          sortText: `1_${func.name}` // Prioritize functions
+          sortText: `3_${func.name}` // Functions come after fields and relationships
         });
       }
     });
@@ -315,7 +315,7 @@ export class FormulaLanguageServer {
           detail: `${column.data_type} column`,
           documentation: `Column from ${tableName} table`,
           insertText: column.column_name,
-          sortText: `2_${column.column_name}`
+          sortText: `1_${column.column_name}` // Fields have highest priority
         });
       }
     });
@@ -346,7 +346,7 @@ export class FormulaLanguageServer {
           detail: `→ ${rel.target_table_name}`,
           documentation: `Relationship to ${rel.target_table_name} table`,
           insertText: `${relName}.`,
-          sortText: `3_${relName}`
+          sortText: `2_${relName}` // Relationships have second priority
         });
       }
     });
@@ -368,7 +368,7 @@ export class FormulaLanguageServer {
           kind: CompletionItemKind.KEYWORD,
           detail: 'keyword',
           insertText: keyword,
-          sortText: `4_${keyword}`
+          sortText: `4_${keyword}` // Keywords come after functions
         });
       }
     });
@@ -389,7 +389,7 @@ export class FormulaLanguageServer {
           kind: CompletionItemKind.OPERATOR,
           detail: 'operator',
           insertText: ` ${op} `,
-          sortText: `5_${op}`
+          sortText: `5_${op}` // Operators have lowest priority
         });
       }
     });

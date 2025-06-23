@@ -163,6 +163,12 @@ class AutocompleteManager {
                 this.requestCompletions(input, context);
                 return;
             }
+            // Show completions on Tab key (and complete if available)
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                this.requestCompletions(input, context, true); // autoCompleteFirst = true
+                return;
+            }
             return;
         }
 
@@ -195,7 +201,7 @@ class AutocompleteManager {
     /**
      * Request completions from developer tools
      */
-    async requestCompletions(input, context) {
+    async requestCompletions(input, context, autoCompleteFirst = false) {
         try {
             const text = input.value;
             const position = input.selectionStart;
@@ -209,6 +215,21 @@ class AutocompleteManager {
 
             if (completions.length > 0) {
                 this.show(input, completions);
+                
+                // If autoCompleteFirst is true (Tab pressed) and there's exactly one completion,
+                // or if the first completion is an exact match, insert it immediately
+                if (autoCompleteFirst) {
+                    const firstCompletion = completions[0];
+                    const beforeCursor = text.substring(0, position);
+                    const currentWordMatch = beforeCursor.match(/[a-zA-Z_][a-zA-Z0-9_]*$/);
+                    const currentWord = currentWordMatch ? currentWordMatch[0] : '';
+                    
+                    if (completions.length === 1 || 
+                        (firstCompletion && firstCompletion.label.toLowerCase() === currentWord.toLowerCase())) {
+                        this.insertCompletion(input);
+                        return;
+                    }
+                }
             } else {
                 this.hide();
             }
@@ -311,15 +332,27 @@ class AutocompleteManager {
         const inputRect = this.currentInput.getBoundingClientRect();
         const dropdownRect = this.dropdown.getBoundingClientRect();
         
-        // Position below input
+        // Position below input, but on the left side to avoid blocking error messages
         let top = inputRect.bottom + window.scrollY;
         let left = inputRect.left + window.scrollX;
         
-        // Adjust if dropdown would go off screen
-        if (left + dropdownRect.width > window.innerWidth) {
-            left = window.innerWidth - dropdownRect.width - 10;
+        // Try to position on the left side of the input (offset by dropdown width)
+        // This avoids blocking error messages that typically appear on the right
+        const leftSidePosition = left - dropdownRect.width - 10;
+        
+        // Use left side if there's enough space, otherwise use right side
+        if (leftSidePosition >= 10) {
+            left = leftSidePosition;
+            this.dropdown.classList.add('positioned-left');
+        } else {
+            // Fall back to right side positioning
+            this.dropdown.classList.remove('positioned-left');
+            if (left + dropdownRect.width > window.innerWidth) {
+                left = window.innerWidth - dropdownRect.width - 10;
+            }
         }
         
+        // Adjust vertical position if dropdown would go off screen
         if (top + dropdownRect.height > window.innerHeight + window.scrollY) {
             // Position above input if no room below
             top = inputRect.top + window.scrollY - dropdownRect.height;
@@ -522,6 +555,23 @@ const autocompleteCSS = `
 .autocomplete-tooltip {
     white-space: pre-wrap;
     line-height: 1.4;
+}
+
+/* Left-positioned dropdown styling */
+.autocomplete-dropdown.positioned-left {
+    border-left: 3px solid #667eea;
+}
+
+.autocomplete-dropdown.positioned-left::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: -8px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid #667eea;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
 }
 `;
 
