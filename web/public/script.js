@@ -950,18 +950,276 @@ const EventListeners = {
 };
 
 // =============================================================================
+// DEVELOPER TOOLS INTEGRATION
+// =============================================================================
+
+const DeveloperToolsIntegration = {
+    async init() {
+        try {
+            console.log('🔧 Initializing developer tools...');
+            
+            // Initialize the developer tools client
+            await window.developerTools.initialize();
+            
+            // Set up features for existing inputs
+            this.setupSyntaxHighlighting();
+            this.setupAutocomplete();
+            this.setupFormatting();
+            
+            // Watch for new inputs
+            this.setupDynamicAttachment();
+            
+            // Update schema
+            await this.updateSchema();
+            
+            console.log('✅ Developer tools initialized successfully');
+            
+        } catch (error) {
+            console.warn('⚠️ Failed to initialize developer tools:', error);
+        }
+    },
+
+    setupSyntaxHighlighting() {
+        const inputs = this.getFormulaInputs();
+        inputs.forEach(textarea => {
+            const tableName = this.getTableContext(textarea);
+            window.syntaxHighlighting.attachTo(textarea, tableName);
+        });
+    },
+
+    setupAutocomplete() {
+        const inputs = this.getFormulaInputs();
+        inputs.forEach(textarea => {
+            const tableName = this.getTableContext(textarea);
+            window.autocomplete.attachTo(textarea, tableName);
+        });
+    },
+
+    setupFormatting() {
+        const inputs = this.getFormulaInputs();
+        inputs.forEach(textarea => {
+            const tableName = this.getTableContext(textarea);
+            
+            // Add format button next to each formula input
+            const formatButton = this.createFormatButton(textarea);
+            this.insertFormatButton(textarea, formatButton);
+            
+            // Attach formatter with keyboard shortcut
+            window.formatterIntegration.attachTo(textarea, {
+                showButton: false, // We create our own
+                keyboardShortcut: true,
+                autoFormat: false
+            });
+        });
+    },
+
+    createFormatButton(textarea) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = 'Format';
+        button.className = 'btn btn-secondary btn-sm';
+        button.title = 'Format formula (Shift+Alt+F)';
+        button.style.cssText = `
+            margin-left: 8px;
+            padding: 4px 8px;
+            font-size: 12px;
+            vertical-align: top;
+        `;
+        
+        button.addEventListener('click', async () => {
+            try {
+                button.textContent = 'Formatting...';
+                button.disabled = true;
+                
+                const formatted = await window.developerTools.format(textarea.value);
+                if (formatted !== textarea.value) {
+                    textarea.value = formatted;
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    
+                    // Show brief success feedback
+                    const originalText = button.textContent;
+                    button.textContent = '✓';
+                    button.style.color = '#28a745';
+                    setTimeout(() => {
+                        button.textContent = 'Format';
+                        button.style.color = '';
+                    }, 1000);
+                } else {
+                    button.textContent = 'Already formatted';
+                    setTimeout(() => {
+                        button.textContent = 'Format';
+                    }, 1500);
+                }
+            } catch (error) {
+                button.textContent = 'Error';
+                button.style.color = '#dc3545';
+                setTimeout(() => {
+                    button.textContent = 'Format';
+                    button.style.color = '';
+                }, 2000);
+            } finally {
+                button.disabled = false;
+            }
+        });
+        
+        return button;
+    },
+
+    insertFormatButton(textarea, button) {
+        // Find the best place to insert the button
+        const container = textarea.parentNode;
+        
+        // If there's already a button group nearby, add to it
+        let buttonGroup = container.querySelector('.btn-group');
+        if (buttonGroup) {
+            buttonGroup.appendChild(button);
+            return;
+        }
+        
+        // Look for existing buttons to group with
+        const existingButton = container.querySelector('button');
+        if (existingButton && existingButton.nextSibling === textarea) {
+            // Insert after existing button
+            container.insertBefore(button, existingButton.nextSibling);
+            return;
+        }
+        
+        // Create a wrapper div and insert after textarea
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display: inline-block; margin-top: 4px;';
+        wrapper.appendChild(button);
+        
+        if (textarea.nextSibling) {
+            container.insertBefore(wrapper, textarea.nextSibling);
+        } else {
+            container.appendChild(wrapper);
+        }
+    },
+
+    setupDynamicAttachment() {
+        // Watch for dynamically added formula inputs
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const newInputs = node.matches?.('textarea.formula-input, textarea[id*="formula"]') 
+                            ? [node] 
+                            : node.querySelectorAll?.('textarea.formula-input, textarea[id*="formula"]') || [];
+                        
+                        newInputs.forEach(textarea => {
+                            const tableName = this.getTableContext(textarea);
+                            
+                            // Attach all tools
+                            window.syntaxHighlighting.attachTo(textarea, tableName);
+                            window.autocomplete.attachTo(textarea, tableName);
+                            
+                            // Add format button
+                            const formatButton = this.createFormatButton(textarea);
+                            this.insertFormatButton(textarea, formatButton);
+                            
+                            window.formatterIntegration.attachTo(textarea, {
+                                showButton: false,
+                                keyboardShortcut: true
+                            });
+                        });
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    },
+
+    getFormulaInputs() {
+        return document.querySelectorAll('textarea#formulaInput, textarea.formula-input, textarea[id*="formula"]');
+    },
+
+    getTableContext(textarea) {
+        // Try to get table context from various sources
+        const form = textarea.closest('form') || document.body;
+        
+        // Look for table select in same form/context
+        const tableSelect = form.querySelector('select[id*="table"]');
+        if (tableSelect && tableSelect.value) {
+            return tableSelect.value;
+        }
+        
+        // Check data attribute
+        if (textarea.dataset.tableName) {
+            return textarea.dataset.tableName;
+        }
+        
+        // Use app state
+        return AppState.currentTable || null;
+    },
+
+    async updateSchema() {
+        try {
+            // Get current database schema
+            const schemaResponse = await fetch('/api/tables');
+            const { tables } = await schemaResponse.json();
+            
+            const schema = { tables: {}, relationships: [] };
+            
+            // Fetch detailed schema for each table
+            for (const tableName of tables) {
+                const tableResponse = await fetch(`/api/tables/${tableName}/schema`);
+                const tableData = await tableResponse.json();
+                
+                schema.tables[tableName] = {
+                    columns: tableData.columns || [],
+                    directRelationships: tableData.directRelationships || [],
+                    reverseRelationships: tableData.reverseRelationships || []
+                };
+                
+                schema.relationships.push(...(tableData.directRelationships || []));
+            }
+            
+            // Update all developer tools
+            window.developerTools.updateSchema(schema);
+            window.autocomplete.updateSchema(schema);
+            window.syntaxHighlighting.updateSchema(schema);
+            
+        } catch (error) {
+            console.warn('Failed to update developer tools schema:', error);
+        }
+    },
+
+    // Called when table selection changes
+    onTableChange(tableName) {
+        // Update context for all formula inputs
+        this.getFormulaInputs().forEach(textarea => {
+            textarea.dataset.tableName = tableName;
+        });
+    }
+};
+
+// =============================================================================
 // APPLICATION INITIALIZATION
 // =============================================================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Initialize event listeners
     EventListeners.init();
     
     // Load initial data
-    Tables.load();
+    await Tables.load();
     
     // Initialize report builder with one row
     ReportBuilder.init();
     
-    console.log('🚀 Interactive Formula Compiler initialized');
+    // Initialize developer tools
+    await DeveloperToolsIntegration.init();
+    
+    // Listen for table changes to update developer tools context
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('select[id*="table"]')) {
+            DeveloperToolsIntegration.onTableChange(e.target.value);
+        }
+    });
+    
+    console.log('🚀 Interactive Formula Compiler with Developer Tools initialized');
 });

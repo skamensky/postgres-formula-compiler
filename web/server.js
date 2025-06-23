@@ -489,6 +489,67 @@ app.post('/api/execute', async (req, res) => {
   }
 });
 
+// Developer tools endpoint - serves bundled tools to frontend
+app.get('/api/developer-tools', async (req, res) => {
+  try {
+    // Read and bundle the developer tools files
+    const basePath = join(__dirname, '..', 'src');
+    
+    // Read all required files
+    const files = [
+      'types-unified.js',
+      'lexer.js', 
+      'parser.js',
+      'function-metadata.js',
+      'lsp.js',
+      'syntax-highlighter.js',
+      'formatter.js',
+      'developer-tools.js'
+    ];
+    
+    let bundledCode = '';
+    
+    // Add each file with proper module structure
+    for (const file of files) {
+      const filePath = join(basePath, file);
+      const content = readFileSync(filePath, 'utf8');
+      
+      // Remove import statements and add to bundle
+      const cleanContent = content
+        .replace(/^import\s+.*?from\s+['"][^'"]+['"];?\s*$/gm, '')
+        .replace(/^export\s+\{[^}]*\}\s*;?\s*$/gm, '');
+      
+      bundledCode += `\n// === ${file} ===\n${cleanContent}\n`;
+    }
+    
+    // Add final exports for the client
+    bundledCode += `
+// === Final Exports ===
+export { 
+  createDeveloperTools,
+  FormulaDeveloperTools,
+  FormulaLanguageServer,
+  FormulaSyntaxHighlighter, 
+  FormulaFormatter,
+  CompletionItemKind,
+  DiagnosticSeverity,
+  SemanticTokenType,
+  DefaultTheme,
+  FormattingStyles,
+  DefaultFormattingOptions,
+  DefaultHighlightCSS
+};
+`;
+    
+    res.setHeader('Content-Type', 'application/javascript');
+    res.send(bundledCode);
+    
+  } catch (error) {
+    console.error('Error serving developer tools:', error);
+    res.status(500).json({ error: 'Failed to load developer tools' });
+  }
+});
+
 // Get example formulas
 app.get('/api/examples', async (req, res) => {
   try {
