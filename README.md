@@ -47,28 +47,13 @@ const result = evaluateFormula('ROUND(revenue / cost, 2)', context);
 console.log(result.sql); // Generated PostgreSQL
 ```
 
-### Example Formulas
+## 🏗️ Architecture
 
-```javascript
-// Basic math
-'revenue - cost'
+The compiler is modular with a three-stage pipeline: lexer → parser → compiler. Multiple compiler results can be combined into a single query with multiple fields, enabling complex dashboard-style queries with optimized performance.
 
-// Text functions  
-'UPPER(customer_name) & " - " & STRING(YEAR(sale_date))'
+## � SQL Optimization
 
-// Conditional logic
-'IF(revenue > 1000, "High Value", "Standard")'
-
-// Multi-level relationships
-'merchant_rel.main_rep_rel.name'
-
-// Aggregates across relationships
-'STRING_AGG(rep_links, name, ", ")'
-```
-
-## 🔗 Relationships & SQL Optimization
-
-Navigate complex table relationships up to 3 levels deep. The compiler automatically generates efficient JOINs and consolidates aggregate subqueries for optimal performance.
+Navigate complex table relationships up to 3 levels deep with automatic JOIN generation. The compiler consolidates aggregate subqueries, deduplicates identical expressions, and optimizes query structure for maximum database performance.
 
 ## 🧪 Testing
 
