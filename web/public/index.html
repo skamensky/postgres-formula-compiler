@@ -11,15 +11,16 @@
         <div class="header">
             <h1>Interactive Formula Compiler</h1>
             <p>Real Estate CRM with Excel-like Formula Syntax</p>
+            <div class="client-side-notice">
+                🚀 <strong>Fully Client-Side</strong> - Powered by PGlite in your browser
+            </div>
         </div>
         
         <div class="main-content">
             <div class="tabs">
                 <button class="tab active" data-tab="compiler">Formula Compiler</button>
-                <button class="tab" data-tab="report-builder">Report Builder</button>
                 <button class="tab" data-tab="examples">Examples</button>
                 <button class="tab" data-tab="schema">Schema</button>
-                <button class="tab" data-tab="database">Database</button>
             </div>
             
             <!-- Formula Compiler Tab -->
@@ -42,39 +43,14 @@ Example: IF(price > 300000, 'Luxury', 'Standard')"></textarea>
                     <button id="clearBtn" class="btn btn-secondary">Clear</button>
                 </div>
                 
-                <div id="results"></div>
+                <div id="formulaResults"></div>
                 
                 <div class="form-group" style="margin-top: 30px;">
                     <label>Recent Formulas:</label>
-                    <div id="recentsList">
+                    <div id="recentFormulas">
                         <p class="loading">No recent formulas yet</p>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Report Builder Tab -->
-            <div id="report-builder" class="tab-content">
-                <div class="form-group">
-                    <label for="reportTableSelect">Select Table:</label>
-                    <select id="reportTableSelect">
-                        <option value="">Select a table for reporting...</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Formula Columns:</label>
-                    <div id="formulaBuilder">
-                        <!-- Formula rows will be added dynamically -->
-                    </div>
-                    <button onclick="ReportBuilder.addFormulaRow()" class="btn btn-secondary" style="margin-top: 10px;">+ Add Formula</button>
-                </div>
-                
-                <div class="button-group">
-                    <button id="executeReportBtn" class="btn btn-primary">Generate Report</button>
-                    <button id="clearReportBtn" class="btn btn-secondary">Clear All</button>
-                </div>
-                
-                <div id="reportResults"></div>
             </div>
             
             <!-- Examples Tab -->
@@ -102,48 +78,10 @@ Example: IF(price > 300000, 'Luxury', 'Standard')"></textarea>
                     <p class="loading">Select a table to view its schema and sample data</p>
                 </div>
             </div>
-            
-            <!-- Database Management Tab -->
-            <div id="database" class="tab-content">
-                <h3>Database Connection</h3>
-                
-                <div id="currentDbInfo" class="current-db-info">
-                    <div class="db-status">Loading...</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="dbType">Database Type:</label>
-                    <select id="dbType">
-                        <option value="pglite">PGlite (Default)</option>
-                        <option value="postgresql">PostgreSQL</option>
-                    </select>
-                </div>
-                
-                <div id="connectionStringGroup" class="form-group" style="display: none;">
-                    <label for="connectionString">PostgreSQL Connection String:</label>
-                    <input type="text" id="connectionString" placeholder="postgresql://user:password@host:port/database">
-                    <small style="color: #6c757d; font-size: 0.85rem; margin-top: 5px; display: block;">
-                        Example: postgresql://user:password@localhost:5432/mydb
-                    </small>
-                </div>
-                
-                <div class="button-group">
-                    <button id="testConnectionBtn" class="btn btn-secondary">Test Connection</button>
-                    <button id="switchDatabaseBtn" class="btn btn-primary">Switch Database</button>
-                </div>
-                
-                <div id="databaseResults"></div>
-            </div>
         </div>
         </div>
 
-    <!-- Developer Tools Integration -->
-    <script src="developer-tools-client.js"></script>
-    <script src="autocomplete.js"></script>
-    <script src="syntax-highlighting.js"></script>
-    <script src="formatter-integration.js"></script>
-    
-    <!-- Main Application -->
-    <script src="script.js"></script>
+    <!-- Client-Side Application (ES6 Modules) -->
+    <script type="module" src="browser-script.js"></script>
 </body>
 </html>
