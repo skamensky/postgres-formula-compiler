@@ -301,9 +301,18 @@ async function main() {
       allTableNames.add(rel.toTable);
     }
     
+    if (outputFormat === 'console') {
+      console.log(`🔍 Direct relationships from ${tableName}:`, directRels.map(r => `${r.name} → ${r.toTable}`));
+      console.log(`🔍 Requesting column data for tables:`, [...allTableNames]);
+    }
+    
     // Bulkified: Get column lists for all tables in one call
     const allColumnLists = await getColumnListsForTables([...allTableNames], client);
     const columnList = allColumnLists[tableName];
+    
+    if (outputFormat === 'console') {
+      console.log(`🔍 Successfully loaded column data for tables:`, Object.keys(allColumnLists));
+    }
     
     // Build table infos using bulkified results
     const tableInfos = [
@@ -320,6 +329,15 @@ async function main() {
           tableName: rel.toTable,
           columnList: allColumnLists[rel.toTable]
         });
+      } else {
+        // Critical error: relationship points to a table we couldn't load
+        console.error(`❌ Error: Relationship '${rel.name}' from table '${tableName}' points to table '${rel.toTable}', but table '${rel.toTable}' was not found in the database.`);
+        console.error(`   Available tables loaded: ${Object.keys(allColumnLists).join(', ')}`);
+        console.error(`   This usually means:`);
+        console.error(`   1. The table '${rel.toTable}' doesn't exist in the database`);
+        console.error(`   2. The relationship definition is incorrect`);
+        console.error(`   3. There's a database connection or permission issue`);
+        process.exit(1);
       }
     }
     
