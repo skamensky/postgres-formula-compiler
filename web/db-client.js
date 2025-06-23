@@ -53,8 +53,7 @@ class DatabaseClient {
 
   async initializePGlite() {
     const __dirname = dirname(fileURLToPath(import.meta.url));
-    const projectRoot = join(__dirname, '..');
-    const seedSql = readFileSync(join(projectRoot, 'seed.sql'), 'utf8');
+    const seedSql = readFileSync(join(__dirname, 'public/modules/shared/seed.sql'), 'utf8');
     await this.client.exec(seedSql);
   }
 
