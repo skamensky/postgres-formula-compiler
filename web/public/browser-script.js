@@ -972,7 +972,9 @@ function displaySchemaDetails(tableName, schema) {
         schema.directRelationships.forEach(rel => {
             html += `
                 <div class="relationship-item">
-                    <strong>${rel.relationship_name}</strong> → ${rel.target_table_name}
+                    <strong>${rel.relationship_name}</strong> → 
+                    <span class="clickable-table" onclick="navigateToTable('${rel.target_table_name}')" 
+                          title="Click to view ${rel.target_table_name} schema">${rel.target_table_name}</span>
                     <div class="relationship-detail">via ${rel.col_name}</div>
                 </div>
             `;
@@ -995,7 +997,9 @@ function displaySchemaDetails(tableName, schema) {
         schema.reverseRelationships.forEach(rel => {
             html += `
                 <div class="relationship-item">
-                    <strong>${rel.relationship_name}</strong> ← ${rel.source_table_name}
+                    <strong>${rel.relationship_name}</strong> ← 
+                    <span class="clickable-table" onclick="navigateToTable('${rel.source_table_name}')" 
+                          title="Click to view ${rel.source_table_name} schema">${rel.source_table_name}</span>
                     <div class="relationship-detail">via ${rel.col_name}</div>
                 </div>
             `;
@@ -1020,6 +1024,41 @@ function displaySchemaDetails(tableName, schema) {
     html += `</div>`;
     
     schemaDetailsElement.innerHTML = html;
+}
+
+/**
+ * Navigate to a related table in the schema viewer
+ * @param {string} tableName - The table name to navigate to
+ */
+function navigateToTable(tableName) {
+    console.log(`🔗 Navigating to table: ${tableName}`);
+    
+    // Update the schema table selector
+    const schemaTableSelect = document.getElementById('schemaTableSelect');
+    if (schemaTableSelect) {
+        schemaTableSelect.value = tableName;
+    }
+    
+    // Also update the main table selector to keep them in sync
+    const tableSelect = document.getElementById('tableSelect');
+    if (tableSelect) {
+        tableSelect.value = tableName;
+        AppState.currentTable = tableName;
+    }
+    
+    // Load the schema details for the new table
+    loadSchemaDetails(tableName);
+    
+    // Update UI enhancements for the new table context
+    updateUIEnhancementsForTable(tableName);
+    
+    // Visual feedback - briefly highlight the table name change
+    if (schemaTableSelect) {
+        schemaTableSelect.style.backgroundColor = '#e3f2fd';
+        setTimeout(() => {
+            schemaTableSelect.style.backgroundColor = '';
+        }, 1000);
+    }
 }
 
 // =============================================================================
@@ -1222,6 +1261,7 @@ window.FormulaCompiler = FormulaCompiler;
 window.RecentFormulas = RecentFormulas;
 window.UI = UI;
 window.loadSchemaDetails = loadSchemaDetails;
+window.navigateToTable = navigateToTable;
 window.toggleTableExamples = toggleTableExamples;
 window.loadAndExecuteExample = loadAndExecuteExample;
 
