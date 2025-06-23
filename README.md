@@ -1,5 +1,9 @@
 # JavaScript-to-SQL Formula Compiler
 
+<div align="center">
+  <img src="docs/images/chameleon.png" alt="Chameleon Logo" width="600" />
+</div>
+
 A JavaScript-based Excel-like formula compiler that converts formulas to PostgreSQL SQL. This project implements a complete lexer, parser, and compiler pipeline with comprehensive function support and optimized SQL generation.
 
 
