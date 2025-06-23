@@ -318,6 +318,145 @@
             padding: 8px 12px;
             border-radius: 20px;
         }
+        
+        /* Report Builder Styles */
+        .formula-row {
+            display: grid;
+            grid-template-columns: 200px 1fr 40px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: start;
+        }
+        
+        .formula-name {
+            padding: 8px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+        }
+        
+        .formula-input {
+            padding: 8px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            resize: vertical;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .formula-input.error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .formula-input.success {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+        
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            height: 32px;
+        }
+        
+        .btn-remove:hover {
+            background: #c82333;
+        }
+        
+        /* Error tooltip */
+        .error-tooltip {
+            position: absolute;
+            background: #dc3545;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .error-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 10px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 4px solid #dc3545;
+        }
+        
+        /* Recent formulas */
+        .recent-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .recent-item:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .recent-formula {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            color: #495057;
+            margin: 4px 0;
+        }
+        
+        .recent-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Clickable relationships */
+        .relationship-link {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .relationship-link:hover {
+            color: #0056b3;
+        }
+        
+        .relationship-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .relationship-badge:hover {
+            background: #cce7ff;
+            transform: translateY(-1px);
+        }
+        
+        .relationship-badge.reverse {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        
+        .relationship-badge.reverse:hover {
+            background: #ffe8a1;
+        }
     </style>
 </head>
 <body>
@@ -330,6 +469,7 @@
         <div class="main-content">
             <div class="tabs">
                 <button class="tab active" data-tab="compiler">Formula Compiler</button>
+                <button class="tab" data-tab="report-builder">Report Builder</button>
                 <button class="tab" data-tab="examples">Examples</button>
                 <button class="tab" data-tab="schema">Database Schema</button>
             </div>
@@ -353,6 +493,41 @@
                 </div>
                 
                 <div id="results"></div>
+                
+                <div id="recentFormulas" style="margin-top: 20px;">
+                    <h4>📋 Recent Formulas</h4>
+                    <div id="recentsList">
+                        <p class="loading">No recent formulas yet</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="report-builder">
+                <div class="form-group">
+                    <label for="reportTableSelect">Select Table:</label>
+                    <select id="reportTableSelect">
+                        <option value="">Loading tables...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Build Your Report:</label>
+                    <div id="formulaBuilder">
+                        <div class="formula-row">
+                            <input type="text" placeholder="Column Name" class="formula-name">
+                            <textarea placeholder="Formula" class="formula-input" rows="2"></textarea>
+                            <button class="btn-remove" onclick="removeFormulaRow(this)">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="addFormulaRow()">+ Add Formula</button>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" id="executeReportBtn">Generate Report</button>
+                    <button class="btn btn-secondary" id="clearReportBtn">Clear All</button>
+                </div>
+                
+                <div id="reportResults"></div>
             </div>
             
             <div class="tab-content" id="examples">
@@ -383,6 +558,8 @@
         // Global state
         let currentTable = '';
         let availableTables = [];
+        let recentFormulas = JSON.parse(localStorage.getItem('recentFormulas') || '[]');
+        let validationTimeouts = new Map();
         
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -398,6 +575,8 @@
                 // Load data for specific tabs
                 if (tab.dataset.tab === 'examples') {
                     loadExamples();
+                } else if (tab.dataset.tab === 'report-builder') {
+                    loadReportBuilder();
                 }
             });
         });
@@ -409,25 +588,34 @@
                 const data = await response.json();
                 availableTables = data.tables;
                 
-                // Update both table selects
+                // Update all table selects
                 const tableSelect = document.getElementById('tableSelect');
                 const schemaTableSelect = document.getElementById('schemaTableSelect');
+                const reportTableSelect = document.getElementById('reportTableSelect');
                 
                 tableSelect.innerHTML = '<option value="">Select a table...</option>';
                 schemaTableSelect.innerHTML = '<option value="">Choose a table to view its schema</option>';
+                reportTableSelect.innerHTML = '<option value="">Select a table for reporting...</option>';
                 
                 availableTables.forEach(table => {
                     const option1 = new Option(table, table);
                     const option2 = new Option(table, table);
+                    const option3 = new Option(table, table);
                     tableSelect.appendChild(option1);
                     schemaTableSelect.appendChild(option2);
+                    reportTableSelect.appendChild(option3);
                 });
                 
-                // Auto-select submission table if available
-                if (availableTables.includes('submission')) {
-                    tableSelect.value = 'submission';
-                    currentTable = 'submission';
+                // Auto-select customer table if available, otherwise first table
+                const defaultTable = availableTables.includes('customer') ? 'customer' : availableTables[0];
+                if (defaultTable) {
+                    tableSelect.value = defaultTable;
+                    reportTableSelect.value = defaultTable;
+                    currentTable = defaultTable;
                 }
+                
+                // Load recent formulas
+                loadRecentFormulas();
                 
             } catch (error) {
                 console.error('Error loading tables:', error);
@@ -467,6 +655,8 @@
                 
                 if (result.success) {
                     showResult(result, 'success');
+                    // Save to recent formulas
+                    saveToRecents(formula, tableName);
                 } else {
                     showResult(result.error, 'error');
                 }
@@ -628,10 +818,26 @@
                         <div class="schema-section">
                             <h4>🔗 Relationships (${schema.relationships.length})</h4>
                             <div class="columns-grid">
-                                ${schema.relationships.map(rel => `
-                                    <div class="column-item">
-                                        <div class="column-name">${rel.col_name.replace(/_id$/, '_rel')}</div>
+                                ${schema.directRelationships.map(rel => `
+                                    <div class="relationship-badge" onclick="navigateToTable('${rel.target_table_name}')">
+                                        <div class="column-name">${rel.relationship_name}</div>
                                         <div class="column-type">→ ${rel.target_table_name}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (schema.reverseRelationships && schema.reverseRelationships.length > 0) {
+                    html += `
+                        <div class="schema-section">
+                            <h4>⬅️ Reverse Relationships (${schema.reverseRelationships.length})</h4>
+                            <div class="columns-grid">
+                                ${schema.reverseRelationships.map(rel => `
+                                    <div class="relationship-badge reverse" onclick="navigateToTable('${rel.source_table_name}')">
+                                        <div class="column-name">${rel.relationship_name}</div>
+                                        <div class="column-type">← ${rel.source_table_name}</div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -670,6 +876,322 @@
             }
         }
         
+        // Navigate to table in schema
+        function navigateToTable(tableName) {
+            const schemaTableSelect = document.getElementById('schemaTableSelect');
+            schemaTableSelect.value = tableName;
+            loadTableSchema(tableName);
+        }
+        
+        // Save formula to recents
+        function saveToRecents(formula, tableName) {
+            const recent = {
+                formula: formula,
+                tableName: tableName,
+                timestamp: new Date().toISOString(),
+                id: Date.now() + Math.random()
+            };
+            
+            // Remove duplicates and limit to 10
+            recentFormulas = recentFormulas.filter(r => r.formula !== formula || r.tableName !== tableName);
+            recentFormulas.unshift(recent);
+            recentFormulas = recentFormulas.slice(0, 10);
+            
+            localStorage.setItem('recentFormulas', JSON.stringify(recentFormulas));
+            loadRecentFormulas();
+        }
+        
+        // Load recent formulas
+        function loadRecentFormulas() {
+            const recentsList = document.getElementById('recentsList');
+            
+            if (recentFormulas.length === 0) {
+                recentsList.innerHTML = '<p class="loading">No recent formulas yet</p>';
+                return;
+            }
+            
+            let html = '';
+            recentFormulas.forEach(recent => {
+                const timeAgo = getTimeAgo(new Date(recent.timestamp));
+                html += `
+                    <div class="recent-item" onclick="loadRecentFormula('${recent.id}')">
+                        <div class="recent-formula">${escapeHtml(recent.formula)}</div>
+                        <div class="recent-meta">
+                            <span>📊 ${recent.tableName}</span>
+                            <span>⏰ ${timeAgo}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            recentsList.innerHTML = html;
+        }
+        
+        // Load recent formula into compiler
+        function loadRecentFormula(id) {
+            const recent = recentFormulas.find(r => r.id == id);
+            if (!recent) return;
+            
+            // Switch to compiler tab
+            switchToTab('compiler');
+            
+            // Set form values
+            document.getElementById('tableSelect').value = recent.tableName;
+            document.getElementById('formulaInput').value = recent.formula;
+            currentTable = recent.tableName;
+        }
+        
+        // Report Builder Functions
+        function loadReportBuilder() {
+            // Nothing special needed for now
+        }
+        
+        function addFormulaRow() {
+            const formulaBuilder = document.getElementById('formulaBuilder');
+            const newRow = document.createElement('div');
+            newRow.className = 'formula-row';
+            newRow.innerHTML = `
+                <input type="text" placeholder="Column Name" class="formula-name">
+                <textarea placeholder="Formula" class="formula-input" rows="2"></textarea>
+                <button class="btn-remove" onclick="removeFormulaRow(this)">✕</button>
+            `;
+            formulaBuilder.appendChild(newRow);
+            
+            // Add real-time validation to the new textarea
+            const textarea = newRow.querySelector('.formula-input');
+            addValidation(textarea);
+        }
+        
+        function removeFormulaRow(button) {
+            button.parentElement.remove();
+        }
+        
+        // Execute multiple formulas report
+        async function executeReport() {
+            const tableName = document.getElementById('reportTableSelect').value;
+            const formulaRows = document.querySelectorAll('#formulaBuilder .formula-row');
+            
+            if (!tableName) {
+                showReportResult('Please select a table', 'error');
+                return;
+            }
+            
+            if (formulaRows.length === 0) {
+                showReportResult('Please add at least one formula', 'error');
+                return;
+            }
+            
+            const formulas = [];
+            let hasErrors = false;
+            
+            formulaRows.forEach((row, index) => {
+                const name = row.querySelector('.formula-name').value.trim() || `Column_${index + 1}`;
+                const formula = row.querySelector('.formula-input').value.trim();
+                
+                if (!formula) {
+                    hasErrors = true;
+                    return;
+                }
+                
+                formulas.push({ name, formula });
+            });
+            
+            if (hasErrors) {
+                showReportResult('Please fill in all formulas', 'error');
+                return;
+            }
+            
+            const executeBtn = document.getElementById('executeReportBtn');
+            executeBtn.disabled = true;
+            executeBtn.textContent = 'Generating Report...';
+            
+            try {
+                const response = await fetch('/api/execute-multiple', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ formulas, tableName })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showReportResult(result, 'success');
+                    // Save successful formulas to recents
+                    formulas.forEach(f => saveToRecents(f.formula, tableName));
+                } else {
+                    showReportResult(result.error, 'error');
+                }
+                
+            } catch (error) {
+                showReportResult(`Network error: ${error.message}`, 'error');
+            } finally {
+                executeBtn.disabled = false;
+                executeBtn.textContent = 'Generate Report';
+            }
+        }
+        
+        // Show report results
+        function showReportResult(result, type) {
+            const resultsDiv = document.getElementById('reportResults');
+            
+            if (type === 'error') {
+                resultsDiv.innerHTML = `
+                    <div class="results error">
+                        <h3>❌ Report Generation Failed</h3>
+                        <p><strong>Error:</strong> ${result}</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Success case
+            let html = `
+                <div class="results success">
+                    <h3>📊 Multi-Formula Report Generated</h3>
+                    
+                    <div class="metadata">
+                        <div class="metadata-item">📈 Formulas: ${result.formulas.length}</div>
+                        <div class="metadata-item">📊 Results: ${result.results.length} rows</div>
+                        <div class="metadata-item">🔗 JOINs: ${result.metadata.actualJoins}</div>
+                        <div class="metadata-item">📊 Aggregates: ${result.metadata.totalAggregateIntents}</div>
+                    </div>
+                    
+                    <h4>📝 Generated SQL:</h4>
+                    <div class="sql-output">${escapeHtml(result.sql)}</div>
+            `;
+            
+            if (result.results.length > 0) {
+                html += `
+                    <h4>📊 Report Results:</h4>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    ${Object.keys(result.results[0]).map(key => `<th>${key}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.results.slice(0, 10).map(row => `
+                                    <tr>
+                                        ${Object.keys(row).map(key => `<td>${row[key] === null ? '<em>NULL</em>' : escapeHtml(String(row[key]))}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                if (result.results.length > 10) {
+                    html += `<p><em>Showing first 10 of ${result.results.length} results</em></p>`;
+                }
+            } else {
+                html += '<p><em>No results returned</em></p>';
+            }
+            
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Real-time validation
+        function addValidation(textarea) {
+            textarea.addEventListener('input', () => {
+                const formula = textarea.value.trim();
+                const tableName = document.getElementById('reportTableSelect').value || document.getElementById('tableSelect').value;
+                
+                if (!formula || !tableName) {
+                    textarea.className = 'formula-input';
+                    hideErrorTooltip();
+                    return;
+                }
+                
+                // Clear previous timeout
+                const timeoutId = validationTimeouts.get(textarea);
+                if (timeoutId) {
+                    clearTimeout(timeoutId);
+                }
+                
+                // Set new timeout for validation
+                const newTimeoutId = setTimeout(() => {
+                    validateFormula(formula, tableName, textarea);
+                }, 500);
+                
+                validationTimeouts.set(textarea, newTimeoutId);
+            });
+        }
+        
+        // Validate formula
+        async function validateFormula(formula, tableName, element) {
+            try {
+                const response = await fetch('/api/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ formula, tableName })
+                });
+                
+                const result = await response.json();
+                
+                if (result.valid) {
+                    element.className = 'formula-input success';
+                    hideErrorTooltip();
+                } else {
+                    element.className = 'formula-input error';
+                    showErrorTooltip(element, result.error);
+                }
+                
+            } catch (error) {
+                element.className = 'formula-input error';
+                showErrorTooltip(element, 'Validation failed');
+            }
+        }
+        
+        // Error tooltip functions
+        function showErrorTooltip(element, message) {
+            hideErrorTooltip();
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'error-tooltip';
+            tooltip.textContent = message;
+            tooltip.id = 'errorTooltip';
+            
+            document.body.appendChild(tooltip);
+            
+            const rect = element.getBoundingClientRect();
+            tooltip.style.left = rect.left + 'px';
+            tooltip.style.top = (rect.bottom + 5) + 'px';
+        }
+        
+        function hideErrorTooltip() {
+            const existing = document.getElementById('errorTooltip');
+            if (existing) {
+                existing.remove();
+            }
+        }
+        
+        // Helper functions
+        function switchToTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            return `${diffDays}d ago`;
+        }
+        
         // Utility function to escape HTML
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -688,8 +1210,30 @@
             currentTable = e.target.value;
         });
         
+        document.getElementById('reportTableSelect').addEventListener('change', (e) => {
+            // Update validation for existing formula inputs
+            document.querySelectorAll('.formula-input').forEach(textarea => {
+                addValidation(textarea);
+            });
+        });
+        
         document.getElementById('schemaTableSelect').addEventListener('change', (e) => {
             loadTableSchema(e.target.value);
+        });
+        
+        document.getElementById('executeReportBtn').addEventListener('click', executeReport);
+        document.getElementById('clearReportBtn').addEventListener('click', () => {
+            document.getElementById('formulaBuilder').innerHTML = `
+                <div class="formula-row">
+                    <input type="text" placeholder="Column Name" class="formula-name">
+                    <textarea placeholder="Formula" class="formula-input" rows="2"></textarea>
+                    <button class="btn-remove" onclick="removeFormulaRow(this)">✕</button>
+                </div>
+            `;
+            document.getElementById('reportResults').innerHTML = '';
+            // Add validation to the new textarea
+            const textarea = document.querySelector('.formula-input');
+            addValidation(textarea);
         });
         
         // Allow Enter key to execute (Ctrl+Enter for newline)
@@ -697,6 +1241,17 @@
             if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
                 e.preventDefault();
                 executeFormula();
+            }
+        });
+        
+        // Add real-time validation to main formula input
+        addValidation(document.getElementById('formulaInput'));
+        
+        // Initialize report builder validation
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialTextarea = document.querySelector('#formulaBuilder .formula-input');
+            if (initialTextarea) {
+                addValidation(initialTextarea);
             }
         });
         

@@ -48,7 +48,7 @@ app.get('/api/tables', async (req, res) => {
   }
 });
 
-// Get table schema
+// Get table schema with reverse relationships
 app.get('/api/tables/:tableName/schema', async (req, res) => {
   try {
     const { tableName } = req.params;
@@ -60,22 +60,271 @@ app.get('/api/tables/:tableName/schema', async (req, res) => {
       data_type: type
     }));
     
-    // Get relationships using introspection  
+    // Get all relationships
     const allRelationships = await getAllRelationships(dbClient);
-    const relationships = allRelationships
+    
+    // Direct relationships (this table -> other tables)
+    const directRelationships = allRelationships
       .filter(rel => rel.fromTable === tableName)
       .map(rel => ({
         col_name: rel.joinColumn,
-        target_table_name: rel.toTable
+        target_table_name: rel.toTable,
+        relationship_name: rel.name,
+        type: 'direct'
+      }));
+    
+    // Reverse relationships (other tables -> this table)
+    const reverseRelationships = allRelationships
+      .filter(rel => rel.toTable === tableName)
+      .map(rel => ({
+        col_name: rel.joinColumn,
+        source_table_name: rel.fromTable,
+        relationship_name: `${rel.fromTable}_${rel.joinColumn}`,
+        type: 'reverse'
       }));
     
     res.json({
       columns: columns,
-      relationships: relationships
+      directRelationships: directRelationships,
+      reverseRelationships: reverseRelationships,
+      // Legacy format for backward compatibility
+      relationships: directRelationships.map(rel => ({
+        col_name: rel.col_name,
+        target_table_name: rel.target_table_name
+      }))
     });
   } catch (error) {
     console.error('Error fetching table schema:', error);
     res.status(500).json({ error: 'Failed to fetch table schema' });
+  }
+});
+
+// Validate formula (for real-time error checking)
+app.post('/api/validate', async (req, res) => {
+  try {
+    const { formula, tableName } = req.body;
+    
+    if (!formula || !tableName) {
+      return res.json({ valid: false, error: 'Formula and table name are required' });
+    }
+    
+    // Get context similar to execute endpoint
+    const allTableNames = await getTableNames(dbClient);
+    const columnLists = await getColumnListsForTables(allTableNames, dbClient);
+    const allRelationships = await getAllRelationships(dbClient);
+    
+    const allTableNamesForContext = new Set([tableName]);
+    const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRels) {
+      allTableNamesForContext.add(rel.toTable);
+    }
+    
+    const tablesToLoadInverseRels = new Set([tableName]);
+    const directInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
+    for (const rel of directInverseRels) {
+      tablesToLoadInverseRels.add(rel.fromTable);
+    }
+    
+    const allInverseRelationships = await getInverseRelationshipsForTables([...tablesToLoadInverseRels], dbClient);
+    const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
+    
+    const tableInfos = [
+      {
+        tableName: tableName,
+        columnList: columnLists[tableName]
+      }
+    ];
+    
+    for (const rel of directRels) {
+      if (columnLists[rel.toTable]) {
+        tableInfos.push({
+          tableName: rel.toTable,
+          columnList: columnLists[rel.toTable]
+        });
+      }
+    }
+    
+    const relationshipInfo = {};
+    const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRelationships) {
+      const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+      if (targetTable) {
+        relationshipInfo[rel.name] = {
+          joinColumn: rel.joinColumn,
+          columnList: targetTable.columnList
+        };
+      }
+    }
+    
+    const context = {
+      tableName: tableName,
+      tableInfos: tableInfos,
+      relationshipInfos: allRelationships,
+      columnList: columnLists[tableName],
+      relationshipInfo: relationshipInfo,
+      inverseRelationshipInfo: inverseRelationshipInfo,
+      allInverseRelationships: allInverseRelationships
+    };
+    
+    // Try to compile formula
+    try {
+      const compilation = evaluateFormula(formula, context);
+      res.json({ valid: true, compilation: compilation });
+    } catch (error) {
+      res.json({ valid: false, error: error.message || error.toString() });
+    }
+    
+  } catch (error) {
+    console.error('Error validating formula:', error);
+    res.json({ valid: false, error: 'Validation failed' });
+  }
+});
+
+// Execute multiple formulas (report builder)
+app.post('/api/execute-multiple', async (req, res) => {
+  try {
+    const { formulas, tableName } = req.body;
+    
+    if (!formulas || !Array.isArray(formulas) || formulas.length === 0) {
+      return res.status(400).json({ error: 'Formulas array is required' });
+    }
+    
+    if (!tableName) {
+      return res.status(400).json({ error: 'Table name is required' });
+    }
+    
+    // Get context (same as single execute)
+    const allTableNames = await getTableNames(dbClient);
+    const columnLists = await getColumnListsForTables(allTableNames, dbClient);
+    const allRelationships = await getAllRelationships(dbClient);
+    
+    const allTableNamesForContext = new Set([tableName]);
+    const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRels) {
+      allTableNamesForContext.add(rel.toTable);
+    }
+    
+    const tablesToLoadInverseRels = new Set([tableName]);
+    const directInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
+    for (const rel of directInverseRels) {
+      tablesToLoadInverseRels.add(rel.fromTable);
+    }
+    
+    const allInverseRelationships = await getInverseRelationshipsForTables([...tablesToLoadInverseRels], dbClient);
+    const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
+    
+    const tableInfos = [
+      {
+        tableName: tableName,
+        columnList: columnLists[tableName]
+      }
+    ];
+    
+    for (const rel of directRels) {
+      if (columnLists[rel.toTable]) {
+        tableInfos.push({
+          tableName: rel.toTable,
+          columnList: columnLists[rel.toTable]
+        });
+      }
+    }
+    
+    const relationshipInfo = {};
+    const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
+    for (const rel of directRelationships) {
+      const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
+      if (targetTable) {
+        relationshipInfo[rel.name] = {
+          joinColumn: rel.joinColumn,
+          columnList: targetTable.columnList
+        };
+      }
+    }
+    
+    const context = {
+      tableName: tableName,
+      tableInfos: tableInfos,
+      relationshipInfos: allRelationships,
+      columnList: columnLists[tableName],
+      relationshipInfo: relationshipInfo,
+      inverseRelationshipInfo: inverseRelationshipInfo,
+      allInverseRelationships: allInverseRelationships
+    };
+    
+    // Compile all formulas
+    const results = {};
+    const compilationResults = [];
+    
+    for (let i = 0; i < formulas.length; i++) {
+      const formula = formulas[i];
+      const fieldName = formula.name || `formula_${i + 1}`;
+      
+      try {
+        const compilation = evaluateFormula(formula.formula, context);
+        results[fieldName] = compilation;
+        compilationResults.push({
+          name: fieldName,
+          formula: formula.formula,
+          compilation: compilation,
+          success: true
+        });
+      } catch (error) {
+        compilationResults.push({
+          name: fieldName,
+          formula: formula.formula,
+          error: error.message || error.toString(),
+          success: false
+        });
+      }
+    }
+    
+    // Check if any formulas failed
+    const failedFormulas = compilationResults.filter(r => !r.success);
+    if (failedFormulas.length > 0) {
+      return res.json({
+        success: false,
+        error: 'Some formulas failed to compile',
+        failedFormulas: failedFormulas,
+        successfulFormulas: compilationResults.filter(r => r.success)
+      });
+    }
+    
+    // Generate SQL using the compiled results
+    let sqlResult;
+    try {
+      sqlResult = generateSQL(results, tableName);
+    } catch (error) {
+      return res.json({
+        success: false,
+        error: error.message || error.toString(),
+        formulas: formulas
+      });
+    }
+    
+    // Execute SQL
+    const result = await dbClient.query(sqlResult.sql);
+    
+    res.json({
+      success: true,
+      formulas: compilationResults,
+      sql: sqlResult.sql,
+      results: result.rows,
+      metadata: {
+        totalJoinIntents: Object.values(results).reduce((sum, r) => sum + r.joinIntents.length, 0),
+        totalAggregateIntents: Object.values(results).reduce((sum, r) => sum + r.aggregateIntents.length, 0),
+        actualJoins: (sqlResult.fromClause.match(/LEFT JOIN/g) || []).length,
+        subqueries: sqlResult.aggregateSubqueries.length,
+        selectExpressions: sqlResult.selectExpressions.length
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error executing multiple formulas:', error);
+    res.json({
+      success: false,
+      error: error.message,
+      formulas: req.body.formulas || []
+    });
   }
 });
 

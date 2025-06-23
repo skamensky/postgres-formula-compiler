@@ -153,55 +153,55 @@ INSERT INTO rep (user_id, name, region, license_number, phone_number, email, hir
 -- Sample Customers (Much more diverse scenarios)
 INSERT INTO customer (first_name, last_name, email, phone, address, city, state, zip_code, lead_source, budget_min, budget_max, preferred_bedrooms, preferred_bathrooms, status, notes, assigned_rep_id) VALUES
   -- High-activity investor with multiple deals
-  ('Marcus', 'Thompson', 'marcus.thompson@email.com', '555-2001', '100 Business Plaza', 'Springfield', 'IL', '62701', 'Referral', 200000, 2000000, NULL, NULL, 'active', 'Real estate investor, portfolio expansion', 11),
+  ('Marcus', 'Thompson', 'marcus.thompson@email.com', '555-2001', '100 Business Plaza', 'Springfield', 'IL', '62701', 'Referral', 200000, 2000000, NULL, NULL, 'active', 'Real estate investor, portfolio expansion', 10),
   
   -- Luxury buyer with specific requirements  
-  ('Victoria', 'Sterling', 'victoria.sterling@email.com', '555-2002', '555 Executive Dr', 'Springfield', 'IL', '62702', 'Past Client', 1500000, 3500000, 5, 4, 'active', 'Corporate executive, needs luxury amenities', 8),
+  ('Victoria', 'Sterling', 'victoria.sterling@email.com', '555-2002', '555 Executive Dr', 'Springfield', 'IL', '62702', 'Past Client', 1500000, 3500000, 5, 4, 'active', 'Corporate executive, needs luxury amenities', 7),
   
   -- First-time buyer, price sensitive
-  ('Alex', 'Rivera', 'alex.rivera@email.com', '555-2003', '789 College Ave', 'Springfield', 'IL', '62703', 'Website', 180000, 280000, 2, 1, 'active', 'First-time buyer, tight budget, pre-approved', 10),
+  ('Alex', 'Rivera', 'alex.rivera@email.com', '555-2003', '789 College Ave', 'Springfield', 'IL', '62703', 'Website', 180000, 280000, 2, 1, 'active', 'First-time buyer, tight budget, pre-approved', 9),
   
   -- Corporate relocation, multiple family members
-  ('Jennifer', 'Chang', 'jennifer.chang@email.com', '555-2004', '456 Corporate Way', 'Springfield', 'IL', '62704', 'Corporate Referral', 450000, 650000, 4, 3, 'active', 'Corporate relocation, needs quick closing', 12),
+  ('Jennifer', 'Chang', 'jennifer.chang@email.com', '555-2004', '456 Corporate Way', 'Springfield', 'IL', '62704', 'Corporate Referral', 450000, 650000, 4, 3, 'active', 'Corporate relocation, needs quick closing', 11),
   
   -- Downsizing retirees
-  ('Robert', 'Wilson', 'robert.wilson@email.com', '555-2005', '123 Retirement Ln', 'Springfield', 'IL', '62705', 'Referral', 300000, 450000, 2, 2, 'prospect', 'Downsizing from large home, no rush', 7),
+  ('Robert', 'Wilson', 'robert.wilson@email.com', '555-2005', '123 Retirement Ln', 'Springfield', 'IL', '62705', 'Referral', 300000, 450000, 2, 2, 'prospect', 'Downsizing from large home, no rush', 6),
   
   -- Young professionals, dual income
-  ('Emma', 'Foster', 'emma.foster@email.com', '555-2006', '321 Tech Park', 'Springfield', 'IL', '62706', 'Social Media', 350000, 500000, 3, 2, 'active', 'Dual income, tech workers, modern preferences', 3),
+  ('Emma', 'Foster', 'emma.foster@email.com', '555-2006', '321 Tech Park', 'Springfield', 'IL', '62706', 'Social Media', 350000, 500000, 3, 2, 'active', 'Dual income, tech workers, modern preferences', 2),
   
   -- International buyer, cash purchase
-  ('Hiroshi', 'Tanaka', 'hiroshi.tanaka@email.com', '555-2007', '999 International Blvd', 'Springfield', 'IL', '62707', 'Agent Network', 800000, 1200000, 4, 3, 'active', 'International buyer, cash only, investment focus', 8),
+  ('Hiroshi', 'Tanaka', 'hiroshi.tanaka@email.com', '555-2007', '999 International Blvd', 'Springfield', 'IL', '62707', 'Agent Network', 800000, 1200000, 4, 3, 'active', 'International buyer, cash only, investment focus', 7),
   
   -- Growing family, needs space
-  ('Sarah', 'Johnson', 'sarah.johnson@email.com', '555-2008', '147 Family Circle', 'Springfield', 'IL', '62708', 'Website', 400000, 600000, 4, 3, 'prospect', 'Growing family, needs yard and schools', 4),
+  ('Sarah', 'Johnson', 'sarah.johnson@email.com', '555-2008', '147 Family Circle', 'Springfield', 'IL', '62708', 'Website', 400000, 600000, 4, 3, 'prospect', 'Growing family, needs yard and schools', 3),
   
   -- Divorce situation, urgent timeline
   ('Michael', 'Peters', 'michael.peters@email.com', '555-2009', '258 Transition St', 'Springfield', 'IL', '62709', 'Attorney Referral', 250000, 400000, 2, 2, 'active', 'Divorce settlement, needs quick sale/purchase', 1),
   
   -- Empty nesters, luxury condo interest
-  ('Linda', 'Martinez', 'linda.martinez@email.com', '555-2010', '369 Empty Nest Dr', 'Springfield', 'IL', '62710', 'Past Client', 500000, 800000, 2, 2, 'prospect', 'Empty nesters, want low maintenance luxury', 8),
+  ('Linda', 'Martinez', 'linda.martinez@email.com', '555-2010', '369 Empty Nest Dr', 'Springfield', 'IL', '62710', 'Past Client', 500000, 800000, 2, 2, 'prospect', 'Empty nesters, want low maintenance luxury', 7),
   
   -- Investment group representative
-  ('David', 'Kumar', 'david.kumar@email.com', '555-2011', '147 Investment Ave', 'Springfield', 'IL', '62711', 'Business Network', 300000, 1500000, NULL, NULL, 'active', 'Investment group, looking for rental properties', 11),
+  ('David', 'Kumar', 'david.kumar@email.com', '555-2011', '147 Investment Ave', 'Springfield', 'IL', '62711', 'Business Network', 300000, 1500000, NULL, NULL, 'active', 'Investment group, looking for rental properties', 10),
   
   -- New construction buyer
-  ('Ashley', 'Clark', 'ashley.clark@email.com', '555-2012', '852 Builder Row', 'Springfield', 'IL', '62712', 'Builder Referral', 450000, 650000, 3, 2, 'active', 'Wants new construction, energy efficient', 13),
+  ('Ashley', 'Clark', 'ashley.clark@email.com', '555-2012', '852 Builder Row', 'Springfield', 'IL', '62712', 'Builder Referral', 450000, 650000, 3, 2, 'active', 'Wants new construction, energy efficient', 12),
   
   -- Senior citizen, accessibility needs
-  ('Frank', 'Roberts', 'frank.roberts@email.com', '555-2013', '741 Senior Way', 'Springfield', 'IL', '62713', 'Healthcare Referral', 200000, 350000, 2, 1, 'lead', 'Accessibility needs, single level preferred', 7),
+  ('Frank', 'Roberts', 'frank.roberts@email.com', '555-2013', '741 Senior Way', 'Springfield', 'IL', '62713', 'Healthcare Referral', 200000, 350000, 2, 1, 'lead', 'Accessibility needs, single level preferred', 6),
   
   -- Out-of-state buyer, virtual viewing
-  ('Patricia', 'Lee', 'patricia.lee@email.com', '555-2014', '963 Remote St', 'Springfield', 'IL', '62714', 'Website', 380000, 520000, 3, 2, 'prospect', 'Out of state, relies on virtual tours', 2),
+  ('Patricia', 'Lee', 'patricia.lee@email.com', '555-2014', '963 Remote St', 'Springfield', 'IL', '62714', 'Website', 380000, 520000, 3, 2, 'prospect', 'Out of state, relies on virtual tours', 1),
   
   -- Inherited property, buying replacement
-  ('Christopher', 'Brown', 'christopher.brown@email.com', '555-2015', '159 Heritage Ave', 'Springfield', 'IL', '62715', 'Estate Attorney', 600000, 900000, 4, 3, 'lead', 'Selling inherited property, upgrading', 5),
+  ('Christopher', 'Brown', 'christopher.brown@email.com', '555-2015', '159 Heritage Ave', 'Springfield', 'IL', '62715', 'Estate Attorney', 600000, 900000, 4, 3, 'lead', 'Selling inherited property, upgrading', 4),
   
   -- Military relocation
-  ('Captain', 'Smith', 'captain.smith@military.email', '555-2016', '753 Base Housing', 'Springfield', 'IL', '62716', 'Military Network', 300000, 450000, 3, 2, 'active', 'Military relocation, VA loan qualified', 12),
+  ('Captain', 'Smith', 'captain.smith@military.email', '555-2016', '753 Base Housing', 'Springfield', 'IL', '62716', 'Military Network', 300000, 450000, 3, 2, 'active', 'Military relocation, VA loan qualified', 11),
   
   -- Flip investor, multiple properties
-  ('Tony', 'Ricci', 'tony.ricci@email.com', '555-2017', '951 Contractor Dr', 'Springfield', 'IL', '62717', 'Contractor Network', 100000, 800000, NULL, NULL, 'active', 'House flipper, looking for deals', 11),
+  ('Tony', 'Ricci', 'tony.ricci@email.com', '555-2017', '951 Contractor Dr', 'Springfield', 'IL', '62717', 'Contractor Network', 100000, 800000, NULL, NULL, 'active', 'House flipper, looking for deals', 10),
   
   -- Just browsing, not serious yet
   ('Madison', 'Taylor', 'madison.taylor@email.com', '555-2018', '357 Browser Lane', 'Springfield', 'IL', '62718', 'Website', 250000, 400000, 2, 2, 'lead', 'Just browsing, not pre-approved yet', NULL);
@@ -209,40 +209,40 @@ INSERT INTO customer (first_name, last_name, email, phone, address, city, state,
 -- Sample Listings (Much more diverse price points and conditions)
 INSERT INTO listing (address, city, state, zip_code, listing_price, status, property_type, bedrooms, bathrooms, square_feet, lot_size, year_built, listing_date, days_on_market, listing_agent_id, description, features) VALUES
   -- Luxury properties
-  ('1001 Mansion Row', 'Springfield', 'IL', '62701', 2850000, 'active', 'Single Family', 6, 5.5, 6800, 2.5, 2023, '2024-01-05', 17, 8, 'Ultra-luxury estate with every amenity', ARRAY['Wine Cellar', 'Home Theater', 'Pool', 'Guest House', 'Elevator', 'Smart Home']),
-  ('2002 Executive Blvd', 'Springfield', 'IL', '62702', 1650000, 'active', 'Single Family', 5, 4, 4200, 1.2, 2022, '2024-01-08', 14, 8, 'Modern executive home with city views', ARRAY['Chef Kitchen', 'Office', 'Gym', 'Pool', 'Security System']),
-  ('3003 Prestige Way', 'Springfield', 'IL', '62703', 1200000, 'pending', 'Single Family', 4, 3.5, 3800, 0.8, 2021, '2023-12-20', 33, 8, 'Contemporary luxury with premium finishes', ARRAY['Gourmet Kitchen', 'Master Suite', 'Pool', 'Workshop']),
+  ('1001 Mansion Row', 'Springfield', 'IL', '62701', 2850000, 'active', 'Single Family', 6, 5.5, 6800, 2.5, 2023, '2024-01-05', 17, 7, 'Ultra-luxury estate with every amenity', ARRAY['Wine Cellar', 'Home Theater', 'Pool', 'Guest House', 'Elevator', 'Smart Home']),
+  ('2002 Executive Blvd', 'Springfield', 'IL', '62702', 1650000, 'active', 'Single Family', 5, 4, 4200, 1.2, 2022, '2024-01-08', 14, 7, 'Modern executive home with city views', ARRAY['Chef Kitchen', 'Office', 'Gym', 'Pool', 'Security System']),
+  ('3003 Prestige Way', 'Springfield', 'IL', '62703', 1200000, 'pending', 'Single Family', 4, 3.5, 3800, 0.8, 2021, '2023-12-20', 33, 7, 'Contemporary luxury with premium finishes', ARRAY['Gourmet Kitchen', 'Master Suite', 'Pool', 'Workshop']),
   
   -- Mid-range family homes
-  ('4004 Family Street', 'Springfield', 'IL', '62704', 485000, 'active', 'Single Family', 4, 3, 2400, 0.4, 2018, '2024-01-10', 12, 3, 'Perfect family home in great school district', ARRAY['Updated Kitchen', 'Fenced Yard', 'Garage', 'Basement']),
-  ('5005 Suburban Dr', 'Springfield', 'IL', '62705', 425000, 'active', 'Single Family', 3, 2.5, 2100, 0.35, 2017, '2024-01-12', 10, 4, 'Move-in ready with recent updates', ARRAY['Hardwood Floors', 'New HVAC', 'Deck', 'Storage']),
-  ('6006 School Zone Ave', 'Springfield', 'IL', '62706', 535000, 'contingent', 'Single Family', 4, 3, 2600, 0.5, 2019, '2023-12-28', 25, 2, 'Excellent schools, family neighborhood', ARRAY['Open Floor Plan', 'Two Car Garage', 'Patio', 'Pantry']),
+  ('4004 Family Street', 'Springfield', 'IL', '62704', 485000, 'active', 'Single Family', 4, 3, 2400, 0.4, 2018, '2024-01-10', 12, 2, 'Perfect family home in great school district', ARRAY['Updated Kitchen', 'Fenced Yard', 'Garage', 'Basement']),
+  ('5005 Suburban Dr', 'Springfield', 'IL', '62705', 425000, 'active', 'Single Family', 3, 2.5, 2100, 0.35, 2017, '2024-01-12', 10, 3, 'Move-in ready with recent updates', ARRAY['Hardwood Floors', 'New HVAC', 'Deck', 'Storage']),
+  ('6006 School Zone Ave', 'Springfield', 'IL', '62706', 535000, 'contingent', 'Single Family', 4, 3, 2600, 0.5, 2019, '2023-12-28', 25, 1, 'Excellent schools, family neighborhood', ARRAY['Open Floor Plan', 'Two Car Garage', 'Patio', 'Pantry']),
   
   -- Starter homes and condos
-  ('7007 First Home Lane', 'Springfield', 'IL', '62707', 225000, 'active', 'Townhouse', 2, 2, 1400, 0.05, 2020, '2024-01-15', 7, 10, 'Perfect starter home with low maintenance', ARRAY['HOA Amenities', 'Patio', 'In-Unit Laundry', 'Storage']),
-  ('8008 Condo Circle', 'Springfield', 'IL', '62708', 185000, 'active', 'Condo', 2, 1, 950, 0, 2019, '2024-01-14', 8, 10, 'Affordable condo with city convenience', ARRAY['Balcony', 'Gym Access', 'Pool', 'Parking']),
-  ('9009 Budget Way', 'Springfield', 'IL', '62709', 165000, 'active', 'Single Family', 2, 1, 900, 0.1, 1985, '2024-01-18', 4, 10, 'Fixer-upper with great potential', ARRAY['Large Lot', 'Garage', 'Original Hardwood']),
+  ('7007 First Home Lane', 'Springfield', 'IL', '62707', 225000, 'active', 'Townhouse', 2, 2, 1400, 0.05, 2020, '2024-01-15', 7, 9, 'Perfect starter home with low maintenance', ARRAY['HOA Amenities', 'Patio', 'In-Unit Laundry', 'Storage']),
+  ('8008 Condo Circle', 'Springfield', 'IL', '62708', 185000, 'active', 'Condo', 2, 1, 950, 0, 2019, '2024-01-14', 8, 9, 'Affordable condo with city convenience', ARRAY['Balcony', 'Gym Access', 'Pool', 'Parking']),
+  ('9009 Budget Way', 'Springfield', 'IL', '62709', 165000, 'active', 'Single Family', 2, 1, 900, 0.1, 1985, '2024-01-18', 4, 9, 'Fixer-upper with great potential', ARRAY['Large Lot', 'Garage', 'Original Hardwood']),
   
   -- Investment properties
-  ('1010 Rental Row', 'Springfield', 'IL', '62710', 145000, 'active', 'Single Family', 3, 1, 1100, 0.15, 1978, '2024-01-11', 11, 11, 'Great rental investment opportunity', ARRAY['Separate Entrance', 'Parking', 'Storage Shed']),
-  ('1111 Cash Flow St', 'Springfield', 'IL', '62711', 195000, 'active', 'Duplex', 4, 2, 1800, 0.2, 1995, '2024-01-09', 13, 11, 'Duplex with excellent rental potential', ARRAY['Two Units', 'Separate Utilities', 'Parking', 'Yard']),
-  ('1212 Portfolio Ave', 'Springfield', 'IL', '62712', 320000, 'sold', 'Fourplex', 8, 4, 3200, 0.3, 1990, '2023-11-15', 68, 11, 'Multi-unit investment property', ARRAY['Four Units', 'Laundry Facility', 'Parking Lot']),
+  ('1010 Rental Row', 'Springfield', 'IL', '62710', 145000, 'active', 'Single Family', 3, 1, 1100, 0.15, 1978, '2024-01-11', 11, 10, 'Great rental investment opportunity', ARRAY['Separate Entrance', 'Parking', 'Storage Shed']),
+  ('1111 Cash Flow St', 'Springfield', 'IL', '62711', 195000, 'active', 'Duplex', 4, 2, 1800, 0.2, 1995, '2024-01-09', 13, 10, 'Duplex with excellent rental potential', ARRAY['Two Units', 'Separate Utilities', 'Parking', 'Yard']),
+  ('1212 Portfolio Ave', 'Springfield', 'IL', '62712', 320000, 'sold', 'Fourplex', 8, 4, 3200, 0.3, 1990, '2023-11-15', 68, 10, 'Multi-unit investment property', ARRAY['Four Units', 'Laundry Facility', 'Parking Lot']),
   
   -- Unique properties
-  ('1313 Historic Main', 'Springfield', 'IL', '62713', 750000, 'active', 'Historic', 4, 3, 3200, 0.4, 1895, '2024-01-06', 16, 5, 'Beautifully restored Victorian mansion', ARRAY['Historic Details', 'Period Features', 'Carriage House', 'Gardens']),
-  ('1414 New Build Circle', 'Springfield', 'IL', '62714', 465000, 'active', 'Single Family', 3, 2.5, 2200, 0.3, 2024, '2024-01-20', 2, 13, 'Brand new construction with warranties', ARRAY['Energy Efficient', 'Smart Home', 'Granite Counters', 'Warranty']),
-  ('1515 Senior Village', 'Springfield', 'IL', '62715', 285000, 'active', 'Single Family', 2, 2, 1600, 0.1, 2016, '2024-01-13', 9, 7, 'Single level living in 55+ community', ARRAY['No Steps', 'Community Center', 'Golf Cart Friendly', 'Low Maintenance']),
+  ('1313 Historic Main', 'Springfield', 'IL', '62713', 750000, 'active', 'Historic', 4, 3, 3200, 0.4, 1895, '2024-01-06', 16, 4, 'Beautifully restored Victorian mansion', ARRAY['Historic Details', 'Period Features', 'Carriage House', 'Gardens']),
+  ('1414 New Build Circle', 'Springfield', 'IL', '62714', 465000, 'active', 'Single Family', 3, 2.5, 2200, 0.3, 2024, '2024-01-20', 2, 12, 'Brand new construction with warranties', ARRAY['Energy Efficient', 'Smart Home', 'Granite Counters', 'Warranty']),
+  ('1515 Senior Village', 'Springfield', 'IL', '62715', 285000, 'active', 'Single Family', 2, 2, 1600, 0.1, 2016, '2024-01-13', 9, 6, 'Single level living in 55+ community', ARRAY['No Steps', 'Community Center', 'Golf Cart Friendly', 'Low Maintenance']),
   
   -- Problem properties
-  ('1616 Foreclosure Way', 'Springfield', 'IL', '62716', 125000, 'active', 'Single Family', 3, 1, 1200, 0.2, 1975, '2024-01-17', 5, 11, 'Bank owned, sold as-is condition', ARRAY['Needs Work', 'Cash Only', 'Large Lot', 'Structural Issues']),
-  ('1717 Estate Sale Dr', 'Springfield', 'IL', '62717', 395000, 'pending', 'Single Family', 4, 2, 2400, 0.6, 1962, '2023-12-22', 31, 5, 'Estate sale, needs updating but solid bones', ARRAY['Large Lot', 'Original Details', 'Needs Updates', 'Privacy']),
+  ('1616 Foreclosure Way', 'Springfield', 'IL', '62716', 125000, 'active', 'Single Family', 3, 1, 1200, 0.2, 1975, '2024-01-17', 5, 10, 'Bank owned, sold as-is condition', ARRAY['Needs Work', 'Cash Only', 'Large Lot', 'Structural Issues']),
+  ('1717 Estate Sale Dr', 'Springfield', 'IL', '62717', 395000, 'pending', 'Single Family', 4, 2, 2400, 0.6, 1962, '2023-12-22', 31, 4, 'Estate sale, needs updating but solid bones', ARRAY['Large Lot', 'Original Details', 'Needs Updates', 'Privacy']),
   
   -- Commercial properties
-  ('1818 Business Blvd', 'Springfield', 'IL', '62718', 850000, 'active', 'Commercial', 0, 2, 4500, 0.5, 2005, '2024-01-07', 15, 9, 'Prime commercial space with parking', ARRAY['High Traffic', 'Parking Lot', 'Multiple Units', 'Investment Grade']),
-  ('1919 Office Park', 'Springfield', 'IL', '62719', 1250000, 'active', 'Commercial', 0, 4, 8500, 1.0, 2010, '2024-01-04', 18, 9, 'Professional office building', ARRAY['Class A Space', 'Elevator', 'Conference Rooms', 'Parking Garage']),
+  ('1818 Business Blvd', 'Springfield', 'IL', '62718', 850000, 'active', 'Commercial', 0, 2, 4500, 0.5, 2005, '2024-01-07', 15, 8, 'Prime commercial space with parking', ARRAY['High Traffic', 'Parking Lot', 'Multiple Units', 'Investment Grade']),
+  ('1919 Office Park', 'Springfield', 'IL', '62719', 1250000, 'active', 'Commercial', 0, 4, 8500, 1.0, 2010, '2024-01-04', 18, 8, 'Professional office building', ARRAY['Class A Space', 'Elevator', 'Conference Rooms', 'Parking Garage']),
   
   -- Vacation/Second homes
-  ('2020 Lake View Dr', 'Springfield', 'IL', '62720', 675000, 'active', 'Single Family', 3, 3, 2200, 1.5, 2015, '2024-01-16', 6, 8, 'Waterfront retreat with dock access', ARRAY['Lake Access', 'Dock', 'Fire Pit', 'Boat Storage']);
+  ('2020 Lake View Dr', 'Springfield', 'IL', '62720', 675000, 'active', 'Single Family', 3, 3, 2200, 1.5, 2015, '2024-01-16', 6, 7, 'Waterfront retreat with dock access', ARRAY['Lake Access', 'Dock', 'Fire Pit', 'Boat Storage']);
 
 -- Sample Opportunities (Complex, realistic scenarios)
 INSERT INTO opportunity (customer_id, listing_id, stage, offer_amount, closing_date, sale_price, commission_total, financing_type, inspection_completed, appraisal_completed, contract_signed_date, probability, notes) VALUES
@@ -319,142 +319,103 @@ INSERT INTO opportunity (customer_id, listing_id, stage, offer_amount, closing_d
   
   -- Opportunities without assigned customers (walk-ins, etc.)
   (NULL, 19, 'lead', NULL, NULL, NULL, NULL, NULL, false, false, NULL, 20, 'Commercial inquiry, no assigned customer yet'),
-  (NULL, 13, 'showing', NULL, NULL, NULL, NULL, 'Cash', false, false, NULL, 15, 'Walk-in interested in historic property'),
+  (NULL, 13, 'showing', NULL, NULL, NULL, NULL, 'Cash', false, false, NULL, 15, 'Walk-in interested in historic property');
   
-  -- Some customers with no opportunities yet (Madison Taylor - just browsing);
+  -- Some customers with no opportunities yet (Madison Taylor - just browsing)
 
 -- Sample Commission Splits (Complex scenarios with various splits)
 INSERT INTO rep_link (rep_id, opportunity_id, role, commission_percentage, commission_amount, paid_date) VALUES
-  -- Marcus Thompson deals - Different reps, some over 100%
-  (11, 1, 'Listing Agent', 50.0, 2100, '2024-01-25'),
-  (11, 1, 'Buyer Agent', 50.0, 2100, '2024-01-25'),
-  (11, 2, 'Buyer Agent', 60.0, NULL, NULL),
-  (4, 2, 'Listing Agent', 40.0, NULL, NULL),
-  (11, 3, 'Listing Agent', 100.0, 8000, '2024-01-20'),
-  (11, 4, 'Buyer Agent', 70.0, NULL, NULL),
-  (3, 4, 'Listing Agent', 35.0, NULL, NULL), -- OVER 100% example (105%)
+  -- Marcus Thompson deals (opportunities 1-4)
+  (10, 1, 'Listing Agent', 50.0, 2100, '2024-01-25'),
+  (10, 1, 'Buyer Agent', 50.0, 2100, '2024-01-25'),
+  (10, 2, 'Buyer Agent', 60.0, NULL, NULL),
+  (3, 2, 'Listing Agent', 40.0, NULL, NULL),
+  (10, 3, 'Listing Agent', 100.0, 8000, '2024-01-20'),
+  (10, 4, 'Buyer Agent', 70.0, NULL, NULL),
+  (2, 4, 'Listing Agent', 35.0, NULL, NULL), -- OVER 100% example (105%)
   
-  -- Victoria Sterling deals - High-end, complex splits
-  (8, 5, 'Listing Agent', 30.0, NULL, NULL),
-  (8, 6, 'Listing Agent', 50.0, NULL, NULL),
-  (8, 6, 'Buyer Agent', 50.0, NULL, NULL),
-  (8, 7, 'Showing Agent', 25.0, NULL, NULL),
+  -- Victoria Sterling deals (opportunities 5-7)
+  (7, 5, 'Listing Agent', 30.0, NULL, NULL),
+  (7, 6, 'Listing Agent', 50.0, NULL, NULL),
+  (7, 6, 'Buyer Agent', 50.0, NULL, NULL),
+  (7, 7, 'Showing Agent', 25.0, NULL, NULL),
   
-  -- Alex Rivera deals - First-time buyer specialist
-  (10, 8, 'Buyer Agent', 60.0, NULL, NULL),
-  (7, 8, 'Listing Agent', 40.0, NULL, NULL),
-  (10, 9, 'Buyer Agent', 50.0, NULL, NULL), -- Lost deal, no commission
+  -- Alex Rivera deals (opportunities 8-9)
+  (9, 8, 'Buyer Agent', 60.0, NULL, NULL),
+  (6, 8, 'Listing Agent', 40.0, NULL, NULL),
+  (9, 9, 'Buyer Agent', 50.0, NULL, NULL), -- Lost deal, no commission
   
-  -- Jennifer Chang - Corporate deal with referral fee
-  (12, 10, 'Buyer Agent', 50.0, 7125, '2024-02-05'),
-  (3, 10, 'Listing Agent', 40.0, 5700, '2024-02-05'),
-  (6, 10, 'Referral Fee', 15.0, 2137.50, '2024-02-05'), -- OVER 100% total (105%)
-  (12, 11, 'Buyer Agent', 50.0, NULL, NULL), -- Lost deal
+  -- Jennifer Chang deals (opportunities 10-11)
+  (11, 10, 'Buyer Agent', 50.0, 7125, '2024-02-05'),
+  (2, 10, 'Listing Agent', 40.0, 5700, '2024-02-05'),
+  (5, 10, 'Referral Fee', 15.0, 2137.50, '2024-02-05'), -- OVER 100% total (105%)
+  (11, 11, 'Buyer Agent', 50.0, NULL, NULL), -- Lost deal
   
-  -- Robert Wilson - Senior specialist
-  (7, 12, 'Listing Agent', 100.0, NULL, NULL),
+  -- Robert Wilson (opportunity 12)
+  (6, 12, 'Listing Agent', 100.0, NULL, NULL),
   
-  -- Emma Foster - Young professionals
-  (3, 13, 'Buyer Agent', 50.0, NULL, NULL),
-  (4, 13, 'Listing Agent', 50.0, NULL, NULL),
-  (13, 14, 'Showing Agent', 25.0, NULL, NULL),
+  -- Emma Foster deals (opportunities 13-14)
+  (2, 13, 'Buyer Agent', 50.0, NULL, NULL),
+  (3, 13, 'Listing Agent', 50.0, NULL, NULL),
+  (12, 14, 'Showing Agent', 25.0, NULL, NULL),
   
-  -- Hiroshi Tanaka - International buyer
-  (8, 15, 'Buyer Agent', 60.0, NULL, NULL),
-  (8, 15, 'Listing Agent', 40.0, NULL, NULL),
-  (8, 16, 'Showing Agent', 30.0, NULL, NULL),
+  -- Hiroshi Tanaka deals (opportunities 15-16)
+  (7, 15, 'Buyer Agent', 60.0, NULL, NULL),
+  (7, 15, 'Listing Agent', 40.0, NULL, NULL),
+  (7, 16, 'Showing Agent', 30.0, NULL, NULL),
   
-  -- Sarah Johnson - School district specialist
-  (4, 17, 'Buyer Agent', 55.0, NULL, NULL),
-  (2, 17, 'Listing Agent', 45.0, NULL, NULL),
+  -- Sarah Johnson (opportunity 17)
+  (3, 17, 'Buyer Agent', 55.0, NULL, NULL),
+  (1, 17, 'Listing Agent', 45.0, NULL, NULL),
   
-  -- Michael Peters - Divorce situation, reduced commission
+  -- Michael Peters (opportunity 18) - reduced commission
   (1, 18, 'Buyer Agent', 40.0, 1920, '2024-01-30'),
-  (10, 18, 'Listing Agent', 35.0, 1680, '2024-01-30'), -- UNDER 100% total (75%)
+  (9, 18, 'Listing Agent', 35.0, 1680, '2024-01-30'), -- UNDER 100% total (75%)
   
-  -- David Kumar - Investment group deals
-  (11, 20, 'Showing Agent', 25.0, NULL, NULL),
-  (9, 21, 'Buyer Agent', 30.0, NULL, NULL),
-  (9, 21, 'Listing Agent', 70.0, NULL, NULL), -- Commercial specialist gets more
+  -- David Kumar deals (opportunities 20-21)
+  (10, 20, 'Showing Agent', 25.0, NULL, NULL),
+  (8, 21, 'Buyer Agent', 30.0, NULL, NULL),
+  (8, 21, 'Listing Agent', 70.0, NULL, NULL), -- Commercial specialist gets more
   
-  -- Ashley Clark - New construction
-  (13, 22, 'Buyer Agent', 50.0, NULL, NULL),
-  (13, 22, 'Builder Bonus', 15.0, NULL, NULL), -- OVER 100% with builder bonus (65%)
+  -- Ashley Clark (opportunity 22) - New construction
+  (12, 22, 'Buyer Agent', 50.0, NULL, NULL),
+  (12, 22, 'Builder Bonus', 15.0, NULL, NULL), -- OVER 100% with builder bonus (65%)
   
-  -- Frank Roberts - Accessibility specialist
-  (7, 23, 'Listing Agent', 100.0, NULL, NULL),
+  -- Frank Roberts (opportunity 23)
+  (6, 23, 'Listing Agent', 100.0, NULL, NULL),
   
-  -- Patricia Lee - Out of state (opportunity 24)
-  (2, 24, 'Buyer Agent', 55.0, NULL, NULL),
-  (4, 24, 'Listing Agent', 45.0, NULL, NULL),
+  -- Patricia Lee (opportunity 24)
+  (1, 24, 'Buyer Agent', 55.0, NULL, NULL),
+  (3, 24, 'Listing Agent', 45.0, NULL, NULL),
   
-  -- Christopher Brown - Estate specialist (opportunity 25)
-  (5, 25, 'Buyer Agent', 50.0, NULL, NULL),
-  (5, 25, 'Estate Specialist', 25.0, NULL, NULL), -- OVER 100% with specialty fee (75%)
+  -- Christopher Brown (opportunity 25)
+  (4, 25, 'Buyer Agent', 50.0, NULL, NULL),
+  (4, 25, 'Estate Specialist', 25.0, NULL, NULL), -- OVER 100% with specialty fee (75%)
   
-  -- Captain Smith - Military specialist (opportunities 26, 27)
-  (12, 26, 'Buyer Agent', 50.0, NULL, NULL), -- Lost deal
-  (12, 27, 'Buyer Agent', 60.0, NULL, NULL),
-  (4, 27, 'Listing Agent', 40.0, NULL, NULL),
+  -- Captain Smith deals (opportunities 26-27)
+  (11, 26, 'Buyer Agent', 50.0, NULL, NULL), -- Lost deal
+  (11, 27, 'Buyer Agent', 60.0, NULL, NULL),
+  (3, 27, 'Listing Agent', 40.0, NULL, NULL),
   
-  -- Tony Ricci - Investment deals (opportunities 28, 29)
-  (11, 28, 'Dual Agent', 80.0, 3720, '2024-02-05'), -- Dual representation, UNDER 100% (80%)
-  (11, 29, 'Buyer Agent', 70.0, NULL, NULL),
-  (10, 29, 'Listing Agent', 30.0, NULL, NULL),
+  -- Tony Ricci deals (opportunities 28-29)
+  (10, 28, 'Dual Agent', 80.0, 3720, '2024-02-05'), -- Dual representation, UNDER 100% (80%)
+  (10, 29, 'Buyer Agent', 70.0, NULL, NULL),
+  (9, 29, 'Listing Agent', 30.0, NULL, NULL),
   
-  -- Additional opportunities with diverse commission structures
-  -- Opportunity 30: Marcus looking at estate property
-  (11, 30, 'Buyer Agent', 45.0, NULL, NULL),
-  (5, 30, 'Listing Agent', 55.0, NULL, NULL),
+  -- Additional deals (opportunities 30-35)
+  (10, 30, 'Buyer Agent', 45.0, NULL, NULL),
+  (4, 30, 'Listing Agent', 55.0, NULL, NULL),
+  (7, 31, 'Buyer Agent', 30.0, NULL, NULL), -- Lost deal
+  (10, 32, 'Buyer Agent', 60.0, 2610, '2024-02-10'),
+  (10, 32, 'Listing Agent', 40.0, 1740, '2024-02-10'),
+  (10, 33, 'Buyer Agent', 65.0, NULL, NULL),
+  (9, 33, 'Listing Agent', 35.0, NULL, NULL),
+  (1, 35, 'Buyer Agent', 50.0, NULL, NULL),
+  (1, 35, 'Listing Agent', 50.0, NULL, NULL), -- Dual agent scenario
   
-  -- Opportunity 31: Victoria changed mind (lost deal)
-  (8, 31, 'Buyer Agent', 30.0, NULL, NULL), -- Lost deal, no commission
-  
-  -- Opportunity 32: Investment group rental (closed)
-  (11, 32, 'Buyer Agent', 60.0, 2610, '2024-02-10'),
-  (11, 32, 'Listing Agent', 40.0, 1740, '2024-02-10'),
-  
-  -- Opportunity 33: Tony considering condo flip
-  (11, 33, 'Buyer Agent', 65.0, NULL, NULL),
-  (10, 33, 'Listing Agent', 35.0, NULL, NULL),
-  
-  -- Opportunity 34: Robert still looking (no property, no commission)
-  -- No rep_link entries for opportunity without listing
-  
-  -- Opportunity 35: Patricia virtual showing
-  (2, 35, 'Buyer Agent', 50.0, NULL, NULL),
-  (2, 35, 'Listing Agent', 50.0, NULL, NULL), -- Dual agent scenario
-  
-  -- Opportunities 36-37: No assigned customers (walk-ins)
-  -- No rep_link entries yet for unassigned opportunities
-  
-  -- Team deals with multiple reps
-  (2, 15, 'Team Lead', 25.0, NULL, NULL),
-  (5, 15, 'Support Agent', 15.0, NULL, NULL), -- Team total: 100% (60+40) + bonus
-  
-  -- Referral chains and bonuses
-  (6, 10, 'Management Override', 5.0, 712.50, '2024-02-05'), -- Management bonus
-  
-  -- Training scenarios
-  (10, 8, 'Mentor Bonus', 10.0, NULL, NULL), -- Training bonus
-  (6, 8, 'Training Supervisor', 5.0, NULL, NULL), -- Supervisor oversight
-  
-  -- More complex commission scenarios
-  -- OVER 100% examples
-  (1, 1, 'Referral Fee', 5.0, 210, '2024-01-25'), -- Marcus deal with referral bonus (105% total)
-  (8, 2, 'Luxury Specialist Bonus', 8.0, NULL, NULL), -- Victoria deal with specialty bonus (108% total)
-  (9, 21, 'Commercial Bonus', 15.0, NULL, NULL), -- David commercial deal (115% total)
-  
-  -- UNDER 100% examples  
-  (7, 12, 'Senior Discount', -25.0, NULL, NULL), -- Robert senior citizen discount (75% total)
-  (1, 18, 'Divorce Assistance', -10.0, -480, '2024-01-30'), -- Reduced fee for hardship (65% total)
-  
-  -- Some deals with NO commission splits at all (house deals, walk-ins, etc.)
-  -- Opportunities 36, 37 intentionally have no rep_link entries
-  
-  -- High-earning rep scenarios (for reporting)
-  (8, 5, 'Luxury Bonus', 12.0, NULL, NULL), -- James Wilson luxury bonus
-  (8, 6, 'High-Value Deal Bonus', 8.0, NULL, NULL), -- Additional luxury bonuses
-  (11, 1, 'Investment Volume Bonus', 3.0, 126, '2024-01-25'), -- Rachel Davis volume bonus
-  (11, 3, 'Portfolio Bonus', 5.0, 400, '2024-01-20'), -- Portfolio management bonus
-  (11, 32, 'Investment Specialist', 10.0, 435, '2024-02-10'); -- Investment specialist fee
+  -- High-earning rep scenarios for reporting
+  (7, 5, 'Luxury Bonus', 12.0, NULL, NULL), -- James Wilson luxury bonus
+  (7, 6, 'High-Value Deal Bonus', 8.0, NULL, NULL), -- Additional luxury bonuses
+  (10, 1, 'Investment Volume Bonus', 3.0, 126, '2024-01-25'), -- Rachel Davis volume bonus
+  (10, 3, 'Portfolio Bonus', 5.0, 400, '2024-01-20'), -- Portfolio management bonus
+  (10, 32, 'Investment Specialist', 10.0, 435, '2024-02-10'); -- Investment specialist fee
