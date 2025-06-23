@@ -275,6 +275,57 @@ textarea {
 .column-type {
     color: #6c757d;
     font-size: 0.8rem;
+    margin-left: 8px;
+}
+
+.column-comment {
+    color: #6c757d;
+    font-size: 0.8rem;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+.column-default {
+    color: #28a745;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.schema-display {
+    padding: 20px 0;
+}
+
+.schema-display h3 {
+    color: #495057;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+}
+
+.relationships-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.relationship-item {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+.relationship-item strong {
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.relationship-detail {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 4px;
 }
 
 .loading {

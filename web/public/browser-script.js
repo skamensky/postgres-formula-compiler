@@ -477,6 +477,11 @@ function setupEventListeners() {
         AppState.currentTable = e.target.value;
     });
     
+    // Schema table selection
+    document.getElementById('schemaTableSelect').addEventListener('change', (e) => {
+        loadSchemaDetails(e.target.value);
+    });
+    
     // Formula input - Enter key handling
     document.getElementById('formulaInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
@@ -484,6 +489,129 @@ function setupEventListeners() {
             FormulaCompiler.execute();
         }
     });
+}
+
+// =============================================================================
+// SCHEMA BROWSER
+// =============================================================================
+
+async function loadSchemaDetails(tableName) {
+    const schemaDetailsElement = document.getElementById('schemaDetails');
+    
+    if (!tableName) {
+        schemaDetailsElement.innerHTML = '<p class="loading">Select a table to view its schema and sample data</p>';
+        return;
+    }
+    
+    UI.showLoading('schemaDetails', `Loading schema for ${tableName}...`);
+    
+    try {
+        const schema = await getTableSchema(tableName);
+        displaySchemaDetails(tableName, schema);
+    } catch (error) {
+        console.error('Error loading schema:', error);
+        schemaDetailsElement.innerHTML = `
+            <div class="results error">
+                <h4>❌ Error Loading Schema</h4>
+                <p>Failed to load schema for table "${tableName}": ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function displaySchemaDetails(tableName, schema) {
+    const schemaDetailsElement = document.getElementById('schemaDetails');
+    
+    let html = `
+        <div class="schema-display">
+            <h3>📋 ${tableName} Schema</h3>
+    `;
+    
+    // Columns section
+    if (schema.columns && schema.columns.length > 0) {
+        html += `
+            <div class="schema-section">
+                <h4>🏛️ Columns (${schema.columns.length})</h4>
+                <div class="columns-grid">
+        `;
+        
+        schema.columns.forEach(col => {
+            const nullable = col.nullable ? '?' : '!';
+            const defaultValue = col.default_value ? ` = ${col.default_value}` : '';
+            html += `
+                <div class="column-item">
+                    <strong>${col.column_name}</strong><span class="column-type">${col.data_type}${nullable}</span>
+                    ${col.comment ? `<div class="column-comment">${col.comment}</div>` : ''}
+                    ${defaultValue ? `<div class="column-default">${defaultValue}</div>` : ''}
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // Direct relationships section
+    if (schema.directRelationships && schema.directRelationships.length > 0) {
+        html += `
+            <div class="schema-section">
+                <h4>🔗 Direct Relationships (${schema.directRelationships.length})</h4>
+                <div class="relationships-list">
+        `;
+        
+        schema.directRelationships.forEach(rel => {
+            html += `
+                <div class="relationship-item">
+                    <strong>${rel.relationshipName}</strong> → ${rel.targetTable}.${rel.targetColumn}
+                    <div class="relationship-detail">via ${rel.sourceColumn}</div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // Reverse relationships section
+    if (schema.reverseRelationships && schema.reverseRelationships.length > 0) {
+        html += `
+            <div class="schema-section">
+                <h4>🔙 Reverse Relationships (${schema.reverseRelationships.length})</h4>
+                <div class="relationships-list">
+        `;
+        
+        schema.reverseRelationships.forEach(rel => {
+            html += `
+                <div class="relationship-item">
+                    <strong>${rel.relationshipName}</strong> ← ${rel.sourceTable}.${rel.sourceColumn}
+                    <div class="relationship-detail">to ${rel.targetColumn}</div>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // Sample data section
+    if (schema.sampleData && schema.sampleData.length > 0) {
+        html += `
+            <div class="schema-section">
+                <h4>📊 Sample Data (${schema.sampleData.length} rows)</h4>
+                ${UI.renderDataTable(schema.sampleData, 5)}
+            </div>
+        `;
+    }
+    
+    html += `</div>`;
+    
+    schemaDetailsElement.innerHTML = html;
 }
 
 // =============================================================================
@@ -517,3 +645,4 @@ async function loadExamples() {
 window.FormulaCompiler = FormulaCompiler;
 window.RecentFormulas = RecentFormulas;
 window.UI = UI;
+window.loadSchemaDetails = loadSchemaDetails;
