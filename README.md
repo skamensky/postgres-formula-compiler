@@ -55,6 +55,32 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 ![Examples Functionality](tests/playwright/screenshots/examples-functionality.png)
 *One-click example loading with full context*
 
+## � Documentation
+
+The project includes comprehensive documentation that's automatically generated and maintained:
+
+### 📖 **[Formula Language Reference](docs/usage/README.md)**
+Complete guide to the formula language with:
+- **[Function Reference by Category](docs/usage/README.md#functions-by-category)**: Math, String, Date, Logical, Null Handling, Aggregate, and Core functions
+- **[Alphabetical Function Index](docs/usage/README.md#all-functions-a-z)**: Quick lookup for all 36+ functions
+- **[Data Types](docs/usage/types.md)**: Complete type system with operations and compatibility
+- **[Operators](docs/usage/README.md#operators)**: Arithmetic, comparison, and logical operators
+
+### 🔧 **[Detailed Function Documentation](docs/usage/functions/)**
+In-depth documentation for each function category:
+- **[Math Functions](docs/usage/functions/math.md)**: ROUND, ABS, CEILING, FLOOR, trigonometric, etc.
+- **[String Functions](docs/usage/functions/string.md)**: UPPER, LOWER, TRIM, SUBSTR, CONCAT, etc.
+- **[Date Functions](docs/usage/functions/date.md)**: NOW, TODAY, YEAR, MONTH, DATEDIF, etc.
+- **[Logical Functions](docs/usage/functions/logical.md)**: AND, OR, NOT operations
+- **[Aggregate Functions](docs/usage/functions/aggregate.md)**: COUNT_AGG, SUM_AGG, STRING_AGG, etc.
+- **[Core Functions](docs/usage/functions/core.md)**: IF, STRING, DATE, ME, EVAL
+- **[Null Handling](docs/usage/functions/null-handling.md)**: ISNULL, ISBLANK, NULLVALUE, COALESCE
+
+### 🏗️ **[Technical Documentation](docs/lang/)**
+For developers integrating or extending the compiler:
+- **[Integration Guide](docs/lang/integration.md)**: How to integrate the metadata-driven function system
+- **[Function Metadata Reference](docs/lang/metadata.md)**: Complete metadata structure and function constants
+
 ## 🚀 Quick Start
 
 ### Basic Usage
@@ -88,54 +114,6 @@ node tests/basic-arithmetic-literals.test.js
 node tests/math-functions.test.js
 # ... etc
 ```
-
-## 📖 Supported Functions
-
-### Math Functions
-- `ABS(number)` - Absolute value
-- `ROUND(number, digits)` - Round to specified decimal places
-- `MIN(a, b, ...)` - Minimum of values
-- `MAX(a, b, ...)` - Maximum of values
-- `MOD(number, divisor)` - Modulo operation
-- `CEILING(number)` - Round up to nearest integer
-- `FLOOR(number)` - Round down to nearest integer
-
-### Text Functions
-- `UPPER(text)` - Convert to uppercase
-- `LOWER(text)` - Convert to lowercase
-- `TRIM(text)` - Remove leading/trailing whitespace
-- `LEN(text)` - String length
-- `LEFT(text, count)` - Left substring
-- `RIGHT(text, count)` - Right substring
-- `MID(text, start, length)` - Middle substring
-- `CONTAINS(text, search)` - Check if text contains substring
-- `SUBSTITUTE(text, old, new)` - Replace text
-
-### Date Functions
-- `TODAY()` - Current date
-- `DATE(string)` - Parse date from string
-- `YEAR(date)` - Extract year
-- `MONTH(date)` - Extract month
-- `DAY(date)` - Extract day
-- `WEEKDAY(date)` - Day of week (1=Sunday)
-- `ADDMONTHS(date, months)` - Add months to date
-- `ADDDAYS(date, days)` - Add days to date
-- `DATEDIF(start, end, unit)` - Date difference
-
-### Logical Functions
-- `IF(condition, true_value, false_value)` - Conditional logic
-- `AND(a, b, ...)` - Logical AND
-- `OR(a, b, ...)` - Logical OR
-- `NOT(value)` - Logical NOT
-
-### Null Handling
-- `ISNULL(value)` - Check if value is null
-- `NULLVALUE(value, default)` - Return default if null
-- `ISBLANK(value)` - Check if value is blank
-
-### Utility Functions
-- `ME()` - Current user ID
-- `STRING(value)` - Convert to string
 
 ## 🔗 Multi-Level Relationships
 
