@@ -45,7 +45,7 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 - **[Data Types](docs/usage/types.md)** - Type system and operations
 - **[Integration Guide](docs/lang/integration.md)** - For developers extending the compiler
 
-## 🚀 Quick Start
+## � Quick Start
 
 ```javascript
 import { evaluateFormula } from './formula-compiler.js';
@@ -63,7 +63,7 @@ console.log(result.sql); // Generated PostgreSQL
 
 The compiler is modular with a three-stage pipeline: lexer → parser → compiler. Multiple compiler results can be combined into a single query with multiple fields, enabling complex dashboard-style queries with optimized performance.
 
-## � SQL Optimization
+## 🔧 SQL Optimization
 
 Navigate complex table relationships up to 3 levels deep with automatic JOIN generation. The compiler consolidates aggregate subqueries, deduplicates identical expressions, and optimizes query structure for maximum database performance.
 
