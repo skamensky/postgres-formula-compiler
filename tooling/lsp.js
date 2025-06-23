@@ -164,15 +164,15 @@ export class FormulaLanguageServer {
           };
         }
 
-        // Relationship hover (if schema available)
-        if (token.type === TokenType.IDENTIFIER && this.schema && token.value.endsWith('_REL')) {
+        // Relationship hover (if schema available)  
+        if (token.type === TokenType.IDENTIFIER && this.schema && token.value.toLowerCase().endsWith('_rel')) {
           const relationshipName = token.value.slice(0, -4).toLowerCase();
           const relationship = this.findRelationship(relationshipName);
           if (relationship) {
             return {
-              contents: `**Relationship**: ${relationship.name}\n\n` +
-                       `**Target Table**: ${relationship.target_table}\n\n` +
-                       `**Description**: Links to ${relationship.target_table} records`,
+              contents: `**Relationship**: ${relationship.relationship_name}\n\n` +
+                       `**Target Table**: ${relationship.target_table_name}\n\n` +
+                       `**Description**: Links to ${relationship.target_table_name} records`,
               range: {
                 start: token.position,
                 end: token.position + token.value.length
@@ -336,7 +336,7 @@ export class FormulaLanguageServer {
     const relationships = this.schema[tableName].directRelationships || [];
 
     relationships.forEach(rel => {
-      const relName = `${rel.relationship_name}_REL`;
+      const relName = `${rel.relationship_name}_rel`; // Use lowercase _rel
       const upperRelName = relName.toUpperCase();
       // Match if relationship starts with prefix OR if prefix is a substring of relationship name
       if (upperRelName.startsWith(upperPrefix) || upperRelName.includes(upperPrefix)) {
