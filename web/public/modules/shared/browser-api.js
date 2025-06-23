@@ -6,6 +6,7 @@
 import { evaluateFormula, generateSQL } from '../compiler/index.js';
 import { createDeveloperTools } from '../tooling/developer-tools.js';
 import { initializeBrowserDatabase } from './db-client.js';
+import { mapPostgresType } from '../compiler/utils.js';
 
 let dbClient = null;
 let developerTools = null;
@@ -14,25 +15,6 @@ let currentSchema = null;
 // =============================================================================
 // DATABASE INTROSPECTION FUNCTIONS FOR PGLITE
 // =============================================================================
-
-/**
- * Map PostgreSQL data types to JavaScript types
- */
-function mapPostgresType(pgType) {
-    if (['numeric', 'integer', 'bigint', 'smallint', 'decimal', 'real', 'double precision'].includes(pgType)) {
-        return 'number';
-    }
-    
-    if (['timestamp', 'timestamp with time zone', 'timestamptz', 'date'].includes(pgType)) {
-        return 'date';
-    }
-    
-    if (pgType === 'boolean') {
-        return 'boolean';
-    }
-    
-    return 'string';
-}
 
 /**
  * Get all table names from the database
