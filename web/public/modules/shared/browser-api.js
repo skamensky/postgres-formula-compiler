@@ -62,9 +62,14 @@ async function getColumnListsForTables(tableNames, client) {
         columnLists[row.table_name][row.column_name] = mapPostgresType(row.data_type);
     }
     
+    console.log(`🔍 [Browser API] Column query returned data for tables:`, Object.keys(columnLists).filter(t => Object.keys(columnLists[t]).length > 0));
+    
     // Check if any tables were not found
     for (const tableName of tableNames) {
         if (Object.keys(columnLists[tableName]).length === 0) {
+            console.error(`❌ [Browser API] Table '${tableName}' not found in database`);
+            console.error(`   Requested tables:`, tableNames);
+            console.error(`   Available tables with data:`, Object.keys(columnLists).filter(t => Object.keys(columnLists[t]).length > 0));
             throw new Error(`Table '${tableName}' not found in database`);
         }
     }
@@ -222,9 +227,15 @@ export async function executeFormula(formula, tableName) {
         // Build relationship context
         const allTableNamesForContext = new Set([tableName]);
         const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
+        
+        console.log(`🔍 [Browser API] Direct relationships from ${tableName}:`, directRels.map(r => `${r.name} → ${r.toTable}`));
+        
         for (const rel of directRels) {
             allTableNamesForContext.add(rel.toTable);
         }
+        
+        console.log(`🔍 [Browser API] Tables available in database:`, allTableNames);
+        console.log(`🔍 [Browser API] Tables needed for context:`, [...allTableNamesForContext]);
         
         const tablesToLoadInverseRels = new Set([tableName]);
         const directInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
@@ -247,6 +258,13 @@ export async function executeFormula(formula, tableName) {
                     tableName: rel.toTable,
                     columnList: columnLists[rel.toTable]
                 });
+                console.log(`✅ [Browser API] Loaded table info for ${rel.toTable} (${Object.keys(columnLists[rel.toTable]).length} columns)`);
+            } else {
+                const errorMsg = `❌ Relationship '${rel.name}' from table '${tableName}' points to table '${rel.toTable}', but table '${rel.toTable}' was not found in the database.`;
+                console.error(errorMsg);
+                console.error(`   Available tables: ${allTableNames.join(', ')}`);
+                console.error(`   Tables with column data: ${Object.keys(columnLists).join(', ')}`);
+                throw new Error(errorMsg);
             }
         }
         
