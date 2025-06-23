@@ -32,7 +32,7 @@ This project uses GitHub Actions to automatically deploy to GitHub Pages wheneve
 
 Once deployed, the application will be available at:
 ```
-https://[your-username].github.io/[repository-name]/
+https://skamensky.github.io/js-to-sql/
 ```
 
 ### Local Development

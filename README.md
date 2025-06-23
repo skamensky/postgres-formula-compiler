@@ -25,7 +25,7 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 
 ## 🎯 Live Demo & Screenshots
 
-> **🚀 [Live Demo Available](https://[skamensky].github.io/js-to-sql/)** - Automatically deployed via GitHub Actions
+> **🚀 [Live Demo Available](https://skamensky.github.io/js-to-sql/)** - Automatically deployed via GitHub Actions
 
 ### Formula Compiler Interface
 ![Formula Compiler](tests/playwright/screenshots/compiler-tab.png)
@@ -356,7 +356,7 @@ This project is configured for automatic deployment to GitHub Pages using GitHub
 
 1. **Automatic Deployment**: Push to `main` branch triggers deployment
 2. **Build Process**: Runs `npm run build` to compile frontend modules
-3. **Live Demo**: Available at `https://[your-username].github.io/js-to-sql/`
+3. **Live Demo**: Available at `https://skamensky.github.io/js-to-sql/`
 
 ### Manual Deployment Setup
 
