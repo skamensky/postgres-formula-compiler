@@ -4,7 +4,7 @@
  */
 
 let pgliteInstance = null;
-
+ 
 /**
  * Initialize PGlite database with seed data
  */
