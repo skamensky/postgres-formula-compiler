@@ -2,7 +2,7 @@
 
 /**
  * Unified Playwright Test Runner
- * Runs all Playwright tests with shared browser context for efficiency
+ * Runs all Playwright tests with configurable parallelization for efficiency
  */
 
 import { chromium } from 'playwright';
@@ -12,73 +12,94 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Configuration
+const CONFIG = {
+    // Concurrency level (number of tests to run in parallel)
+    // 1 = sequential, 2 = reasonable for most computers, 3+ = high-end only
+    maxConcurrency: parseInt(process.env.PLAYWRIGHT_CONCURRENCY) || 2,
+    
+    // Auto-detect based on system resources (recommended)
+    autoDetectConcurrency: true
+};
+
 // Test suite configuration
 const TEST_SUITES = [
     {
         name: 'Basic Loading',
         description: 'Tests basic webapp loading and health checks',
         file: 'basic-loading.js',
-        timeout: 30000
+        timeout: 30000,
+        priority: 1 // Higher priority tests run first
     },
     {
         name: 'Schema Functionality', 
         description: 'Tests schema tab loading and table information display',
         file: 'schema-functionality.js',
-        timeout: 45000
+        timeout: 45000,
+        priority: 2
     },
     {
         name: 'Schema Tab Initial Load',
         description: 'Tests initial schema tab loading behavior',
         file: 'schema-tab-initial-load.js', 
-        timeout: 30000
+        timeout: 30000,
+        priority: 2
     },
     {
         name: 'Opportunity Schema',
         description: 'Tests opportunity table schema display',
         file: 'opportunity-schema.js',
-        timeout: 30000
+        timeout: 30000,
+        priority: 2
     },
     {
         name: 'Examples Functionality',
         description: 'Tests formula examples loading and execution',
         file: 'examples-functionality.js',
-        timeout: 45000
+        timeout: 45000,
+        priority: 1
     },
     {
         name: 'Language Tooling',
         description: 'Tests syntax highlighting and developer tools',
         file: 'language-tooling-test.js',
-        timeout: 30000
+        timeout: 30000,
+        priority: 3
     },
     {
         name: 'Autocomplete Final',
         description: 'Tests autocomplete functionality with Tab key support',
         file: 'autocomplete-final-test.js',
-        timeout: 45000
+        timeout: 45000,
+        priority: 1
     },
     {
         name: 'Live Execution',
         description: 'Tests live formula execution with error handling',
         file: 'live-execution-test.js',
-        timeout: 60000
+        timeout: 60000,
+        priority: 1
     },
     {
         name: 'Relationship Naming',
         description: 'Tests relationship naming convention (assigned_rep_id_rel.name)',
         file: 'relationship-naming-test.js',
-        timeout: 45000
+        timeout: 45000,
+        priority: 1
     },
     {
         name: 'Assigned Rep Debug',
         description: 'Debug tests for assigned rep relationship functionality',
         file: 'assigned-rep-debug.js',
-        timeout: 30000
+        timeout: 30000,
+        priority: 3
     },
     {
         name: 'Comprehensive WebApp',
         description: 'Comprehensive end-to-end webapp functionality tests',
         file: 'webapp-comprehensive.js',
-        timeout: 90000
+        timeout: 90000,
+        priority: 1 // Run this important test early
     }
 ];
 
@@ -88,6 +109,38 @@ class UnifiedTestRunner {
         this.context = null;
         this.results = [];
         this.screenshots = [];
+        this.runningTests = new Set();
+        this.concurrency = null; // Will be set in run()
+    }
+
+    async determineConcurrency() {
+        if (!CONFIG.autoDetectConcurrency) {
+            return CONFIG.maxConcurrency;
+        }
+
+        // Auto-detect based on available resources
+        const os = await import('os');
+        const totalMemoryGB = os.totalmem() / (1024 * 1024 * 1024);
+        const cpuCores = os.cpus().length;
+        
+        let recommendedConcurrency;
+        
+        if (totalMemoryGB >= 32 && cpuCores >= 8) {
+            recommendedConcurrency = 3; // Very high-end machine
+        } else if (totalMemoryGB >= 16 && cpuCores >= 6) {
+            recommendedConcurrency = 2; // High-end machine
+        } else if (totalMemoryGB >= 8 && cpuCores >= 4) {
+            recommendedConcurrency = 2; // Mid-range machine
+        } else {
+            recommendedConcurrency = 1; // Conservative for lower resources
+        }
+
+        const finalConcurrency = Math.min(recommendedConcurrency, CONFIG.maxConcurrency);
+        
+        console.log(`🖥️  System: ${totalMemoryGB.toFixed(1)}GB RAM, ${cpuCores} cores`);
+        console.log(`⚡ Auto-detected concurrency: ${finalConcurrency} (max: ${CONFIG.maxConcurrency})`);
+        
+        return finalConcurrency;
     }
 
     async checkServerHealth() {
@@ -107,22 +160,6 @@ class UnifiedTestRunner {
         }
     }
 
-    async setupBrowser() {
-        console.log('🌐 Setting up shared browser context...');
-        
-        this.browser = await chromium.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        });
-
-        this.context = await this.browser.newContext({
-            viewport: { width: 1280, height: 720 },
-            ignoreHTTPSErrors: true
-        });
-
-        console.log('✅ Browser context ready');
-    }
-
     async runTestSuite(suite) {
         const testFile = path.join(__dirname, suite.file);
         
@@ -131,60 +168,93 @@ class UnifiedTestRunner {
             return { name: suite.name, passed: false, error: 'File not found' };
         }
 
-        console.log(`\n${'='.repeat(80)}`);
-        console.log(`🧪 Running: ${suite.name}`);
-        console.log(`📄 Description: ${suite.description}`);
-        console.log(`📁 File: ${suite.file}`);
-        console.log(`⏱️  Timeout: ${suite.timeout}ms`);
-        console.log(`${'='.repeat(80)}`);
+        const startTime = Date.now();
+        console.log(`\n🧪 Starting: ${suite.name} (Priority: ${suite.priority})`);
+        console.log(`📄 ${suite.description}`);
 
-        // For now, run as separate process since existing tests aren't modular
-        // This ensures compatibility while still providing unified management
-        return this.runFallbackTest(suite);
-    }
-
-    async runFallbackTest(suite) {
         // Run test as separate process for compatibility
         return new Promise(async (resolve) => {
             const { spawn } = await import('child_process');
             const testProcess = spawn('node', [path.join(__dirname, suite.file)], { 
-                stdio: 'inherit'
+                stdio: this.concurrency === 1 ? 'inherit' : 'pipe' // Only show output if sequential
             });
+            
+            let output = '';
+            if (this.concurrency > 1) {
+                // Capture output for parallel execution
+                testProcess.stdout?.on('data', (data) => output += data.toString());
+                testProcess.stderr?.on('data', (data) => output += data.toString());
+            }
             
             // Set timeout
             const timeoutId = setTimeout(() => {
                 testProcess.kill('SIGTERM');
-                console.log(`⏰ ${suite.name} timed out after ${suite.timeout}ms`);
-                resolve({ name: suite.name, passed: false, error: 'Timeout' });
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                console.log(`⏰ ${suite.name} timed out after ${suite.timeout}ms (${duration}s)`);
+                resolve({ name: suite.name, passed: false, error: 'Timeout', duration });
             }, suite.timeout);
             
             testProcess.on('close', (code) => {
                 clearTimeout(timeoutId);
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                
                 if (code === 0) {
-                    console.log(`✅ ${suite.name} passed`);
-                    resolve({ name: suite.name, passed: true });
+                    console.log(`✅ ${suite.name} passed (${duration}s)`);
+                    resolve({ name: suite.name, passed: true, duration, output });
                 } else {
-                    console.log(`❌ ${suite.name} failed (exit code: ${code})`);
-                    resolve({ name: suite.name, passed: false, error: `Exit code: ${code}` });
+                    console.log(`❌ ${suite.name} failed (${duration}s, exit code: ${code})`);
+                    if (this.concurrency > 1 && output) {
+                        console.log(`📄 Output for ${suite.name}:`);
+                        console.log(output);
+                    }
+                    resolve({ name: suite.name, passed: false, error: `Exit code: ${code}`, duration, output });
                 }
             });
 
             testProcess.on('error', (error) => {
                 clearTimeout(timeoutId);
-                console.error(`❌ ${suite.name} error:`, error.message);
-                resolve({ name: suite.name, passed: false, error: error.message });
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                console.error(`❌ ${suite.name} error (${duration}s):`, error.message);
+                resolve({ name: suite.name, passed: false, error: error.message, duration });
             });
         });
     }
 
-    async cleanup() {
-        if (this.context) {
-            await this.context.close();
+    async runTestsInParallel() {
+        // Sort tests by priority (higher priority first)
+        const sortedTests = [...TEST_SUITES].sort((a, b) => a.priority - b.priority);
+        
+        const results = [];
+        const queue = [...sortedTests];
+        const running = [];
+
+        console.log(`🚀 Running tests with concurrency: ${this.concurrency}`);
+        console.log(`📋 Test execution order (by priority):`);
+        sortedTests.forEach((test, i) => {
+            console.log(`   ${i + 1}. ${test.name} (Priority: ${test.priority}, ${test.timeout/1000}s timeout)`);
+        });
+
+        while (queue.length > 0 || running.length > 0) {
+            // Start new tests up to concurrency limit
+            while (running.length < this.concurrency && queue.length > 0) {
+                const suite = queue.shift();
+                const testPromise = this.runTestSuite(suite);
+                running.push({ suite, promise: testPromise });
+            }
+
+            // Wait for at least one test to complete
+            if (running.length > 0) {
+                const completed = await Promise.race(running.map(r => r.promise));
+                const completedIndex = running.findIndex(r => r.promise === Promise.resolve(completed));
+                
+                if (completedIndex >= 0) {
+                    results.push(completed);
+                    running.splice(completedIndex, 1);
+                }
+            }
         }
-        if (this.browser) {
-            await this.browser.close();
-        }
-        console.log('🧹 Browser cleanup completed');
+
+        return results;
     }
 
     printSummary() {
@@ -194,16 +264,19 @@ class UnifiedTestRunner {
 
         const passed = this.results.filter(r => r.passed);
         const failed = this.results.filter(r => !r.passed);
+        const totalDuration = this.results.reduce((sum, r) => sum + (parseFloat(r.duration) || 0), 0);
 
         console.log(`\n✅ PASSED (${passed.length}):`);
         passed.forEach(test => {
-            console.log(`   ✅ ${test.name}`);
+            const duration = test.duration ? ` (${test.duration}s)` : '';
+            console.log(`   ✅ ${test.name}${duration}`);
         });
 
         if (failed.length > 0) {
             console.log(`\n❌ FAILED (${failed.length}):`);
             failed.forEach(test => {
-                console.log(`   ❌ ${test.name}`);
+                const duration = test.duration ? ` (${test.duration}s)` : '';
+                console.log(`   ❌ ${test.name}${duration}`);
                 if (test.error) {
                     console.log(`      Error: ${test.error}`);
                 }
@@ -219,7 +292,9 @@ class UnifiedTestRunner {
             `❌ ${failed.length} TESTS FAILED (${successRate}% success rate)`;
         
         console.log(`\nOVERALL: ${overallResult}`);
-        console.log(`� Total Tests: ${this.results.length}`);
+        console.log(`📊 Total Tests: ${this.results.length}`);
+        console.log(`⏱️  Total Duration: ${totalDuration.toFixed(1)}s`);
+        console.log(`⚡ Concurrency: ${this.concurrency} parallel tests`);
         console.log('='.repeat(80));
 
         return failed.length === 0;
@@ -227,8 +302,11 @@ class UnifiedTestRunner {
 
     async run() {
         console.log('🚀 Starting Unified Playwright Test Suite');
-        console.log('🎯 Running all Playwright tests with unified management');
+        console.log('🎯 Running tests with smart parallelization');
         console.log('='.repeat(80));
+
+        // Determine concurrency
+        this.concurrency = await this.determineConcurrency();
 
         // Check server health
         if (!(await this.checkServerHealth())) {
@@ -244,10 +322,16 @@ class UnifiedTestRunner {
             }
         });
 
-        // Run all test suites as separate processes for now (ensures compatibility)
-        for (const suite of TEST_SUITES) {
-            const result = await this.runTestSuite(suite);
-            this.results.push(result);
+        // Run tests (parallel or sequential based on concurrency)
+        if (this.concurrency === 1) {
+            // Sequential execution
+            for (const suite of TEST_SUITES) {
+                const result = await this.runTestSuite(suite);
+                this.results.push(result);
+            }
+        } else {
+            // Parallel execution
+            this.results = await this.runTestsInParallel();
         }
 
         // Print summary and exit
