@@ -1,1 +1,0 @@
-STRING_AGG_DISTINCT(rep_links_submission, STRING(commission_percentage) & "%", " | ")

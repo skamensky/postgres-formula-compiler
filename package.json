@@ -9,6 +9,7 @@
     "test:e2e": "node tests/playwright/run-all-e2e.js",
     "test:webapp": "node tests/playwright/webapp-comprehensive.js",
     "test:opportunity": "node tests/playwright/opportunity-schema.js",
+    "test:examples": "node tests/playwright/examples-functionality.js",
     "build": "node scripts/build-frontend.js",
     "serve": "node web/server.js",
     "dev": "npm run build && npm run serve",

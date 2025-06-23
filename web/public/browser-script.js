@@ -4,6 +4,7 @@
  */
 
 import { initializeBrowserAPI, executeFormula, getTables, getTableSchema, validateFormula, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
+import { getExamplesForTable, getAllExamples, getExampleStats } from './modules/shared/examples.js';
 
 // =============================================================================
 // APPLICATION STATE  
@@ -475,6 +476,12 @@ function setupEventListeners() {
     // Table selection
     document.getElementById('tableSelect').addEventListener('change', (e) => {
         AppState.currentTable = e.target.value;
+        
+        // Refresh examples if on examples tab
+        const examplesTab = document.getElementById('examples');
+        if (examplesTab && examplesTab.classList.contains('active')) {
+            loadExamples();
+        }
     });
     
     // Schema table selection
@@ -619,22 +626,190 @@ function displaySchemaDetails(tableName, schema) {
 // =============================================================================
 
 async function loadExamples() {
-    // For now, show a placeholder - we could load examples from a JSON file
-    // or embed them directly in the client
     const examplesList = document.getElementById('examplesList');
-    if (examplesList) {
-        examplesList.innerHTML = `
-            <div class="examples-placeholder">
-                <h3>📝 Example Formulas</h3>
-                <p>Client-side examples coming soon!</p>
-                <p>For now, try these basic formulas:</p>
-                <ul>
-                    <li><code>UPPER(name)</code> - Convert name to uppercase</li>
-                    <li><code>IF(amount > 1000, "High", "Low")</code> - Conditional logic</li>
-                    <li><code>SUM(opportunities_rel, amount)</code> - Sum related records</li>
-                </ul>
+    if (!examplesList) return;
+    
+    try {
+        const currentTable = AppState.currentTable;
+        const stats = getExampleStats();
+        
+        let html = `
+            <div class="examples-container">
+                <div class="examples-header">
+                    <h3>📝 Formula Examples</h3>
+                    <p>Click any example to auto-execute in the compiler!</p>
+                    <div class="examples-stats">
+                        <span class="stat-item">📊 ${stats.totalExamples} total examples</span>
+                        <span class="stat-item">🗃️ ${stats.tableCount} tables</span>
+                    </div>
+                </div>
+        `;
+        
+        // Show table filter if a table is selected
+        if (currentTable) {
+            const tableExamples = getExamplesForTable(currentTable);
+            if (tableExamples.length > 0) {
+                html += `
+                    <div class="examples-section">
+                        <h4>🎯 ${currentTable} Examples (${tableExamples.length})</h4>
+                        <div class="examples-grid">
+                `;
+                
+                tableExamples.forEach(example => {
+                    html += createExampleCard(example, true);
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Show all examples organized by table
+        html += `
+            <div class="examples-section">
+                <h4>📚 All Examples by Table</h4>
+                <div class="examples-accordion">
+        `;
+        
+        for (const tableName in stats.byTable) {
+            const tableExamples = getExamplesForTable(tableName);
+            const isCurrentTable = tableName === currentTable;
+            
+            html += `
+                <div class="examples-table-group ${isCurrentTable ? 'current-table' : ''}">
+                    <div class="examples-table-header" onclick="toggleTableExamples('${tableName}')">
+                        <span class="table-name">${tableName}</span>
+                        <span class="table-count">${tableExamples.length} examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-${tableName}">
+                        <div class="examples-grid">
+            `;
+            
+            tableExamples.forEach(example => {
+                html += createExampleCard(example, false);
+            });
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += `
+                </div>
+            </div>
             </div>
         `;
+        
+        examplesList.innerHTML = html;
+        
+        // Auto-expand current table if one is selected
+        if (currentTable) {
+            const currentTableContent = document.getElementById(`examples-${currentTable}`);
+            if (currentTableContent) {
+                currentTableContent.style.display = 'block';
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading examples:', error);
+        examplesList.innerHTML = `
+            <div class="examples-error">
+                <h3>❌ Error Loading Examples</h3>
+                <p>Could not load formula examples: ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Create HTML for an example card
+ */
+function createExampleCard(example, isHighlighted = false) {
+    const shortFormula = example.formula.length > 100 
+        ? example.formula.substring(0, 100) + '...' 
+        : example.formula;
+    
+    return `
+        <div class="example-card ${isHighlighted ? 'highlighted' : ''}" 
+             onclick="loadAndExecuteExample('${example.id}')">
+            <div class="example-header">
+                <h5 class="example-title">${example.title}</h5>
+                <span class="example-table">${example.tableName}</span>
+            </div>
+            <div class="example-description">${example.description}</div>
+            <div class="example-formula">
+                <code>${shortFormula}</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Toggle visibility of examples for a table
+ */
+function toggleTableExamples(tableName) {
+    const content = document.getElementById(`examples-${tableName}`);
+    const header = content?.previousElementSibling;
+    const icon = header?.querySelector('.toggle-icon');
+    
+    if (content && icon) {
+        const isVisible = content.style.display === 'block';
+        content.style.display = isVisible ? 'none' : 'block';
+        icon.textContent = isVisible ? '▼' : '▲';
+    }
+}
+
+/**
+ * Load an example into the compiler and execute it
+ */
+async function loadAndExecuteExample(exampleId) {
+    try {
+        // Import the example getter function dynamically
+        const { getExampleById } = await import('./modules/shared/examples.js');
+        const example = getExampleById(exampleId);
+        
+        if (!example) {
+            console.error('Example not found:', exampleId);
+            return;
+        }
+        
+        console.log(`🚀 Loading example: ${example.title}`);
+        
+        // Switch to compiler tab
+        UI.switchTab('compiler');
+        
+        // Set the table
+        const tableSelect = document.getElementById('tableSelect');
+        if (tableSelect) {
+            tableSelect.value = example.tableName;
+            AppState.currentTable = example.tableName;
+        }
+        
+        // Set the formula
+        const formulaInput = document.getElementById('formulaInput');
+        if (formulaInput) {
+            formulaInput.value = example.formula;
+        }
+        
+        // Wait a moment for UI to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Execute the formula
+        await FormulaCompiler.execute();
+        
+        console.log(`✅ Example executed: ${example.title}`);
+        
+    } catch (error) {
+        console.error('Error loading example:', error);
+        UI.showResult('formulaResults', `Error loading example: ${error.message}`, 'error');
     }
 }
 
@@ -646,3 +821,5 @@ window.FormulaCompiler = FormulaCompiler;
 window.RecentFormulas = RecentFormulas;
 window.UI = UI;
 window.loadSchemaDetails = loadSchemaDetails;
+window.toggleTableExamples = toggleTableExamples;
+window.loadAndExecuteExample = loadAndExecuteExample;

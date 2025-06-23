@@ -57,7 +57,7 @@ FROM app_user s</pre>
                 <div class="form-group" style="margin-top: 30px;">
                     <label>Recent Formulas:</label>
                     <div id="recentFormulas">
-            <div class="recent-formula" onclick="RecentFormulas.loadFormula('id_1750676869007_z3kcyjgig')">
+            <div class="recent-formula" onclick="RecentFormulas.loadFormula('id_1750677550515_v9tt79ppf')">
                 <div class="recent-formula-text">UPPER("test")</div>
                 <div class="recent-formula-meta">
                     app_user • just now
@@ -72,15 +72,675 @@ FROM app_user s</pre>
                 <h3>Formula Examples</h3>
                 <p>Click any example to load it into the compiler:</p>
                 <div id="examplesList">
-            <div class="examples-placeholder">
-                <h3>📝 Example Formulas</h3>
-                <p>Client-side examples coming soon!</p>
-                <p>For now, try these basic formulas:</p>
-                <ul>
-                    <li><code>UPPER(name)</code> - Convert name to uppercase</li>
-                    <li><code>IF(amount &gt; 1000, "High", "Low")</code> - Conditional logic</li>
-                    <li><code>SUM(opportunities_rel, amount)</code> - Sum related records</li>
-                </ul>
+            <div class="examples-container">
+                <div class="examples-header">
+                    <h3>📝 Formula Examples</h3>
+                    <p>Click any example to auto-execute in the compiler!</p>
+                    <div class="examples-stats">
+                        <span class="stat-item">📊 41 total examples</span>
+                        <span class="stat-item">🗃️ 6 tables</span>
+                    </div>
+                </div>
+        
+            <div class="examples-section">
+                <h4>📚 All Examples by Table</h4>
+                <div class="examples-accordion">
+        
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('customer')">
+                        <span class="table-name">customer</span>
+                        <span class="table-count">5 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-customer">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('customer_budget_analysis')">
+            <div class="example-header">
+                <h5 class="example-title">Budget Analysis</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Budget Analysis with numeric rounding</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " | Budget Range: $" &amp; STRING(ROUND(budget_max - budget_min, 0)) &amp; " ...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_contact_card')">
+            <div class="example-header">
+                <h5 class="example-title">Contact Card</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Contact Card with text formatting</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " | " &amp; email &amp; " | " &amp; phone &amp; " | Budget: $" &amp; STRING(ROUND(budget_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_lead_score')">
+            <div class="example-header">
+                <h5 class="example-title">Lead Score</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Lead Score using aggregate counting</div>
+            <div class="example-formula">
+                <code>STRING(ROUND(
+  IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_multi_level_reps')">
+            <div class="example-header">
+                <h5 class="example-title">Multi Level Reps</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Multi Level Reps using aggregate counting</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " | Reps: " &amp; STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_rep_network')">
+            <div class="example-header">
+                <h5 class="example-title">Rep Network</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Rep Network with text concatenation</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " → " &amp; STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_opport...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('listing')">
+                        <span class="table-name">listing</span>
+                        <span class="table-count">6 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-listing">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('listing_agent_listing_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Agent Listing Summary</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Agent Listing Summary with conditional logic</div>
+            <div class="example-formula">
+                <code>address &amp; " - Listed by " &amp; listing_agent_rel.name &amp; " (" &amp; listing_agent_rel.region &amp; ") | " &amp; IF(s...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_features_highlight')">
+            <div class="example-header">
+                <h5 class="example-title">Features Highlight</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Features Highlight with conditional logic</div>
+            <div class="example-formula">
+                <code>address &amp; " | Built: " &amp; STRING(year_built) &amp; " | Lot: " &amp; STRING(lot_size) &amp; " acres | Features: " ...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_luxury_indicator')">
+            <div class="example-header">
+                <h5 class="example-title">Luxury Indicator</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Luxury Indicator with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(listing_price &gt; 800000, "💎 LUXURY", IF(listing_price &gt; 500000, "⭐ PREMIUM", IF(listing_price &gt; 3...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_market_analysis')">
+            <div class="example-header">
+                <h5 class="example-title">Market Analysis</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Market Analysis with conditional logic</div>
+            <div class="example-formula">
+                <code>address &amp; " | Market Position: " &amp; IF(days_on_market &lt; 30, "🔥 HOT", IF(days_on_market &lt; 60, "📈 NOR...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_market_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Market Summary</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Market Summary with text formatting</div>
+            <div class="example-formula">
+                <code>address &amp; " | $" &amp; STRING(ROUND(listing_price/1000, 0)) &amp; "K | " &amp; STRING(bedrooms) &amp; "bed/" &amp; STRIN...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_price_per_sqft')">
+            <div class="example-header">
+                <h5 class="example-title">Price Per Sqft</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Price Per Sqft with numeric rounding</div>
+            <div class="example-formula">
+                <code>ROUND(listing_price / square_feet, 2)</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('merchant')">
+                        <span class="table-name">merchant</span>
+                        <span class="table-count">1 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-merchant">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('merchant_all_reps_on_a_merchant')">
+            <div class="example-header">
+                <h5 class="example-title">All Reps On A Merchant</h5>
+                <span class="example-table">merchant</span>
+            </div>
+            <div class="example-description">All Reps On A Merchant using relationships</div>
+            <div class="example-formula">
+                <code>STRING_AGG_DISTINCT(submissions_merchant.rep_links_submission, rep_rel.name, ",")</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('opportunity')">
+                        <span class="table-name">opportunity</span>
+                        <span class="table-count">3 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-opportunity">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('opportunity_commission_projection')">
+            <div class="example-header">
+                <h5 class="example-title">Commission Projection</h5>
+                <span class="example-table">opportunity</span>
+            </div>
+            <div class="example-description">Commission Projection using aggregate counting</div>
+            <div class="example-formula">
+                <code>IF(stage = "closed", "✅ PAID: $" &amp; STRING(ROUND(commission_total, 0)), "📊 PROJECTED: $" &amp; STRING(RO...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('opportunity_deal_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Deal Summary</h5>
+                <span class="example-table">opportunity</span>
+            </div>
+            <div class="example-description">Deal Summary with text formatting</div>
+            <div class="example-formula">
+                <code>customer_rel.first_name &amp; " " &amp; customer_rel.last_name &amp; " → " &amp; listing_rel.address &amp; " | " &amp; UPPER...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('opportunity_pipeline_status')">
+            <div class="example-header">
+                <h5 class="example-title">Pipeline Status</h5>
+                <span class="example-table">opportunity</span>
+            </div>
+            <div class="example-description">Pipeline Status with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(stage = "closed", "🎉 CLOSED", IF(stage = "under_contract", "📋 CONTRACT", IF(stage = "negotiatin...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('rep')">
+                        <span class="table-name">rep</span>
+                        <span class="table-count">3 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-rep">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('rep_commission_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Commission Summary</h5>
+                <span class="example-table">rep</span>
+            </div>
+            <div class="example-description">Commission Summary using aggregate counting</div>
+            <div class="example-formula">
+                <code>name &amp; " | Earned: $" &amp; STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0))...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('rep_performance_dashboard')">
+            <div class="example-header">
+                <h5 class="example-title">Performance Dashboard</h5>
+                <span class="example-table">rep</span>
+            </div>
+            <div class="example-description">Performance Dashboard using aggregate counting</div>
+            <div class="example-formula">
+                <code>name &amp; " (" &amp; region &amp; ") | Goal: $" &amp; STRING(ROUND(sales_goal/1000, 0)) &amp; "K | Active Listings: " &amp;...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('rep_team_structure')">
+            <div class="example-header">
+                <h5 class="example-title">Team Structure</h5>
+                <span class="example-table">rep</span>
+            </div>
+            <div class="example-description">Team Structure with conditional logic</div>
+            <div class="example-formula">
+                <code>name &amp; " | " &amp; NULLVALUE(manager_rel.name, "🏆 MANAGER") &amp; " | Team: " &amp; region &amp; " | Hired: " &amp; STR...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('submission')">
+                        <span class="table-name">submission</span>
+                        <span class="table-count">23 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-submission">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('submission_advanced_math')">
+            <div class="example-header">
+                <h5 class="example-title">Advanced Math</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Advanced Math using aggregate averaging</div>
+            <div class="example-formula">
+                <code>ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DAT...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_approval_status')">
+            <div class="example-header">
+                <h5 class="example-title">Approval Status</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Approval Status with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(status = "approved", "✅ APPROVED on " &amp; STRING(MONTH(updated_at)) &amp; "/" &amp; STRING(DAY(updated_at))...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_business_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Business Summary</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Business Summary with numeric rounding</div>
+            <div class="example-formula">
+                <code>merchant_rel.business_name &amp; " - $" &amp; STRING(ROUND(amount, 2)) &amp; " - Commission: " &amp; STRING_AGG(rep_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_commission_breakdown')">
+            <div class="example-header">
+                <h5 class="example-title">Commission Breakdown</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Commission Breakdown with text concatenation</div>
+            <div class="example-formula">
+                <code>STRING_AGG_DISTINCT(rep_links_submission, STRING(commission_percentage) &amp; "%", " | ")</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_compliance_check')">
+            <div class="example-header">
+                <h5 class="example-title">Compliance Check</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Compliance Check with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(AND(amount &lt;= 250000, DATEDIF(created_at, TODAY(), "days") &lt;= 60), "✅ COMPLIANT", "⚠️ REVIEW NEED...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_comprehensive_dashboard')">
+            <div class="example-header">
+                <h5 class="example-title">Comprehensive Dashboard</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Comprehensive Dashboard using aggregate counting</div>
+            <div class="example-formula">
+                <code>merchant_rel.business_name &amp; " | $" &amp; STRING(ROUND(amount, 0)) &amp; " | " &amp; STRING(COUNT_AGG(rep_links_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_contact_info')">
+            <div class="example-header">
+                <h5 class="example-title">Contact Info</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Contact Info with text concatenation</div>
+            <div class="example-formula">
+                <code>merchant_rel.first_name &amp; " " &amp; merchant_rel.last_name &amp; " (" &amp; merchant_rel.email &amp; ") | " &amp; SUBSTI...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_deep_relationship')">
+            <div class="example-header">
+                <h5 class="example-title">Deep Relationship</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Deep Relationship using relationships</div>
+            <div class="example-formula">
+                <code>merchant_rel.main_rep_rel.app_user_rel.name</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_document_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Document Summary</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Document Summary with text formatting</div>
+            <div class="example-formula">
+                <code>"Status: " &amp; UPPER(status) &amp; " | Amount: $" &amp; STRING(ROUND(amount, 0)) &amp; " | Merchant: " &amp; merchant_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_financial_metrics')">
+            <div class="example-header">
+                <h5 class="example-title">Financial Metrics</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Financial Metrics using aggregate summation</div>
+            <div class="example-formula">
+                <code>ROUND(amount * SUM_AGG(rep_links_submission, commission_percentage) / 100, 2)</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_funding_analysis')">
+            <div class="example-header">
+                <h5 class="example-title">Funding Analysis</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Funding Analysis with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(amount &gt; 500000, "JUMBO: $" &amp; STRING(ROUND(amount/1000, 0)) &amp; "K", IF(amount &gt; 100000, "LARGE: $"...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_merchant_profile')">
+            <div class="example-header">
+                <h5 class="example-title">Merchant Profile</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Merchant Profile with text formatting</div>
+            <div class="example-formula">
+                <code>UPPER(LEFT(merchant_rel.business_name, 3)) &amp; "-" &amp; STRING(merchant_rel.id) &amp; " | " &amp; SUBSTITUTE(merc...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_multi_level_demo')">
+            <div class="example-header">
+                <h5 class="example-title">Multi Level Demo</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Multi Level Demo using aggregate counting</div>
+            <div class="example-formula">
+                <code>"Submission " &amp; STRING(amount) &amp; " with " &amp; STRING(COUNT_AGG(rep_links_submission, commission_percen...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_null_safety_check')">
+            <div class="example-header">
+                <h5 class="example-title">Null Safety Check</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Null Safety Check using aggregate counting</div>
+            <div class="example-formula">
+                <code>IF(ISNULL(merchant_rel.business_name), "NO MERCHANT", merchant_rel.business_name) &amp; " | Amount: " &amp; ...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_performance_score')">
+            <div class="example-header">
+                <h5 class="example-title">Performance Score</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Performance Score using aggregate averaging</div>
+            <div class="example-formula">
+                <code>ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - ...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_quarterly_report')">
+            <div class="example-header">
+                <h5 class="example-title">Quarterly Report</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Quarterly Report with text concatenation</div>
+            <div class="example-formula">
+                <code>"Q" &amp; STRING(CEILING(MONTH(created_at) / 3)) &amp; " " &amp; STRING(YEAR(created_at)) &amp; " | " &amp; merchant_rel...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_rep_analysis')">
+            <div class="example-header">
+                <h5 class="example-title">Rep Analysis</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Rep Analysis with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(AND_AGG(rep_links_submission, commission_percentage &gt; 0), "All reps have commission", "Some reps ...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_risk_assessment')">
+            <div class="example-header">
+                <h5 class="example-title">Risk Assessment</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Risk Assessment using aggregate counting</div>
+            <div class="example-formula">
+                <code>IF(amount &gt; 100000, "HIGH RISK", IF(amount &gt; 50000, "MEDIUM RISK", "LOW RISK")) &amp; " | " &amp; merchant_r...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_seasonal_analysis')">
+            <div class="example-header">
+                <h5 class="example-title">Seasonal Analysis</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Seasonal Analysis with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(AND(MONTH(created_at) &gt;= 3, MONTH(created_at) &lt;= 5), "🌸 SPRING", IF(AND(MONTH(created_at) &gt;= 6, ...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_status_report')">
+            <div class="example-header">
+                <h5 class="example-title">Status Report</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Status Report with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " &amp; UPPER(status))) &amp; "...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_text_processing')">
+            <div class="example-header">
+                <h5 class="example-title">Text Processing</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Text Processing with conditional logic</div>
+            <div class="example-formula">
+                <code>UPPER(LEFT(TRIM(merchant_rel.business_name), 10)) &amp; "..." &amp; " (" &amp; STRING(LEN(merchant_rel.business_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_timeline_tracker')">
+            <div class="example-header">
+                <h5 class="example-title">Timeline Tracker</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Timeline Tracker with conditional logic</div>
+            <div class="example-formula">
+                <code>"Created: " &amp; STRING(MONTH(created_at)) &amp; "/" &amp; STRING(DAY(created_at)) &amp; "/" &amp; STRING(YEAR(created_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('submission_weekend_detector')">
+            <div class="example-header">
+                <h5 class="example-title">Weekend Detector</h5>
+                <span class="example-table">submission</span>
+            </div>
+            <div class="example-description">Weekend Detector with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(OR(WEEKDAY(created_at) = 1, WEEKDAY(created_at) = 7), "📅 WEEKEND SUBMISSION", "🏢 WEEKDAY SUBMIS...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                </div>
+            </div>
             </div>
         </div>
             </div>

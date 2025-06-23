@@ -1,1 +1,0 @@
-"Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) & "/" & STRING(YEAR(created_at)) & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"

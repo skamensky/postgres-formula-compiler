@@ -1,1 +1,0 @@
-IF(amount > 100000, "HIGH RISK", IF(amount > 50000, "MEDIUM RISK", "LOW RISK")) & " | " & merchant_rel.business_name & " | Reps: " & STRING(COUNT_AGG(rep_links_submission, rep))

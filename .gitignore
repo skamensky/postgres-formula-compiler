@@ -4,3 +4,4 @@ node_modules
 # Auto-generated frontend modules (keep shared/ as source)
 web/public/modules/compiler/
 web/public/modules/tooling/
+web/public/modules/shared/examples.js
