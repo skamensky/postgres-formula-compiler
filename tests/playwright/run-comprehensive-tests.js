@@ -1,5 +1,6 @@
 import { testSchemaTabInitialLoad } from './schema-tab-initial-load.js';
 import { testLanguageTooling } from './language-tooling-test.js';
+import { testRelationshipNaming } from './relationship-naming-test.js';
 
 async function runComprehensiveTests() {
     console.log('🧪 Running comprehensive tests for reported issues...\n');
@@ -20,6 +21,12 @@ async function runComprehensiveTests() {
         results.languageTest = await testLanguageTooling();
         
         console.log('\n' + '=' .repeat(60));
+        console.log('TEST 3: Relationship Naming Convention');
+        console.log('=' .repeat(60));
+        
+        results.relationshipTest = await testRelationshipNaming();
+        
+        console.log('\n' + '=' .repeat(60));
         console.log('COMPREHENSIVE TEST SUMMARY');
         console.log('=' .repeat(60));
         
@@ -38,7 +45,17 @@ async function runComprehensiveTests() {
             });
         }
         
-        const allPassed = results.schemaTest.success && results.languageTest.success;
+        console.log('\n🔗 Relationship Naming Convention:');
+        if (results.relationshipTest.success) {
+            console.log(`  ✅ VERIFIED - All ${results.relationshipTest.total} tests passed`);
+            console.log('  📋 Convention: {field_name}_rel.{foreign_field_name}');
+            console.log('  ✅ assigned_rep_id_rel.name formula works correctly');
+        } else {
+            console.log(`  ❌ FAILED - ${results.relationshipTest.failed}/${results.relationshipTest.total} tests failed`);
+            console.log('  📊 Score:', results.relationshipTest.score);
+        }
+        
+        const allPassed = results.schemaTest.success && results.languageTest.success && results.relationshipTest.success;
         
         console.log('\n🏆 OVERALL RESULT:');
         if (allPassed) {
@@ -51,6 +68,8 @@ async function runComprehensiveTests() {
             success: allPassed,
             schemaFixed: results.schemaTest.success,
             languageToolingScore: results.languageTest.score,
+            relationshipNamingFixed: results.relationshipTest.success,
+            relationshipScore: results.relationshipTest.score,
             details: results
         };
         

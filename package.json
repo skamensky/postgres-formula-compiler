@@ -15,6 +15,7 @@
     "test:autocomplete": "node tests/playwright/autocomplete-final-test.js",
     "test:live": "node tests/playwright/live-execution-test.js",
     "test:assigned-rep": "node tests/playwright/assigned-rep-debug.js",
+    "test:relationships": "node tests/playwright/relationship-naming-test.js",
     "test:comprehensive": "node tests/playwright/run-comprehensive-tests.js",
     "build": "node scripts/build-frontend.js",
     "serve": "node web/server.js",
