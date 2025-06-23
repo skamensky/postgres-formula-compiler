@@ -42,35 +42,59 @@ Deploy Anywhere (GitHub Pages, Netlify, Vercel)
 
 ### **1. Build System (`scripts/build-frontend.js`)**
 
-**Purpose**: Copy and transform all compiler/tooling files for browser use
+**Purpose**: Copy and transform compiler/tooling files for browser use
 
 **Process**:
-1. **Copy Files**: `src/` → `web/public/modules/compiler/`
-2. **Copy Tools**: `tooling/` → `web/public/modules/tooling/`
+1. **Copy Compiler**: `src/` → `web/public/modules/compiler/` (auto-generated)
+2. **Copy Tooling**: `tooling/` → `web/public/modules/tooling/` (auto-generated)
 3. **Transform Imports**: Fix relative paths for browser modules
-4. **Create Shared**: Generate browser-specific API and database clients
-5. **Update .gitignore**: Auto-generated modules are ignored
+4. **Preserve Shared**: `modules/shared/` contains source files (not auto-generated)
 
 **Result**: Complete compilation stack available in browser
 
-### **2. Browser Database Client (`modules/shared/db-client.js`)**
+### **2. File Organization (New Structure)**
 
-**Replaces**: Server-side database connections
+**Source Files (Manual):**
+```
+web/public/modules/shared/     # Source files (committed to git)
+├── db-client.js              # PGlite browser database client
+├── browser-api.js            # Client-side API interface  
+└── seed.sql                  # Real estate CRM seed data
 
-**Features**:
-- **PGlite Integration**: Direct browser-based SQL database
-- **Seed Data Loading**: Automatically initializes with real estate data
-- **Same Interface**: Drop-in replacement for server database client
+web/public/tooling-client/     # Frontend developer tools
+├── developer-tools-client.js # Main developer tools manager
+├── autocomplete.js           # Autocomplete dropdown
+├── syntax-highlighting.js    # Real-time syntax highlighting
+└── formatter-integration.js  # Code formatting integration
+```
+
+**Auto-Generated Files (Gitignored):**
+```
+web/public/modules/compiler/   # Copy of src/ (auto-generated)
+└── (all compiler files)
+
+web/public/modules/tooling/    # Copy of tooling/ (auto-generated)  
+└── (all tooling files)
+```
+
+### **3. Browser Database Client (`modules/shared/db-client.js`)**
+
+**Source File** - Contains the PGlite integration:
 
 ```javascript
-// Browser automatically loads this
 import { initializeBrowserDatabase } from './modules/shared/db-client.js';
 const dbClient = await initializeBrowserDatabase();
 ```
 
-### **3. Browser API Layer (`modules/shared/browser-api.js`)**
+**Features**:
+- PGlite CDN import for browser use
+- Automatic seed data loading from `seed.sql`
+- Consistent interface matching server database client
+- Singleton pattern to prevent duplicate initialization
 
-**Replaces**: All `/api/*` server endpoints
+### **4. Browser API Layer (`modules/shared/browser-api.js`)**
+
+**Source File** - Replaces all server `/api/*` endpoints:
 
 **API Mapping**:
 - `/api/execute` → `executeFormula()`
@@ -83,13 +107,14 @@ const dbClient = await initializeBrowserDatabase();
 - Same function signatures as server APIs
 - Direct module imports (no network calls)
 - Full error handling and validation
+- Schema management for developer tools
 
-### **4. Simplified Server (`web/server.js`)**
+### **5. Simplified Server (`web/server.js`)**
 
 **Before**: 700+ lines with complex API endpoints  
 **After**: 50 lines of static file serving
 
-**New Server Features**:
+**Server Features**:
 - ✅ Static file serving only
 - ✅ Auto-builds frontend modules on startup
 - ✅ Health check with client-side mode indicator
@@ -98,73 +123,56 @@ const dbClient = await initializeBrowserDatabase();
 - ❌ No formula compilation
 - ❌ No API endpoints
 
-### **5. Browser-Based Frontend (`browser-script.js`)**
+### **6. Browser-Based Frontend (`browser-script.js`)**
 
-**Replaces**: Complex server-dependent `script.js`
+**Replaces**: Complex server-dependent client code
 
-**New Features**:
-- **Direct Module Imports**: ES6 modules for all functionality
-- **Browser Initialization**: PGlite database setup
-- **Zero Network Calls**: All processing happens locally
-- **Developer Tools Integration**: Full LSP, highlighting, formatting
-- **Schema Management**: Dynamic schema loading and updates
+**Features**:
+- Direct ES6 module imports from `modules/`
+- Browser database initialization with PGlite
+- Zero network calls for compilation
+- Developer tools integration
+- Schema management and updates
 
 ## 📁 **File Organization**
 
-### **Source Structure**
+### **Project Structure**
 ```
-src/                     # Core compilation engine
-├── lexer.js            # Tokenization
-├── parser.js           # AST generation  
-├── compiler.js         # Formula compilation
-├── sql-generator.js    # SQL generation
-└── functions/          # Function implementations
-
-tooling/                # Developer experience tools
-├── lsp.js             # Language server protocol
-├── syntax-highlighter.js # Real-time highlighting
-├── formatter.js       # Code formatting
-└── developer-tools.js # Combined interface
-
-web/public/modules/     # Auto-generated (gitignored)
-├── compiler/          # Copy of src/
-├── tooling/           # Copy of tooling/  
-└── shared/            # Browser-specific files
-    ├── db-client.js   # PGlite integration
-    ├── browser-api.js # API replacements
-    └── seed.sql       # Database seed data
+├── src/                      # Core compilation engine (source)
+├── tooling/                  # Developer tools (source)
+├── web/public/
+│   ├── modules/
+│   │   ├── shared/          # Browser-specific source files ✅
+│   │   ├── compiler/        # Auto-generated from src/ ❌
+│   │   └── tooling/         # Auto-generated from tooling/ ❌
+│   ├── tooling-client/      # Frontend developer tools ✅
+│   ├── index.html           # Main application ✅
+│   ├── browser-script.js    # Main app logic ✅
+│   └── styles.css           # Styling ✅
+└── scripts/build-frontend.js # Build system
 ```
 
-### **Deployment Structure**
-```
-web/public/            # Static deployment bundle
-├── index.html        # Main application
-├── styles.css        # Styling
-├── browser-script.js # Main application logic
-└── modules/          # All compilation logic
-    ├── compiler/     # Engine files
-    ├── tooling/      # Developer tools
-    └── shared/       # Browser integrations
-```
+**Git Tracking**:
+- ✅ **Tracked**: `modules/shared/`, `tooling-client/`, main app files
+- ❌ **Ignored**: `modules/compiler/`, `modules/tooling/` (auto-generated)
 
 ## 🔧 **Build & Development Workflow**
 
 ### **Development Commands**
 ```bash
-npm run build    # Build frontend modules
+npm run build    # Build frontend modules (compiler + tooling only)
 npm run serve    # Start static server
 npm run dev      # Build + serve (recommended)
 ```
 
 ### **Build Process**
-1. **Copy & Transform**: All source files → browser modules
-2. **Fix Imports**: Update relative paths for browser
-3. **Generate APIs**: Create browser-specific interfaces
-4. **Seed Data**: Copy database initialization
-5. **Update Ignore**: Add modules to .gitignore
+1. **Copy & Transform**: `src/` → `modules/compiler/`, `tooling/` → `modules/tooling/`
+2. **Fix Imports**: Update relative paths for browser compatibility
+3. **Preserve Shared**: `modules/shared/` files are maintained as source
+4. **Transform JS**: Add `.js` extensions, fix import paths
 
 ### **Development Workflow**
-1. **Make Changes**: Edit files in `src/` or `tooling/`
+1. **Make Changes**: Edit files in `src/`, `tooling/`, or `modules/shared/`
 2. **Rebuild**: `npm run build` (automatic on `npm run serve`)
 3. **Test**: Open `http://localhost:3000`
 4. **Deploy**: Copy `web/public/` to any static host
@@ -191,7 +199,7 @@ npm run dev      # Build + serve (recommended)
 
 ### **GitHub Pages Deployment**
 ```bash
-# Copy web/public/ contents to gh-pages branch
+# Copy web/public/ contents to docs/ or gh-pages branch
 cp -r web/public/* docs/
 git add docs/
 git commit -m "Deploy client-side app"
@@ -207,7 +215,7 @@ build:
 ```
 
 ### **CDN Deployment**
-- Any static file CDN works
+- Copy `web/public/` to any static file CDN
 - No special configuration needed
 - Perfect for global distribution
 
@@ -318,6 +326,12 @@ This refactor successfully transformed the Formula Compiler from a traditional s
 - 🔧 **Simplified Development** workflow
 - 🚀 **Future-Proof Architecture** for scaling
 
+**Organizational Improvements:**
+- 📁 **Clean Structure**: Source files clearly separated from auto-generated
+- 🔧 **Efficient Build**: Only generates what needs to be generated
+- 📝 **Smart Git Tracking**: Ignores auto-generated files, tracks source
+- 🛠️ **Maintainable Code**: Browser-specific code is editable source
+
 **Result**: A blazing-fast, cost-effective, universally deployable formula compiler that showcases the true power of modern client-side development with PGlite.
 
 The vision of a "link on GitHub that always works" is now reality! 🎯
@@ -327,4 +341,5 @@ The vision of a "link on GitHub that always works" is now reality! 🎯
 **Status**: ✅ **Complete and Production Ready**  
 **Date**: December 22, 2024  
 **Performance**: Excellent (sub-10ms formula execution)  
+**Organization**: Optimized (clean source/build separation)  
 **Deployment**: Ready for GitHub Pages, Netlify, Vercel, or any static host
