@@ -224,14 +224,27 @@ export async function executeFormula(formula, tableName) {
         const columnLists = await getColumnListsForTables(allTableNames, dbClient);
         const allRelationships = await getAllRelationships(dbClient);
         
-        // Build relationship context
+        // Build relationship context - recursively load all relationship targets
         const allTableNamesForContext = new Set([tableName]);
         const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
         
         console.log(`🔍 [Browser API] Direct relationships from ${tableName}:`, directRels.map(r => `${r.name} → ${r.toTable}`));
         
+        // Add direct relationship targets
         for (const rel of directRels) {
             allTableNamesForContext.add(rel.toTable);
+        }
+        
+        // RECURSIVELY add second-level relationship targets (for multi-level relationships)
+        const secondLevelTables = [...allTableNamesForContext];
+        for (const targetTable of secondLevelTables) {
+            if (targetTable !== tableName) { // Skip the original table to avoid cycles
+                const secondLevelRels = allRelationships.filter(rel => rel.fromTable === targetTable);
+                console.log(`🔍 [Browser API] Second-level relationships from ${targetTable}:`, secondLevelRels.map(r => `${r.name} → ${r.toTable}`));
+                for (const rel of secondLevelRels) {
+                    allTableNamesForContext.add(rel.toTable);
+                }
+            }
         }
         
         console.log(`🔍 [Browser API] Tables available in database:`, allTableNames);
@@ -246,25 +259,28 @@ export async function executeFormula(formula, tableName) {
         const allInverseRelationships = await getInverseRelationshipsForTables([...tablesToLoadInverseRels], dbClient);
         const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
         
-        // Build table infos
+        // Build table infos for ALL tables in context (including multi-level)
         const tableInfos = [{
             tableName: tableName,
             columnList: columnLists[tableName]
         }];
         
-        for (const rel of directRels) {
-            if (columnLists[rel.toTable]) {
-                tableInfos.push({
-                    tableName: rel.toTable,
-                    columnList: columnLists[rel.toTable]
-                });
-                console.log(`✅ [Browser API] Loaded table info for ${rel.toTable} (${Object.keys(columnLists[rel.toTable]).length} columns)`);
-            } else {
-                const errorMsg = `❌ Relationship '${rel.name}' from table '${tableName}' points to table '${rel.toTable}', but table '${rel.toTable}' was not found in the database.`;
-                console.error(errorMsg);
-                console.error(`   Available tables: ${allTableNames.join(', ')}`);
-                console.error(`   Tables with column data: ${Object.keys(columnLists).join(', ')}`);
-                throw new Error(errorMsg);
+        // Add all tables from the expanded context
+        for (const contextTableName of allTableNamesForContext) {
+            if (contextTableName !== tableName) { // Skip the main table (already added)
+                if (columnLists[contextTableName]) {
+                    tableInfos.push({
+                        tableName: contextTableName,
+                        columnList: columnLists[contextTableName]
+                    });
+                    console.log(`✅ [Browser API] Loaded table info for ${contextTableName} (${Object.keys(columnLists[contextTableName]).length} columns)`);
+                } else {
+                    const errorMsg = `❌ Table '${contextTableName}' needed for relationships was not found in the database.`;
+                    console.error(errorMsg);
+                    console.error(`   Available tables: ${allTableNames.join(', ')}`);
+                    console.error(`   Tables with column data: ${Object.keys(columnLists).join(', ')}`);
+                    throw new Error(errorMsg);
+                }
             }
         }
         
