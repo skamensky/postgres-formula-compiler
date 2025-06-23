@@ -10,13 +10,13 @@ console.log('Running Date Arithmetic Tests...\n');
 // Test 11: Date arithmetic - date + number
 test('Date arithmetic - date + number', () => {
   const result = evaluateFormula('created_date + 30', testContext);
-  assertEqual(result, '("s"."created_date" + INTERVAL \'30 days\')');
+  assertEqual(result, '("s"."created_date" + 30 * INTERVAL \'1 day\')');
 });
 
 // Test 12: Date arithmetic - date - number
 test('Date arithmetic - date - number', () => {
   const result = evaluateFormula('created_date - 7', testContext);
-  assertEqual(result, '("s"."created_date" - INTERVAL \'7 days\')');
+  assertEqual(result, '("s"."created_date" - 7 * INTERVAL \'1 day\')');
 });
 
 // Test 13: Date arithmetic - date - date
@@ -28,13 +28,13 @@ test('Date arithmetic - date - date', () => {
 // Test 34: Expression with column arithmetic and date
 test('Expression with column arithmetic and date', () => {
   const result = evaluateFormula('created_date + revenue', testContext);
-  assertEqual(result, '("s"."created_date" + INTERVAL \'"s"."revenue" days\')');
+  assertEqual(result, '("s"."created_date" + "s"."revenue" * INTERVAL \'1 day\')');
 });
 
 // Test 45: Date arithmetic with parentheses
 test('Date arithmetic with parentheses', () => {
   const result = evaluateFormula('(created_date + 30) - 7', testContext);
-  assertEqual(result, '(("s"."created_date" + INTERVAL \'30 days\') - INTERVAL \'7 days\')');
+  assertEqual(result, '(("s"."created_date" + 30 * INTERVAL \'1 day\') - 7 * INTERVAL \'1 day\')');
 });
 
 // Error Tests

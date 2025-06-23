@@ -64,25 +64,25 @@ test('WEEKDAY function with TODAY()', () => {
 // Test 233: ADDMONTHS function with date column and number
 test('ADDMONTHS function with date column and number', () => {
   const result = evaluateFormula('ADDMONTHS(created_date, 6)', testContext);
-  assertEqual(result, '("s"."created_date" + INTERVAL \'6 months\')');
+  assertEqual(result, '("s"."created_date" + 6 * INTERVAL \'1 month\')');
 });
 
 // Test 234: ADDMONTHS function with TODAY() and negative number
 test('ADDMONTHS function with TODAY() and negative number', () => {
   const result = evaluateFormula('ADDMONTHS(TODAY(), -3)', testContext);
-  assertEqual(result, '(current_date + INTERVAL \'-3 months\')');
+  assertEqual(result, '(current_date + -3 * INTERVAL \'1 month\')');
 });
 
 // Test 235: ADDDAYS function with date column and number
 test('ADDDAYS function with date column and number', () => {
   const result = evaluateFormula('ADDDAYS(updated_date, 30)', testContext);
-  assertEqual(result, '("s"."updated_date" + INTERVAL \'30 days\')');
+  assertEqual(result, '("s"."updated_date" + 30 * INTERVAL \'1 day\')');
 });
 
 // Test 236: ADDDAYS function with TODAY() and negative number
 test('ADDDAYS function with TODAY() and negative number', () => {
   const result = evaluateFormula('ADDDAYS(TODAY(), -7)', testContext);
-  assertEqual(result, '(current_date + INTERVAL \'-7 days\')');
+  assertEqual(result, '(current_date + -7 * INTERVAL \'1 day\')');
 });
 
 // Test 237: DATEDIF function with days unit
@@ -118,7 +118,7 @@ test('Date functions in string concatenation', () => {
 // Test 243: Complex date function expression
 test('Complex date function expression', () => {
   const result = evaluateFormula('ADDDAYS(ADDMONTHS(created_date, 6), DATEDIF(created_date, updated_date, "days"))', testContext);
-  assertEqual(result, '(("s"."created_date" + INTERVAL \'6 months\') + INTERVAL \'EXTRACT(EPOCH FROM ("s"."updated_date" - "s"."created_date")) / 86400 days\')');
+  assertEqual(result, '(("s"."created_date" + 6 * INTERVAL \'1 month\') + EXTRACT(EPOCH FROM ("s"."updated_date" - "s"."created_date")) / 86400 * INTERVAL \'1 day\')');
 });
 
 // Error Tests
