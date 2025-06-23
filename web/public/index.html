@@ -34,12 +34,22 @@
                 
                 <div class="form-group">
                     <label for="formulaInput">Enter Formula:</label>
-                    <textarea id="formulaInput"></textarea>
+                    <div class="formula-input-container">
+                        <textarea id="formulaInput" placeholder="Type your formula here... (executes automatically)"></textarea>
+                        <div id="formulaStatus" class="formula-status">
+                            <div class="status-indicator" id="statusIndicator">
+                                <span class="status-icon">⚪</span>
+                                <span class="status-text">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="formulaError" class="formula-error hidden"></div>
                 </div>
                 
                 <div class="button-group">
-                    <button id="executeBtn" class="btn btn-primary">Execute Formula</button>
+                    <button id="executeBtn" class="btn btn-secondary" style="display: none;">Manual Execute</button>
                     <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                    <button id="toggleLiveBtn" class="btn btn-outline">Live Mode: ON</button>
                 </div>
                 
                 <div id="formulaResults"></div>

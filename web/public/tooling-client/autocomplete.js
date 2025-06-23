@@ -49,10 +49,24 @@ class AutocompleteManager {
             }
         });
 
+        // Hide on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isVisible) {
+                this.hide();
+            }
+        });
+
         // Handle window resize
         window.addEventListener('resize', () => {
             if (this.isVisible) {
                 this.updatePosition();
+            }
+        });
+
+        // Hide when scrolling
+        document.addEventListener('scroll', () => {
+            if (this.isVisible) {
+                this.hide();
             }
         });
     }

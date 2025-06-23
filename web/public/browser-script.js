@@ -280,7 +280,208 @@ function populateTableSelectors() {
 }
 
 // =============================================================================
-// FORMULA COMPILER
+// LIVE FORMULA EXECUTION
+// =============================================================================
+
+const LiveExecution = {
+    enabled: true,
+    debounceDelay: 800, // ms
+    debounceTimer: null,
+    lastFormula: '',
+    lastTable: '',
+    
+    init() {
+        this.setupEventListeners();
+        this.updateUI();
+    },
+    
+    setupEventListeners() {
+        const formulaInput = document.getElementById('formulaInput');
+        const toggleBtn = document.getElementById('toggleLiveBtn');
+        
+        // Live input listener
+        formulaInput.addEventListener('input', (e) => {
+            if (this.enabled) {
+                this.handleInput(e.target.value);
+            }
+        });
+        
+        // Table change listener
+        document.addEventListener('change', (e) => {
+            if (e.target.id === 'tableSelect' && this.enabled) {
+                const formula = formulaInput.value.trim();
+                if (formula) {
+                    this.handleInput(formula);
+                }
+            }
+        });
+        
+        // Toggle button listener
+        toggleBtn.addEventListener('mousedown', () => {
+            // Force hide autocomplete dropdown to prevent interference
+            if (window.autocomplete && window.autocomplete.isVisible) {
+                window.autocomplete.hide();
+            }
+        });
+        
+        toggleBtn.addEventListener('click', () => {
+            this.toggle();
+        });
+    },
+    
+    handleInput(formula) {
+        const tableName = document.getElementById('tableSelect').value;
+        
+        // Clear previous timer
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+        }
+        
+        // Update status to validating
+        this.updateStatus('validating', 'Validating...');
+        
+        // Clear error display
+        this.hideError();
+        
+        // Debounce execution
+        this.debounceTimer = setTimeout(() => {
+            this.validateAndExecute(formula, tableName);
+        }, this.debounceDelay);
+    },
+    
+    async validateAndExecute(formula, tableName) {
+        // Skip if same as last execution
+        if (formula === this.lastFormula && tableName === this.lastTable) {
+            this.updateStatus('ready', 'Ready');
+            return;
+        }
+        
+        // Validate inputs
+        if (!formula.trim()) {
+            this.updateStatus('ready', 'Ready');
+            document.getElementById('formulaResults').innerHTML = '';
+            return;
+        }
+        
+        if (!tableName) {
+            this.showError('Please select a table first');
+            this.updateStatus('error', 'No table');
+            return;
+        }
+        
+        // Validate formula syntax
+        try {
+            const validation = await validateFormula(formula, tableName);
+            if (!validation.valid) {
+                this.showError(validation.error || 'Invalid formula syntax');
+                this.updateStatus('error', 'Invalid');
+                return;
+            }
+        } catch (error) {
+            this.showError(`Validation error: ${error.message}`);
+            this.updateStatus('error', 'Error');
+            return;
+        }
+        
+        // Execute formula
+        this.updateStatus('executing', 'Executing...');
+        
+        try {
+            const result = await executeFormula(formula, tableName);
+            
+            if (result.success) {
+                UI.showResult('formulaResults', result, 'success');
+                this.updateStatus('success', 'Success');
+                
+                // Save to recent formulas (but less frequently to avoid spam)
+                if (formula.length > 10) { // Only save substantial formulas
+                    RecentFormulas.save(formula, tableName);
+                }
+                
+                this.lastFormula = formula;
+                this.lastTable = tableName;
+            } else {
+                this.showError(result.error);
+                this.updateStatus('error', 'Failed');
+            }
+        } catch (error) {
+            this.showError(`Execution error: ${error.message}`);
+            this.updateStatus('error', 'Error');
+        }
+    },
+    
+    updateStatus(state, text) {
+        const indicator = document.getElementById('statusIndicator');
+        const icon = indicator.querySelector('.status-icon');
+        const textEl = indicator.querySelector('.status-text');
+        
+        // Remove all state classes
+        indicator.className = 'status-indicator';
+        indicator.classList.add(state);
+        
+        // Update icon based on state
+        const icons = {
+            ready: '⚪',
+            validating: '🟡',
+            executing: '🔵',
+            success: '🟢',
+            error: '🔴'
+        };
+        
+        icon.textContent = icons[state] || '⚪';
+        textEl.textContent = text;
+    },
+    
+    showError(message) {
+        const errorEl = document.getElementById('formulaError');
+        errorEl.innerHTML = `<strong>Error:</strong> ${Utils.escapeHtml(message)}`;
+        errorEl.classList.remove('hidden');
+    },
+    
+    hideError() {
+        const errorEl = document.getElementById('formulaError');
+        errorEl.classList.add('hidden');
+    },
+    
+    toggle() {
+        this.enabled = !this.enabled;
+        this.updateUI();
+        
+        if (this.enabled) {
+            // If enabling, trigger immediate validation if there's content
+            const formula = document.getElementById('formulaInput').value.trim();
+            if (formula) {
+                this.handleInput(formula);
+            }
+        } else {
+            // If disabling, clear timers and reset status
+            if (this.debounceTimer) {
+                clearTimeout(this.debounceTimer);
+            }
+            this.updateStatus('ready', 'Manual mode');
+        }
+    },
+    
+    updateUI() {
+        const toggleBtn = document.getElementById('toggleLiveBtn');
+        const executeBtn = document.getElementById('executeBtn');
+        
+        if (this.enabled) {
+            toggleBtn.textContent = 'Live Mode: ON';
+            toggleBtn.classList.remove('live-off');
+            executeBtn.style.display = 'none';
+            this.updateStatus('ready', 'Ready');
+        } else {
+            toggleBtn.textContent = 'Live Mode: OFF';
+            toggleBtn.classList.add('live-off');
+            executeBtn.style.display = 'inline-block';
+            this.updateStatus('ready', 'Manual mode');
+        }
+    }
+};
+
+// =============================================================================
+// FORMULA COMPILER (Enhanced for live execution)
 // =============================================================================
 
 const FormulaCompiler = {
@@ -321,6 +522,12 @@ const FormulaCompiler = {
     clear() {
         document.getElementById('formulaInput').value = '';
         document.getElementById('formulaResults').innerHTML = '';
+        
+        // Clear live execution state
+        LiveExecution.lastFormula = '';
+        LiveExecution.lastTable = '';
+        LiveExecution.hideError();
+        LiveExecution.updateStatus('ready', 'Ready');
     }
 };
 
@@ -610,6 +817,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set up event listeners
     setupEventListeners();
     
+    // Initialize live execution
+    LiveExecution.init();
+    
     // Initialize UI components
     RecentFormulas.render();
     
@@ -672,11 +882,19 @@ function setupEventListeners() {
         }
     });
     
-    // Formula input - Enter key handling
+    // Formula input - Enter key handling (only in manual mode)
     document.getElementById('formulaInput').addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
             e.preventDefault();
-            FormulaCompiler.execute();
+            if (!LiveExecution.enabled) {
+                FormulaCompiler.execute();
+            } else {
+                // In live mode, Enter triggers immediate execution
+                const formula = e.target.value.trim();
+                if (formula) {
+                    LiveExecution.validateAndExecute(formula, document.getElementById('tableSelect').value);
+                }
+            }
         }
     });
 }

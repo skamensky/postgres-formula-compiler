@@ -111,6 +111,104 @@ textarea {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
+/* Live Formula Execution Styles */
+.formula-input-container {
+    position: relative;
+}
+
+.formula-status {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 15;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e9ecef;
+}
+
+.status-icon {
+    font-size: 0.7rem;
+}
+
+.status-indicator.ready .status-icon {
+    color: #6c757d;
+}
+
+.status-indicator.validating .status-icon {
+    color: #ffc107;
+    animation: pulse 1.5s infinite;
+}
+
+.status-indicator.executing .status-icon {
+    color: #17a2b8;
+    animation: spin 1s linear infinite;
+}
+
+.status-indicator.success .status-icon {
+    color: #28a745;
+}
+
+.status-indicator.error .status-icon {
+    color: #dc3545;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.formula-error {
+    margin-top: 8px;
+    padding: 12px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    color: #721c24;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.formula-error.hidden {
+    display: none;
+}
+
+.formula-error strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #dc3545;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-outline:hover {
+    background: #667eea;
+    color: white;
+}
+
+.btn-outline.live-off {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline.live-off:hover {
+    background: #6c757d;
+    color: white;
+}
+
 .button-group {
     display: flex;
     gap: 10px;
