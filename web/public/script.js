@@ -959,7 +959,7 @@ const DeveloperToolsIntegration = {
             await window.developerTools.initialize();
             
             // Initialize Monaco Editor
-            await this.setupMonacoEditor();
+            // await this.setupMonacoEditor(); // Using direct integration instead
             
             // Watch for new inputs (legacy support)
             this.setupDynamicAttachment();

@@ -1,32 +1,176 @@
 /**
- * Monaco Editor Integration
- * Provides a Monaco-based editor with textarea-like interface for compatibility
+ * Working Monaco Editor Integration
+ * Based on successful debug pattern
  */
 
-class MonacoEditorWrapper {
-    constructor() {
-        this.editors = new Map();
-        this.initializeMonaco();
-    }
+console.log('🚀 Initializing Monaco Editor Integration...');
 
-    async initializeMonaco() {
-        // Configure Monaco loader
+// Simple direct initialization that works
+async function initializeWorkingMonaco() {
+    console.log('🔧 Setting up working Monaco Editor...');
+    
+    try {
+        // Configure Monaco (if not already done)
         require.config({ 
             paths: { 
                 'vs': '/node_modules/monaco-editor/min/vs' 
             } 
         });
-
-        // Wait for Monaco to load
-        await new Promise(resolve => {
-            require(['vs/editor/editor.main'], () => {
-                // Additional wait to ensure all APIs are available
-                setTimeout(() => {
-                    this.setupLanguage();
-                    resolve();
-                }, 100);
+        
+        // Load Monaco
+        await new Promise((resolve, reject) => {
+            require(['vs/editor/editor.main'], function() {
+                console.log('✅ Monaco loaded for integration');
+                resolve();
+            }, function(error) {
+                console.error('❌ Monaco loading failed:', error);
+                reject(error);
             });
         });
+        
+        // Create the editor
+        return createFormulaEditor();
+        
+    } catch (error) {
+        console.error('❌ Monaco integration failed:', error);
+        return false;
+    }
+}
+
+function createFormulaEditor() {
+    console.log('🔧 Creating formula editor...');
+    
+    const container = document.getElementById('formulaInput');
+    if (!container) {
+        console.error('❌ Formula input container not found');
+        return false;
+    }
+    
+    // Clear container
+    container.innerHTML = '';
+    
+    // Register formula language
+    if (!monaco.languages.getLanguages().find(lang => lang.id === 'formula')) {
+        monaco.languages.register({ id: 'formula' });
+        
+        // Basic language configuration
+        monaco.languages.setLanguageConfiguration('formula', {
+            brackets: [['(', ')'], ['[', ']']],
+            autoClosingPairs: [
+                { open: '(', close: ')' },
+                { open: '[', close: ']' },
+                { open: '"', close: '"' }
+            ]
+        });
+        
+        // Basic tokenization
+        monaco.languages.setMonarchTokensProvider('formula', {
+            tokenizer: {
+                root: [
+                    [/[A-Z][A-Z0-9_]*/, 'function'],
+                    [/[a-z][a-zA-Z0-9_]*/, 'identifier'],
+                    [/\d+(\.\d+)?/, 'number'],
+                    [/".*?"/, 'string'],
+                    [/[()[\]]/, 'delimiter'],
+                    [/[+\-*/&<>=!]+/, 'operator']
+                ]
+            }
+        });
+    }
+    
+    // Create Monaco editor
+    const editor = monaco.editor.create(container, {
+        value: '',
+        language: 'formula',
+        theme: 'vs',
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        wordWrap: 'on',
+        lineNumbers: 'off',
+        glyphMargin: false,
+        folding: false,
+        lineDecorationsWidth: 0,
+        lineNumbersMinChars: 0,
+        automaticLayout: true,
+        fontSize: 14,
+        fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', monospace"
+    });
+    
+    console.log('✅ Monaco editor created successfully');
+    
+    // Create compatibility wrapper
+    const editorWrapper = {
+        _monaco: editor,
+        
+        get value() {
+            return editor.getValue();
+        },
+        
+        set value(val) {
+            editor.setValue(val || '');
+        },
+        
+        clear() {
+            editor.setValue('');
+        },
+        
+        focus() {
+            editor.focus();
+        },
+        
+        addEventListener(event, handler) {
+            if (event === 'input') {
+                editor.onDidChangeModelContent(() => {
+                    handler({ target: this, type: 'input' });
+                });
+            } else if (event === 'keydown') {
+                editor.onKeyDown((e) => {
+                    const keyEvent = {
+                        target: this,
+                        type: 'keydown',
+                        key: e.code,
+                        ctrlKey: e.ctrlKey,
+                        shiftKey: e.shiftKey,
+                        altKey: e.altKey,
+                        preventDefault: () => e.preventDefault()
+                    };
+                    handler(keyEvent);
+                });
+            }
+        },
+        
+        // Placeholder methods for compatibility
+        removeEventListener() {},
+        setSelectionRange() {},
+        get selectionStart() { return 0; },
+        get selectionEnd() { return this.value.length; }
+    };
+    
+    // Store globally for compatibility
+    window.formulaEditor = editorWrapper;
+    console.log('✅ Formula editor ready and available globally');
+    
+    return editorWrapper;
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initializeWorkingMonaco, 500);
+    });
+} else {
+    setTimeout(initializeWorkingMonaco, 500);
+}
+
+// Legacy class for compatibility (simplified)
+class MonacoEditorWrapper {
+    constructor() {
+        this.editors = new Map();
+        // Don't auto-initialize, let the simple function handle it
+    }
+
+    async initializeMonaco() {
+        return initializeWorkingMonaco();
     }
 
     setupLanguage() {
