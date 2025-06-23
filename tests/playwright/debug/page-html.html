@@ -271,9 +271,9 @@
                     <div class="formula-input-container">
                         <textarea id="formulaInput" placeholder="Type your formula here... (executes automatically)" style=""></textarea><div class="syntax-highlight-container" style="position: absolute; pointer-events: none; z-index: 1; overflow: hidden; white-space: pre-wrap; overflow-wrap: break-word; font-family: Monaco, Menlo, &quot;Ubuntu Mono&quot;, monospace; font-size: 16px; line-height: normal; padding: 12px; border: 2px solid transparent; background: transparent; left: 0px; top: 0px; width: 0px; height: 0px;"><div class="syntax-highlight-overlay" style="margin: 0px; padding: 0px; border: 0px; background: transparent; color: transparent; font: inherit; white-space: pre-wrap; overflow-wrap: break-word; min-height: 120px; width: 100%;"><span class="formula-function" title="Converts a string to uppercase" data-token-type="function" data-description="Converts a string to uppercase" data-category="String" data-returntype="Symbol(STRING)" data-arguments="[object Object]">UPPER</span><span class="formula-punctuation" title="" data-token-type="punctuation" data-matching-paren="3">(</span><span class="formula-string" title="" data-token-type="string">"test"</span><span class="formula-punctuation" title="" data-token-type="punctuation" data-matching-paren="1">)</span></div></div>
                         <div id="formulaStatus" class="formula-status">
-                            <div class="status-indicator success" id="statusIndicator">
-                                <span class="status-icon">🟢</span>
-                                <span class="status-text">Success</span>
+                            <div class="status-indicator ready" id="statusIndicator">
+                                <span class="status-icon">⚪</span>
+                                <span class="status-text">Manual mode</span>
                             </div>
                         </div>
                     </div>
@@ -281,9 +281,9 @@
                 </div>
                 
                 <div class="button-group">
-                    <button id="executeBtn" class="btn btn-secondary" style="display: none;">Manual Execute</button>
+                    <button id="executeBtn" class="btn btn-secondary" style="display: inline-block;">Execute Formula</button>
                     <button id="clearBtn" class="btn btn-secondary">Clear</button>
-                    <button id="toggleLiveBtn" class="btn btn-outline">Live Mode: ON</button>
+                    <button id="toggleLiveBtn" class="btn btn-outline live-off">Live Mode: OFF</button>
                 <button type="button" class="btn btn-secondary" title="Format formula (Shift+Alt+F)">Format</button></div>
                 
                 <div id="formulaResults">
@@ -304,7 +304,7 @@ FROM app_user s</pre>
                 <div class="form-group" style="margin-top: 30px;">
                     <label>Recent Formulas:</label>
                     <div id="recentFormulas">
-            <div class="recent-formula" onclick="RecentFormulas.loadFormula('id_1750696173203_5098de34l')">
+            <div class="recent-formula" onclick="RecentFormulas.loadFormula('id_1750696670701_ao7edzque')">
                 <div class="recent-formula-text">UPPER("test")</div>
                 <div class="recent-formula-meta">
                     app_user • just now

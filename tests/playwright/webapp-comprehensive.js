@@ -215,6 +215,33 @@ class WebAppTester {
             const selectedTable = await tableSelect.inputValue();
             console.log(`📋 Selected table for formula: ${selectedTable}`);
             
+            // Check if we're in live mode and need to toggle to manual mode
+            const toggleBtn = this.page.locator('#toggleLiveBtn');
+            const executeBtn = this.page.locator('#executeBtn');
+            
+            const toggleText = await toggleBtn.textContent();
+            const executeBtnVisible = await executeBtn.isVisible();
+            
+            console.log(`🔄 Current mode: ${toggleText}`);
+            console.log(`🔘 Execute button visible: ${executeBtnVisible}`);
+            
+            // If in live mode (execute button not visible), toggle to manual mode
+            if (!executeBtnVisible && toggleText.includes('ON')) {
+                console.log('🔄 Switching to manual mode for testing...');
+                await toggleBtn.click();
+                await this.page.waitForTimeout(500);
+                
+                const newToggleText = await toggleBtn.textContent();
+                const newExecuteBtnVisible = await executeBtn.isVisible();
+                console.log(`🔄 After toggle: ${newToggleText}, Execute visible: ${newExecuteBtnVisible}`);
+                
+                if (!newExecuteBtnVisible) {
+                    console.log('❌ Failed to switch to manual mode');
+                    this.results.failed.push('Could not switch to manual mode');
+                    return;
+                }
+            }
+            
             // Enter a simple formula
             const formula = 'UPPER("test")';
             await this.page.fill('#formulaInput', formula);
@@ -231,7 +258,7 @@ class WebAppTester {
             const resultText = await results.textContent();
             console.log(`📋 Result length: ${resultText?.length || 0} characters`);
             
-            if (resultText?.includes('successfully')) {
+            if (resultText?.includes('successfully') || resultText?.includes('TEST')) {
                 console.log('✅ Formula executed successfully');
                 this.results.passed.push('Formula execution working');
                 
@@ -241,9 +268,11 @@ class WebAppTester {
                 }
             } else if (resultText?.includes('Error')) {
                 console.log('❌ Formula execution failed with error');
+                console.log(`📋 Error details: ${resultText}`);
                 this.results.failed.push('Formula execution failed');
             } else {
                 console.log('⚠️  Formula execution result unclear');
+                console.log(`📋 Result preview: ${resultText?.substring(0, 200)}...`);
                 this.results.warnings.push('Formula execution result unclear');
             }
             
