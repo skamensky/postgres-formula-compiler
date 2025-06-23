@@ -150,14 +150,7 @@ const result = evaluateFormula('merchant_rel.main_rep_rel.name', context, {
 ```
 
 ### Multi-Level Aggregates
-Combine multi-level relationships with aggregate functions:
-```javascript
-// Count submissions by merchant's main rep
-STRING_AGG(merchant_rel.main_rep_rel.name, ", ")
-
-// Average across deep relationships
-AVG_AGG(merchant_rel.main_rep_rel.performance_score)
-```
+Combine multi-level relationships with aggregate functions - see [Aggregate Functions documentation](docs/usage/functions/aggregate.md) for complete details.
 
 ### Performance Optimization
 - **JOIN Deduplication**: Shared relationship paths are consolidated
@@ -238,36 +231,14 @@ COALESCE(sr1.rep_count, 0)
 - **Memory Efficiency**: Consolidated results cached and reused
 - **Execution Speed**: Significant performance improvement for complex multi-aggregate formulas
 
-## 🧪 Test Organization
+## 🧪 Testing
 
-The project includes a comprehensive test suite organized into focused modules:
+The project includes a comprehensive test suite with **325/325 tests passing (100% success rate)**:
 
-### Test Categories (325 total tests)
-- **Basic Arithmetic & Literals** (14 tests)
-- **Boolean Literals** (6 tests)
-- **Comments** (6 tests)
-- **Comparison Operators** (16 tests)
-- **Core Functions** (10 tests)
-- **Date Arithmetic** (7 tests)
-- **Date Functions** (35 tests)
-- **Error Handling** (15 tests)
-- **IF Function** (17 tests)
-- **Logical Operators** (28 tests)
-- **Math Functions** (31 tests)
-- **Multiplication & Division** (10 tests)
-- **Null Handling** (25 tests)
-- **Parentheses & Precedence** (15 tests)
-- **String Functions** (11 tests)
-- **Text Functions** (36 tests)
-- **Aggregate Functions** (37 tests)
-
-### Test Results
-- **325/325 tests passing (100% success rate)**
-
-### Test Utilities
-- Centralized test contexts in `tests/test-utils.js`
-- Comprehensive test runner in `tests/run-all-tests.js`
-- Individual test files for focused testing
+### Test Types
+- **Compiler Tests**: Core formula compilation, functions, operators, and SQL generation
+- **exec-formula Tests**: Command-line formula execution and validation  
+- **E2E Browser Tests**: Frontend functionality, autocomplete, live execution, and user interface
 
 ## 🏗️ Architecture
 
