@@ -13,7 +13,7 @@ The developer tools consist of three main components:
 ## Quick Start
 
 ```javascript
-import { createDeveloperTools } from './developer-tools.js';
+import { createDeveloperTools } from './tooling/developer-tools.js';
 
 // Create tools with default configuration
 const tools = createDeveloperTools('default');
@@ -52,7 +52,7 @@ The LSP provides intelligent code assistance:
 
 #### Usage
 ```javascript
-import { FormulaLanguageServer } from './lsp.js';
+import { FormulaLanguageServer } from './tooling/lsp.js';
 
 const lsp = new FormulaLanguageServer(databaseSchema);
 
@@ -86,7 +86,7 @@ Provides rich syntax highlighting with semantic information:
 
 #### Usage
 ```javascript
-import { FormulaSyntaxHighlighter } from './syntax-highlighter.js';
+import { FormulaSyntaxHighlighter } from './tooling/syntax-highlighter.js';
 
 const highlighter = new FormulaSyntaxHighlighter();
 highlighter.updateSchema(databaseSchema);
@@ -126,7 +126,7 @@ Provides consistent, opinionated code formatting:
 
 #### Usage
 ```javascript
-import { FormulaFormatter } from './formatter.js';
+import { FormulaFormatter } from './tooling/formatter.js';
 
 const formatter = new FormulaFormatter();
 
@@ -335,16 +335,15 @@ This is a primitive foundation that will be expanded with:
 
 ## Testing
 
-Run the demo to see all features in action:
+The developer tools can be tested manually through the web interface at `http://localhost:3000` after running:
 
-```javascript
-import { runDemo } from './developer-tools-demo.js';
-runDemo();
+```bash
+npm run serve
 ```
 
 This will demonstrate:
-- LSP completions and diagnostics
-- Syntax highlighting tokens
-- Formatting with different styles  
+- LSP completions and diagnostics in formula inputs
+- Real-time syntax highlighting  
+- Formatting with different styles via Format buttons
 - Combined analysis features
 - Configuration options

@@ -3,10 +3,10 @@
  * Provides opinionated, idempotent formatting for formula language
  */
 
-import { Lexer, TokenType } from './lexer.js';
-import { Parser } from './parser.js';
-import { TYPE } from './types-unified.js';
-import { FUNCTION_METADATA } from './function-metadata.js';
+import { Lexer, TokenType } from '../src/lexer.js';
+import { Parser } from '../src/parser.js';
+import { TYPE } from '../src/types-unified.js';
+import { FUNCTION_METADATA } from '../src/function-metadata.js';
 
 // Formatting options
 const DefaultFormattingOptions = {

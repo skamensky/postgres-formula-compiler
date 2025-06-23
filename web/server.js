@@ -493,25 +493,26 @@ app.post('/api/execute', async (req, res) => {
 app.get('/api/developer-tools', async (req, res) => {
   try {
     // Read and bundle the developer tools files
-    const basePath = join(__dirname, '..', 'src');
+    const srcPath = join(__dirname, '..', 'src');
+    const toolingPath = join(__dirname, '..', 'tooling');
     
-    // Read all required files
+    // Read all required files from their respective locations
     const files = [
-      'types-unified.js',
-      'lexer.js', 
-      'parser.js',
-      'function-metadata.js',
-      'lsp.js',
-      'syntax-highlighter.js',
-      'formatter.js',
-      'developer-tools.js'
+      { path: srcPath, name: 'types-unified.js' },
+      { path: srcPath, name: 'lexer.js' },
+      { path: srcPath, name: 'parser.js' },
+      { path: srcPath, name: 'function-metadata.js' },
+      { path: toolingPath, name: 'lsp.js' },
+      { path: toolingPath, name: 'syntax-highlighter.js' },
+      { path: toolingPath, name: 'formatter.js' },
+      { path: toolingPath, name: 'developer-tools.js' }
     ];
     
     let bundledCode = '';
     
     // Add each file with proper module structure
     for (const file of files) {
-      const filePath = join(basePath, file);
+      const filePath = join(file.path, file.name);
       const content = readFileSync(filePath, 'utf8');
       
       // Remove import statements and add to bundle
@@ -519,7 +520,7 @@ app.get('/api/developer-tools', async (req, res) => {
         .replace(/^import\s+.*?from\s+['"][^'"]+['"];?\s*$/gm, '')
         .replace(/^export\s+\{[^}]*\}\s*;?\s*$/gm, '');
       
-      bundledCode += `\n// === ${file} ===\n${cleanContent}\n`;
+      bundledCode += `\n// === ${file.name} ===\n${cleanContent}\n`;
     }
     
     // Add final exports for the client

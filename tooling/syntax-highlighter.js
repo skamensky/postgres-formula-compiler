@@ -3,8 +3,8 @@
  * Provides token-based highlighting using the existing lexer
  */
 
-import { Lexer, TokenType } from './lexer.js';
-import { FUNCTION_METADATA } from './function-metadata.js';
+import { Lexer, TokenType } from '../src/lexer.js';
+import { FUNCTION_METADATA } from '../src/function-metadata.js';
 
 // Token style mapping
 const TokenStyles = {
