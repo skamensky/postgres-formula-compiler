@@ -564,8 +564,8 @@ function displaySchemaDetails(tableName, schema) {
         schema.directRelationships.forEach(rel => {
             html += `
                 <div class="relationship-item">
-                    <strong>${rel.relationshipName}</strong> → ${rel.targetTable}.${rel.targetColumn}
-                    <div class="relationship-detail">via ${rel.sourceColumn}</div>
+                    <strong>${rel.relationship_name}</strong> → ${rel.target_table_name}
+                    <div class="relationship-detail">via ${rel.col_name}</div>
                 </div>
             `;
         });
@@ -587,8 +587,8 @@ function displaySchemaDetails(tableName, schema) {
         schema.reverseRelationships.forEach(rel => {
             html += `
                 <div class="relationship-item">
-                    <strong>${rel.relationshipName}</strong> ← ${rel.sourceTable}.${rel.sourceColumn}
-                    <div class="relationship-detail">to ${rel.targetColumn}</div>
+                    <strong>${rel.relationship_name}</strong> ← ${rel.source_table_name}
+                    <div class="relationship-detail">via ${rel.col_name}</div>
                 </div>
             `;
         });

@@ -103,6 +103,7 @@ async function main() {
     const tests = [
         { file: 'tests/playwright/basic-loading.js', name: 'Basic Loading' },
         { file: 'tests/playwright/schema-functionality.js', name: 'Schema Functionality' },
+        { file: 'tests/playwright/opportunity-schema.js', name: 'Opportunity Schema' },
         { file: 'tests/playwright/webapp-comprehensive.js', name: 'Comprehensive Tests' }
     ];
     
