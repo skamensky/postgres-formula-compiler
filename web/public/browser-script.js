@@ -245,7 +245,10 @@ async function loadTables() {
         
         if (defaultTable) {
             document.getElementById('tableSelect').value = defaultTable;
-            document.getElementById('reportTableSelect').value = defaultTable;
+            const schemaTableSelect = document.getElementById('schemaTableSelect');
+            if (schemaTableSelect) {
+                schemaTableSelect.value = defaultTable;
+            }
             AppState.currentTable = defaultTable;
         }
         
@@ -257,11 +260,10 @@ async function loadTables() {
 }
 
 function populateTableSelectors() {
-    const selectors = ['tableSelect', 'schemaTableSelect', 'reportTableSelect'];
+    const selectors = ['tableSelect', 'schemaTableSelect'];
     const options = {
         tableSelect: 'Select a table...',
-        schemaTableSelect: 'Choose a table to view its schema',
-        reportTableSelect: 'Select a table for reporting...'
+        schemaTableSelect: 'Choose a table to view its schema'
     };
     
     selectors.forEach(selectorId => {
