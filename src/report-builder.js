@@ -1,18 +1,19 @@
 /**
- * Report Builder - Modular formula compilation and execution system
- * Extracted from exec-formula for reuse in web applications
+ * Report Builder - Modular functions extracted from exec-formula (battle-tested source of truth)
+ * These functions are the proven implementations from exec-formula, exported for reuse
  */
 
-import { evaluateFormula, generateSQL } from './index.js';
+import { evaluateFormula, generateSQL } from '../formula-compiler.js';
 import { createDatabaseClient } from '../web/db-client.js';
 import {
   getColumnListsForTables,
   getAllRelationships,
   getInverseRelationshipsForTables
 } from '../web/db-introspection.js';
+import { basename, dirname } from 'path';
 
 /**
- * Extract table name from formula file path
+ * Extract table name from formula file path (from exec-formula)
  * @param {string} filePath - Path to formula file
  * @returns {string} Table name
  */
@@ -26,28 +27,23 @@ export function extractTableName(filePath) {
   }
   
   // Fallback: use directory name if not in expected structure
-  const pathParts2 = filePath.split('/');
-  const dir = pathParts2[pathParts2.length - 2]; // Parent directory
-  return dir === '.' ? 'submission' : dir; // Default to submission
+  const dir = dirname(filePath);
+  const dirName = basename(dir);
+  return dirName === '.' ? 'submission' : dirName; // Default to submission
 }
 
 /**
- * Generate field name from formula file path or explicit name
+ * Generate field name from formula file path (from exec-formula)
  * @param {string} filePath - Path to formula file
- * @param {string} [customName] - Optional custom field name
  * @returns {string} Field name
  */
-export function generateFieldName(filePath, customName = null) {
-  if (customName) {
-    return customName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
-  }
-  
-  const fileName = filePath.split('/').pop().replace('.formula', '');
+export function generateFieldName(filePath) {
+  const fileName = basename(filePath, '.formula');
   return fileName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
 }
 
 /**
- * Build compilation context for a table with relationship support
+ * Build compilation context for a table with relationship support (from exec-formula)
  * @param {string} tableName - Target table name
  * @param {Object} client - Database client
  * @returns {Object} Compilation context
@@ -96,6 +92,7 @@ export async function buildTableContext(tableName, client) {
         columnList: allColumnLists[rel.toTable]
       });
     } else {
+      // Critical error: relationship points to a table we couldn't load
       throw new Error(`Relationship '${rel.name}' from table '${tableName}' points to table '${rel.toTable}', but table '${rel.toTable}' was not found in the database.`);
     }
   }
@@ -151,7 +148,7 @@ export async function buildTableContext(tableName, client) {
 }
 
 /**
- * Compile multiple formulas for the same table
+ * Compile multiple formulas for the same table (from exec-formula)
  * @param {Array} formulas - Array of {fieldName, content, path?} objects
  * @param {Object} context - Compilation context from buildTableContext
  * @returns {Object} Compilation results with success/failure info
@@ -193,7 +190,7 @@ export function compileFormulas(formulas, context) {
 }
 
 /**
- * Analyze compilation results for optimization metrics
+ * Analyze compilation results for optimization metrics (from exec-formula)
  * @param {Array} compilationResults - Results from compileFormulas
  * @returns {Object} Analysis metrics
  */
@@ -226,7 +223,7 @@ export function analyzeCompilation(compilationResults) {
 }
 
 /**
- * Build a report from multiple formulas
+ * Build a complete report (main wrapper function from exec-formula)
  * @param {Object} options - Report configuration
  * @param {string} options.tableName - Target table name
  * @param {Array} options.formulas - Array of formula objects
@@ -341,61 +338,30 @@ export async function buildReport(options) {
 }
 
 /**
- * Get example formulas for a table (helper function)
- * @param {string} tableName - Table name
- * @param {Array} [selectedExamples] - Optional array of specific example names to include
- * @returns {Array} Array of formula objects from examples
- */
-export function getExampleFormulas(tableName, selectedExamples = null) {
-  // This would read from the examples directory
-  // For now, return a placeholder structure that matches what the build system creates
-  const exampleMap = {
-    customer: [
-      { fieldName: 'budget_analysis', content: 'IF(budget_max > 0, CONCAT("$", STRING(budget_min), " - $", STRING(budget_max)), "Budget not specified")', path: 'examples/table/customer/budget_analysis.formula' },
-      { fieldName: 'contact_card', content: 'CONCAT(first_name, " ", last_name, " (", email, ")")', path: 'examples/table/customer/contact_card.formula' },
-      { fieldName: 'lead_score', content: 'IF(budget_max > 500000, 90, IF(budget_max > 200000, 70, IF(budget_max > 0, 50, 20)))', path: 'examples/table/customer/lead_score.formula' }
-    ],
-    listing: [
-      { fieldName: 'market_analysis', content: 'CONCAT("$", STRING(price), " in ", city, " (", STRING(bedrooms), "BR/", STRING(bathrooms), "BA)")', path: 'examples/table/listing/market_analysis.formula' },
-      { fieldName: 'price_per_sqft', content: 'IF(square_feet > 0, ROUND(price / square_feet, 2), 0)', path: 'examples/table/listing/price_per_sqft.formula' },
-      { fieldName: 'luxury_indicator', content: 'IF(price > 1000000, "Luxury", IF(price > 500000, "Premium", "Standard"))', path: 'examples/table/listing/luxury_indicator.formula' }
-    ],
-    opportunity: [
-      { fieldName: 'deal_summary', content: 'CONCAT("Deal for ", customer_id_rel.first_name, " - ", listing_id_rel.address)', path: 'examples/table/opportunity/deal_summary.formula' },
-      { fieldName: 'commission_projection', content: 'listing_id_rel.price * 0.06', path: 'examples/table/opportunity/commission_projection.formula' },
-      { fieldName: 'pipeline_status', content: 'IF(closed_date IS NULL, "Active", "Closed")', path: 'examples/table/opportunity/pipeline_status.formula' }
-    ]
-  };
-  
-  const allExamples = exampleMap[tableName] || [];
-  
-  if (selectedExamples && selectedExamples.length > 0) {
-    return allExamples.filter(example => selectedExamples.includes(example.fieldName));
-  }
-  
-  return allExamples;
-}
-
-/**
- * Format report results for different output types
- * @param {Object} reportResult - Result from buildReport
+ * Format report output (from exec-formula formatters)
+ * @param {Object} report - Result from buildReport
  * @param {string} format - Output format: 'json', 'html', 'markdown', 'console'
  * @returns {string} Formatted output
  */
-export function formatReport(reportResult, format = 'json') {
-  const { metadata, results, sql, performance } = reportResult;
-  
-  switch (format) {
-    case 'json':
-      return JSON.stringify(reportResult, null, 2);
-      
-    case 'html':
-      return `<!DOCTYPE html>
+export function formatReport(report, format = 'console') {
+  const formatters = {
+    json: {
+      format: (data) => {
+        return JSON.stringify(data, null, 2);
+      }
+    },
+    
+    html: {
+      format: (data) => {
+        const { metadata, results, sql, compilation } = data;
+        const analysis = compilation.analysis;
+        
+        return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Report: ${metadata.tableName}</title>
+    <title>Formula Execution Results</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
         .header { background: #f4f4f4; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
@@ -414,10 +380,10 @@ export function formatReport(reportResult, format = 'json') {
 </head>
 <body>
     <div class="header">
-        <h1>📊 Report: ${metadata.tableName}</h1>
-        <p><strong>Formulas:</strong> ${metadata.formulaCount}</p>
-        <p><strong>Results:</strong> ${results.length} rows</p>
-        <p><strong>Generated:</strong> ${new Date().toISOString()}</p>
+        <h1>� Formula Execution Results</h1>
+        <p><strong>Table:</strong> ${metadata.tableName}</p>
+        <p><strong>Formulas Processed:</strong> ${metadata.formulaCount}</p>
+        <p><strong>Execution Time:</strong> ${new Date().toISOString()}</p>
     </div>
 
     <div class="section">
@@ -425,16 +391,19 @@ export function formatReport(reportResult, format = 'json') {
         ${metadata.formulas.map((formula, i) => `
         <div class="formula">
             <strong>${i + 1}. ${formula.fieldName}</strong><br>
-            <code>${formula.content}</code>
+            <code>${formula.content}</code><br>
+            <small>Source: ${formula.path}</small>
         </div>
         `).join('')}
     </div>
 
     <div class="section">
-        <h2>📈 Performance</h2>
-        <div class="metric"><strong>Join Intents:</strong> ${performance.deduplicationSavings.joinIntents}</div>
-        <div class="metric"><strong>Actual JOINs:</strong> ${performance.actualJoins}</div>
-        <div class="metric"><strong>Subqueries:</strong> ${performance.deduplicationSavings.subqueries}</div>
+        <h2>📈 Analysis</h2>
+        <div class="metric"><strong>Join Intents:</strong> ${analysis.totalJoinIntents}</div>
+        <div class="metric"><strong>Aggregate Intents:</strong> ${analysis.totalAggregateIntents}</div>
+        <div class="metric"><strong>Actual JOINs:</strong> ${analysis.actualJoins || 0}</div>
+        <div class="metric"><strong>Subqueries:</strong> ${analysis.subqueries || 0}</div>
+        <div class="metric"><strong>SELECT Expressions:</strong> ${analysis.selectExpressions || 0}</div>
     </div>
 
     <div class="section">
@@ -454,89 +423,91 @@ export function formatReport(reportResult, format = 'json') {
                 </tr>
             </thead>
             <tbody>
-                ${results.slice(0, 10).map(row => `
+                ${results.map(row => `
                 <tr>
                     ${Object.keys(row).map(key => `<td>${row[key] === null ? '<span class="null">NULL</span>' : row[key]}</td>`).join('')}
                 </tr>
                 `).join('')}
             </tbody>
         </table>
-        ${results.length > 10 ? `<p><em>Showing first 10 of ${results.length} rows</em></p>` : ''}
         `}
     </div>
 </body>
 </html>`;
-      
-    case 'markdown':
-      return `# 📊 Report: ${metadata.tableName}
+      }
+    },
+    
+    markdown: {
+      format: (data) => {
+        const { metadata, results, sql, compilation } = data;
+        const analysis = compilation.analysis;
+        
+        return `# � Formula Execution Results
 
-## 📋 Summary
-- **Formulas:** ${metadata.formulaCount}
-- **Results:** ${results.length} rows
-- **Generated:** ${new Date().toISOString()}
+## 📋 Metadata
+- **Table:** ${metadata.tableName}
+- **Formulas Processed:** ${metadata.formulaCount}
+- **Execution Time:** ${new Date().toISOString()}
 
 ## 📄 Formulas
 
 ${metadata.formulas.map((formula, i) => `### ${i + 1}. ${formula.fieldName}
-\`\`\`
+${'```'}
 ${formula.content}
-\`\`\`
+${'```'}
+**Source:** ${formula.path}
 `).join('\n')}
 
-## 📈 Performance
+## 📈 Analysis
 
 | Metric | Value |
 |--------|-------|
-| Join Intents | ${performance.deduplicationSavings.joinIntents} |
-| Actual JOINs | ${performance.actualJoins} |
-| Subqueries | ${performance.deduplicationSavings.subqueries} |
+| Join Intents | ${analysis.totalJoinIntents} |
+| Aggregate Intents | ${analysis.totalAggregateIntents} |
+| Actual JOINs | ${analysis.actualJoins || 0} |
+| Subqueries | ${analysis.subqueries || 0} |
+| SELECT Expressions | ${analysis.selectExpressions || 0} |
 
 ## 📝 Generated SQL
 
-\`\`\`sql
+${'```'}sql
 ${sql.query}
-\`\`\`
+${'```'}
 
 ## 📊 Results
 
 ${results.length === 0 ? 'No results found' : `
 | ${Object.keys(results[0]).join(' | ')} |
 | ${Object.keys(results[0]).map(() => '---').join(' | ')} |
-${results.slice(0, 10).map(row => `| ${Object.keys(row).map(key => row[key] === null ? '*NULL*' : row[key]).join(' | ')} |`).join('\n')}
-${results.length > 10 ? `\n*Showing first 10 of ${results.length} rows*` : ''}
-`}`;
-      
-    case 'console':
-      let output = `📊 Report: ${metadata.tableName}\n`;
-      output += `${'='.repeat(50)}\n`;
-      output += `Formulas: ${metadata.formulaCount}\n`;
-      output += `Results: ${results.length} rows\n\n`;
-      
-      output += `📄 Formulas:\n`;
-      metadata.formulas.forEach((formula, i) => {
-        output += `  ${i + 1}. ${formula.fieldName}: ${formula.content}\n`;
-      });
-      
-      output += `\n📈 Performance:\n`;
-      output += `  Join Intents: ${performance.deduplicationSavings.joinIntents}\n`;
-      output += `  Actual JOINs: ${performance.actualJoins}\n`;
-      output += `  Subqueries: ${performance.deduplicationSavings.subqueries}\n`;
-      
-      output += `\n📊 Results (first 5):\n`;
-      if (results.length > 0) {
-        results.slice(0, 5).forEach((row, i) => {
-          output += `  Row ${i + 1}:\n`;
-          Object.keys(row).forEach(key => {
-            output += `    ${key}: ${row[key] || 'NULL'}\n`;
-          });
-        });
-      } else {
-        output += '  No results found\n';
+${results.map(row => `| ${Object.keys(row).map(key => row[key] === null ? '*NULL*' : row[key]).join(' | ')} |`).join('\n')}
+`}
+
+---
+*Generated by Formula Executor*
+`;
       }
-      
-      return output;
-      
-    default:
-      throw new Error(`Unsupported format: ${format}`);
+    }
+  };
+  
+  if (format === 'console') {
+    // For console format, return the data as-is for custom formatting
+    return report;
   }
+  
+  if (!formatters[format]) {
+    throw new Error(`Unknown format: ${format}. Available formats: console, json, html, markdown`);
+  }
+  
+  return formatters[format].format(report);
+}
+
+/**
+ * Get example formulas for a table (helper function)
+ * @param {string} tableName - Table name
+ * @returns {Array} Array of formula objects from examples
+ */
+export function getExampleFormulas(tableName) {
+  // This would be implemented based on the examples/ directory structure
+  // For now, return empty array - can be enhanced later
+  return [];
 }

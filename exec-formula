@@ -8,14 +8,17 @@
  */
 
 import { readFileSync } from 'fs';
-import { basename, dirname } from 'path';
 import { 
   extractTableName,
   generateFieldName,
+  buildTableContext,
+  compileFormulas,
+  analyzeCompilation,
   buildReport,
-  formatReport,
-  getExampleFormulas
+  formatReport
 } from './src/report-builder.js';
+import { basename } from 'path';
+import { createDatabaseClient } from './web/db-client.js';
 
 // Parse command line arguments
 function parseArguments() {
@@ -192,7 +195,7 @@ ${results.map(row => `| ${Object.keys(row).map(key => row[key] === null ? '*NULL
   }
 };
 
-// Functions are now imported from report-builder.js
+// All functions are now imported from src/report-builder.js (battle-tested source of truth)
 
 async function main() {
   try {
@@ -214,7 +217,7 @@ async function main() {
       console.log(`🚀 Formula Executor - Processing ${formulaPaths.length} formula(s)\n`);
     }
     
-    // Extract table names and validate they're all the same
+    // Extract table names and validate they're all the same (using proven functions)
     const tableNames = formulaPaths.map(extractTableName);
     const uniqueTableNames = [...new Set(tableNames)];
     
@@ -228,15 +231,11 @@ async function main() {
     const tableName = uniqueTableNames[0];
     if (outputFormat === 'console') {
       console.log(`📋 Target table: ${tableName}`);
-    }
-    
-    // Read and parse formulas
-    if (outputFormat === 'console') {
       console.log('📄 Reading formulas from files...');
     }
-    const formulas = [];
-    const formulaData = {};
     
+    // Read and parse formulas using proven functions
+    const formulas = [];
     for (let i = 0; i < formulaPaths.length; i++) {
       const filePath = formulaPaths[i];
       const fieldName = generateFieldName(filePath);
@@ -253,222 +252,38 @@ async function main() {
       }
     }
     
-    // Connect to database for metadata lookup
+    // Use the proven buildReport function to do all the heavy lifting
     if (outputFormat === 'console') {
-      console.log('\n🔌 Connecting to database...');
+      console.log('\n� Connecting to database and building report...');
     }
+    
     const client = createDatabaseClient();
-    await client.connect();
-    
-    // Build context for the table using metadata system (NEW FLAT STRUCTURE + BACKWARD COMPATIBILITY)
-    if (outputFormat === 'console') {
-      console.log('📋 Loading table metadata...');
-    }
-    
-    if (outputFormat === 'console') {
-      console.log('🔗 Loading relationship metadata...');
-    }
-    
-    // NEW: Get all relationships from database for multi-level support
-    const allRelationships = await getAllRelationships(client);
-    
-    // Collect all unique table names needed for bulkified column loading
-    const allTableNames = new Set([tableName]);
-    const directRels = allRelationships.filter(rel => rel.fromTable === tableName);
-    for (const rel of directRels) {
-      allTableNames.add(rel.toTable);
-    }
-    
-    if (outputFormat === 'console') {
-      console.log(`🔍 Direct relationships from ${tableName}:`, directRels.map(r => `${r.name} → ${r.toTable}`));
-      console.log(`🔍 Requesting column data for tables:`, [...allTableNames]);
-    }
-    
-    // Bulkified: Get column lists for all tables in one call
-    const allColumnLists = await getColumnListsForTables([...allTableNames], client);
-    const columnList = allColumnLists[tableName];
-    
-    if (outputFormat === 'console') {
-      console.log(`🔍 Successfully loaded column data for tables:`, Object.keys(allColumnLists));
-    }
-    
-    // Build table infos using bulkified results
-    const tableInfos = [
-      {
-        tableName: tableName,
-        columnList: columnList
-      }
-    ];
-    
-    // Add table infos for direct relationships from this table
-    for (const rel of directRels) {
-      if (allColumnLists[rel.toTable]) {
-        tableInfos.push({
-          tableName: rel.toTable,
-          columnList: allColumnLists[rel.toTable]
-        });
-      } else {
-        // Critical error: relationship points to a table we couldn't load
-        console.error(`❌ Error: Relationship '${rel.name}' from table '${tableName}' points to table '${rel.toTable}', but table '${rel.toTable}' was not found in the database.`);
-        console.error(`   Available tables loaded: ${Object.keys(allColumnLists).join(', ')}`);
-        console.error(`   This usually means:`);
-        console.error(`   1. The table '${rel.toTable}' doesn't exist in the database`);
-        console.error(`   2. The relationship definition is incorrect`);
-        console.error(`   3. There's a database connection or permission issue`);
-        process.exit(1);
-      }
-    }
-    
-    if (outputFormat === 'console') {
-      console.log('🔗 Loading inverse relationship metadata...');
-    }
-    
-    // For multi-level aggregates, we need inverse relationships for all tables that could be traversed
-    // Start with the main table, then add tables from direct inverse relationships
-    const tablesToLoadInverseRels = new Set([tableName]);
-    
-    // Add tables from direct inverse relationships (these become intermediate tables in multi-level chains)
-    const directInverseRels = allRelationships.filter(rel => rel.toTable === tableName);
-    for (const rel of directInverseRels) {
-      tablesToLoadInverseRels.add(rel.fromTable);
-    }
-    
-    // Get inverse relationships for all these tables in bulk
-    const allInverseRelationships = await getInverseRelationshipsForTables([...tablesToLoadInverseRels], client);
-    const inverseRelationshipInfo = allInverseRelationships[tableName] || {};
-    
-    // Build context with BOTH new flat structure AND old structure for backward compatibility
-    const context = {
-      tableName: tableName,
-      // NEW flat structure
-      tableInfos: tableInfos,
-      relationshipInfos: allRelationships,
-      // OLD structure for backward compatibility (needed for aggregates)
-      columnList: columnList,
-      relationshipInfo: {}, // Will be populated below for backward compatibility
-      inverseRelationshipInfo: inverseRelationshipInfo,
-      // Multi-level aggregate support: expanded inverse relationships for all intermediate tables
-      allInverseRelationships: allInverseRelationships
-    };
-    
-    // Build old-style relationshipInfo for backward compatibility with aggregates
-    const directRelationships = allRelationships.filter(rel => rel.fromTable === tableName);
-    for (const rel of directRelationships) {
-      const targetTable = tableInfos.find(t => t.tableName === rel.toTable);
-      if (targetTable) {
-        context.relationshipInfo[rel.name] = {
-          joinColumn: rel.joinColumn,
-          columnList: targetTable.columnList
-        };
-      }
-    }
-    
-    if (outputFormat === 'console') {
-      console.log('\n🔄 Compiling formulas to intents...');
-    }
-    
-    // Compile each formula to intents
-    const results = {};
-    const compilationResults = [];
-    
-    for (const formula of formulas) {
-      try {
-        const result = evaluateFormula(formula.content, context);
-        results[formula.fieldName] = result;
-        compilationResults.push({
-          ...formula,
-          result: result,
-          success: true
-        });
-        if (outputFormat === 'console') {
-          console.log(`  ✅ ${formula.fieldName}: Compiled successfully`);
-        }
-      } catch (error) {
-        if (outputFormat === 'console') {
-          console.log(`  ❌ ${formula.fieldName}: ${error.message}`);
-        }
-        compilationResults.push({
-          ...formula,
-          error: error,
-          success: false
-        });
-      }
-    }
-    
-    // Check if any formulas failed
-    const failedFormulas = compilationResults.filter(r => !r.success);
-    if (failedFormulas.length > 0) {
-      console.error(`\n❌ ${failedFormulas.length} formula(s) failed to compile. Aborting.`);
-      process.exit(1);
-    }
-    
-    let totalJoinIntents = new Set();
-    let totalAggregateIntents = new Set();
-    
-    if (outputFormat === 'console') {
-      console.log('\n📊 Compilation Analysis:');
-      console.log('='.repeat(60));
-    }
-    
-    compilationResults.forEach((formula, index) => {
-      if (formula.success) {
-        if (outputFormat === 'console') {
-          console.log(`\n${index + 1}. ${formula.fieldName}:`);
-          console.log(`   Expression ID: ${formula.result.expression.semanticId}`);
-          console.log(`   Join Intents: ${formula.result.joinIntents.length}`);
-          formula.result.joinIntents.forEach((join, i) => {
-            console.log(`     ${i+1}. ${join.semanticId}`);
-          });
-          console.log(`   Aggregate Intents: ${formula.result.aggregateIntents.length}`);
-          formula.result.aggregateIntents.forEach((agg, i) => {
-            console.log(`     ${i+1}. ${agg.semanticId}`);
-          });
-        }
-        
-        // Collect intents for analysis (needed for all formats)
-        formula.result.joinIntents.forEach(join => totalJoinIntents.add(join.semanticId));
-        formula.result.aggregateIntents.forEach(agg => {
-          totalAggregateIntents.add(agg.semanticId);
-          agg.internalJoins.forEach(join => totalJoinIntents.add(join.semanticId));
-        });
-      }
+    const report = await buildReport({
+      tableName,
+      formulas,
+      client,
+      limit: 5 // Default limit for exec-formula
     });
     
+    // Handle output formatting
     if (outputFormat === 'console') {
-      console.log('\n🔧 Generating optimized SQL with deduplication...');
-    }
-    const sqlResult = generateSQL(results, tableName);
-    
-    if (outputFormat === 'console') {
-      console.log('\n📈 Deduplication Analysis:');
-      console.log('='.repeat(60));
-      console.log(`Total Unique Join Intents: ${totalJoinIntents.size}`);
-      console.log(`Total Unique Aggregate Intents: ${totalAggregateIntents.size}`);
-      console.log(`Actual JOINs in Generated SQL: ${(sqlResult.fromClause.match(/LEFT JOIN/g) || []).length}`);
-      console.log(`Actual Aggregate Subqueries: ${sqlResult.aggregateSubqueries.length}`);
-      console.log(`SELECT Expressions: ${sqlResult.selectExpressions.length}`);
+      // Custom console output for exec-formula (preserving the existing detailed output)
+      console.log(`📊 Report for table: ${tableName}`);
+      console.log(`📁 Formulas processed: ${report.metadata.formulaCount}`);
+      console.log(`🔗 Tables loaded: ${report.metadata.totalTablesLoaded}`);  
+      console.log(`📄 Results: ${report.results.length} rows\n`);
       
-      console.log('\n📝 Generated Optimized SQL:');
-      console.log('='.repeat(60));
-      console.log(sqlResult.sql);
-      
-      console.log('\n⚡ Executing SQL query...\n');
-    }
-    
-    const queryResult = await client.query(sqlResult.sql + ' LIMIT 5');
-    
-    if (outputFormat === 'console') {
       console.log('📊 Results:');
       console.log('='.repeat(60));
       
-      if (queryResult.rows.length === 0) {
+      if (report.results.length === 0) {
         console.log('No results found');
       } else {
-        console.log(`Found ${queryResult.rows.length} rows:\n`);
-        queryResult.rows.forEach((row, index) => {
+        console.log(`Found ${report.results.length} rows:\n`);
+        report.results.forEach((row, index) => {
           console.log(`Row ${index + 1}:`);
-          Object.keys(results).forEach(fieldName => {
-            console.log(`  ${fieldName}: ${row[fieldName] || 'NULL'}`);
+          formulas.forEach(formula => {
+            console.log(`  ${formula.fieldName}: ${row[formula.fieldName] || 'NULL'}`);
           });
           console.log('');
         });
@@ -485,46 +300,22 @@ async function main() {
       console.log('  ✓ Shared expressions within same joins are reused');
       console.log('  ✓ Aggregate subqueries are optimized across all formulas');
       console.log('  ✓ Single query execution for multiple formula results');
-    }
-    
-    await client.close();
-    
-    // For non-console formats, prepare and output structured data
-    if (outputFormat !== 'console') {
-      const metadata = {
-        tableName: tableName,
-        formulaCount: formulaPaths.length,
-        formulas: formulas.map(f => ({
-          fieldName: f.fieldName,
-          content: f.content,
-          path: f.path
-        }))
-      };
       
-      const analysis = {
-        totalJoinIntents: totalJoinIntents.size,
-        totalAggregateIntents: totalAggregateIntents.size,
-        actualJoins: (sqlResult.fromClause.match(/LEFT JOIN/g) || []).length,
-        subqueries: sqlResult.aggregateSubqueries.length,
-        selectExpressions: sqlResult.selectExpressions.length
-      };
+      // Show debug info for console mode
+      console.log('\n📈 Deduplication Analysis:');
+      console.log('='.repeat(60));
+      console.log(`Total Unique Join Intents: ${report.compilation.analysis.totalJoinIntents}`);
+      console.log(`Total Unique Aggregate Intents: ${report.compilation.analysis.totalAggregateIntents}`);
+      console.log(`Actual JOINs in Generated SQL: ${report.performance.actualJoins}`);
+      console.log(`Actual Aggregate Subqueries: ${report.sql.aggregateSubqueries.length}`);
+      console.log(`SELECT Expressions: ${report.sql.selectExpressions.length}`);
       
-      const results = queryResult.rows.map(row => {
-        const result = {};
-        Object.keys(row).forEach(key => {
-          result[key] = row[key];
-        });
-        return result;
-      });
-      
-      const outputData = {
-        metadata,
-        results,
-        sql: sqlResult.sql,
-        analysis
-      };
-      
-      const formattedOutput = formatters[outputFormat].format(outputData);
+      console.log('\n📝 Generated Optimized SQL:');
+      console.log('='.repeat(60));
+      console.log(report.sql.query);
+    } else {
+      // Use the formatReport function for structured outputs
+      const formattedOutput = formatReport(report, outputFormat);
       console.log(formattedOutput);
     }
     
