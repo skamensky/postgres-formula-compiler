@@ -4,12 +4,24 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 
 ## 🌟 Key Features
 
+### Core Functionality
 - **36+ Functions**: Math, text, date, logical, and aggregate operations
-- **Multi-Level Relationships**: Navigate table relationships with automatic JOIN generation  
+- **Multi-Level Relationships**: Navigate up to 3 levels deep with automatic JOIN generation
 - **Live Execution**: Real-time formula validation and execution as you type
 - **Smart Autocomplete**: Field names, relationships, and functions
-- **SQL Optimization**: Intelligent query consolidation and deduplication
 - **No Dependencies**: Pure JavaScript implementation
+
+### Advanced Relationships
+- **Configurable Depth**: Adjustable relationship traversal limits
+- **Multi-Level Aggregates**: Combine deep relationships with aggregate functions
+- **JOIN Deduplication**: Shared relationship paths consolidated automatically
+- **Intelligent Alias Generation**: Hierarchical aliases prevent conflicts
+
+### SQL Optimization
+- **Query Consolidation**: Multiple subqueries merged into efficient JOINs
+- **Expression Deduplication**: Identical expressions consolidated into single calculations
+- **Aggregate Optimization**: Multiple aggregates on same relationship combined
+- **Performance Benefits**: Reduced complexity, improved execution speed, memory efficiency
 
 ## 🎯 Live Demo
 
