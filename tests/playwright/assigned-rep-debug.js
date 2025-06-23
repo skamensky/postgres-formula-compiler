@@ -3,7 +3,7 @@
  * Tests the specific formula that's failing and captures detailed console output
  */
 
-const { chromium } = require('playwright');
+import { chromium } from 'playwright';
 
 async function testAssignedRepFormula() {
     console.log('🚀 Testing assigned_rep_rel.name formula...\n');
@@ -33,18 +33,18 @@ async function testAssignedRepFormula() {
         await page.waitForSelector('#formulaInput', { timeout: 10000 });
         console.log('✅ Application loaded');
         
-        // Wait for browser API to initialize
-        await page.waitForFunction(() => window.initializeBrowserAPI, { timeout: 10000 });
-        console.log('✅ Browser API available');
+        // Wait a bit for full initialization and check API availability
+        await page.waitForTimeout(2000);
         
-        // Initialize the API
-        await page.evaluate(async () => {
-            if (!window.dbInitialized) {
-                await window.initializeBrowserAPI();
-                window.dbInitialized = true;
-            }
+        const apiStatus = await page.evaluate(() => {
+            return {
+                executeFormula: typeof window.executeFormula,
+                getTableSchema: typeof window.getTableSchema, 
+                getTables: typeof window.getTables,
+                browserAPI: !!window.browserAPI || !!window.initializeBrowserAPI
+            };
         });
-        console.log('✅ Browser API initialized');
+        console.log('✅ API Status:', apiStatus);
         
         // Set table to opportunity (assuming that's where assigned_rep relationship exists)
         await page.selectOption('#tableSelect', 'opportunity');

@@ -1298,3 +1298,16 @@ function updateUIEnhancementsForTable(tableName) {
 
 // Make enhanceFormulaInput globally available
 window.enhanceFormulaInput = enhanceFormulaInput;
+
+// =============================================================================
+// EXPOSE API FUNCTIONS TO GLOBAL WINDOW FOR EXTERNAL ACCESS
+// =============================================================================
+
+// Expose browser API functions for Playwright tests and external access
+window.initializeBrowserAPI = initializeBrowserAPI;
+window.executeFormula = executeFormula;
+window.getTables = getTables;
+window.getTableSchema = getTableSchema;
+window.validateFormula = validateFormula;
+window.getDeveloperTools = getDeveloperTools;
+window.updateDeveloperToolsSchema = updateDeveloperToolsSchema;
