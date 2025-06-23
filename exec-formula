@@ -8,14 +8,14 @@
  */
 
 import { readFileSync } from 'fs';
-import { evaluateFormula, generateSQL, mapPostgresType } from './formula-compiler.js';
 import { basename, dirname } from 'path';
-import { createDatabaseClient } from './web/db-client.js';
-import {
-  getColumnListsForTables,
-  getAllRelationships,
-  getInverseRelationshipsForTables
-} from './web/db-introspection.js';
+import { 
+  extractTableName,
+  generateFieldName,
+  buildReport,
+  formatReport,
+  getExampleFormulas
+} from './src/report-builder.js';
 
 // Parse command line arguments
 function parseArguments() {
@@ -192,29 +192,7 @@ ${results.map(row => `| ${Object.keys(row).map(key => row[key] === null ? '*NULL
   }
 };
 
-// Extract table name from formula file path
-function extractTableName(filePath) {
-  // Expected structure: examples/table/{table_name}/formula.formula
-  const pathParts = filePath.split('/');
-  const tableIndex = pathParts.indexOf('table');
-  
-  if (tableIndex >= 0 && tableIndex + 1 < pathParts.length) {
-    return pathParts[tableIndex + 1];
-  }
-  
-  // Fallback: use directory name if not in expected structure
-  const dir = dirname(filePath);
-  const dirName = basename(dir);
-  return dirName === '.' ? 'submission' : dirName; // Default to submission
-}
-
-// Generate field name from formula file path
-function generateFieldName(filePath) {
-  const fileName = basename(filePath, '.formula');
-  return fileName.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase();
-}
-
-// These functions are now imported from web/db-introspection.js
+// Functions are now imported from report-builder.js
 
 async function main() {
   try {
