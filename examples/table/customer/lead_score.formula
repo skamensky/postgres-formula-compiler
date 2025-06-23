@@ -1,0 +1,19 @@
+STRING(ROUND(
+  IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +
+  IF(lead_source = "Referral", 20, IF(lead_source = "Website", 15, IF(lead_source = "Past Client", 25, 10))) +
+  IF(budget_max > budget_min * 1.5, 15, 10) +
+  IF(ISNULL(assigned_rep_rel.name), 0, 10) +
+  COUNT_AGG(opportunitys_customer_id, id) * 5
+, 0)) & "/100 | " & IF(ROUND(
+  IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +
+  IF(lead_source = "Referral", 20, IF(lead_source = "Website", 15, IF(lead_source = "Past Client", 25, 10))) +
+  IF(budget_max > budget_min * 1.5, 15, 10) +
+  IF(ISNULL(assigned_rep_rel.name), 0, 10) +
+  COUNT_AGG(opportunitys_customer_id, id) * 5
+, 0) > 70, "🔥 HOT", IF(ROUND(
+  IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +
+  IF(lead_source = "Referral", 20, IF(lead_source = "Website", 15, IF(lead_source = "Past Client", 25, 10))) +
+  IF(budget_max > budget_min * 1.5, 15, 10) +
+  IF(ISNULL(assigned_rep_rel.name), 0, 10) +
+  COUNT_AGG(opportunitys_customer_id, id) * 5
+, 0) > 50, "⭐ WARM", "❄️ COLD"))

@@ -1,0 +1,1 @@
+IF(stage = "closed", "🎉 CLOSED", IF(stage = "under_contract", "📋 CONTRACT", IF(stage = "negotiating", "💬 NEGOTIATE", IF(stage = "showing", "👁️ SHOWING", IF(stage = "contingent", "⏳ CONTINGENT", "🔍 " & UPPER(stage)))))) & " | " & customer_rel.first_name & " " & customer_rel.last_name & " | " & listing_rel.address

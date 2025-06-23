@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Formula Compiler</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Interactive Formula Compiler</h1>
+            <p>Real Estate CRM with Excel-like Formula Syntax</p>
+            <div class="client-side-notice">
+                🚀 <strong>Fully Client-Side</strong> - Powered by PGlite in your browser
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" data-tab="compiler">Formula Compiler</button>
+                <button class="tab" data-tab="examples">Examples</button>
+                <button class="tab" data-tab="schema">Schema</button>
+            </div>
+            
+            <!-- Formula Compiler Tab -->
+            <div id="compiler" class="tab-content active">
+                <div class="form-group">
+                    <label for="tableSelect">Select Table:</label>
+                    <select id="tableSelect">
+                        <option value="">Loading tables...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="formulaInput">Enter Formula:</label>
+                    <div class="formula-input-container">
+                        <textarea id="formulaInput" placeholder="Type your formula here... (executes automatically)"></textarea>
+                        <div id="formulaStatus" class="formula-status">
+                            <div class="status-indicator" id="statusIndicator">
+                                <span class="status-icon">⚪</span>
+                                <span class="status-text">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="formulaError" class="formula-error hidden"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="executeBtn" class="btn btn-secondary" style="display: none;">Manual Execute</button>
+                    <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                    <button id="toggleLiveBtn" class="btn btn-outline">Live Mode: ON</button>
+                </div>
+                
+                <div id="formulaResults"></div>
+                
+                <div class="form-group" style="margin-top: 30px;">
+                    <label>Recent Formulas:</label>
+                    <div id="recentFormulas">
+                        <p class="loading">No recent formulas yet</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Examples Tab -->
+            <div id="examples" class="tab-content">
+                <h3>Formula Examples</h3>
+                <p>Click any example to load it into the compiler:</p>
+                <div id="examplesList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading examples...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Schema Browser Tab -->
+            <div id="schema" class="tab-content">
+                <div class="form-group">
+                    <label for="schemaTableSelect">Choose Table:</label>
+                    <select id="schemaTableSelect">
+                        <option value="">Choose a table to view its schema</option>
+                    </select>
+                </div>
+                
+                <div id="schemaDetails">
+                    <p class="loading">Select a table to view its schema and sample data</p>
+                </div>
+            </div>
+        </div>
+        </div>
+
+    <!-- Developer Tools Client -->
+    <script type="module" src="tooling-client/developer-tools-client.js"></script>
+    <script type="module" src="tooling-client/autocomplete.js"></script>
+    <script type="module" src="tooling-client/syntax-highlighting.js"></script>
+    <script type="module" src="tooling-client/formatter-integration.js"></script>
+    
+    <!-- Client-Side Application (ES6 Modules) -->
+    <script type="module" src="browser-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+address & " | Built: " & STRING(year_built) & " | Lot: " & STRING(lot_size) & " acres | Features: Premium amenities available | " & IF(listing_price > 800000, "🌟 LUXURY FEATURES", IF(listing_price > 500000, "✨ NICE FEATURES", "🏠 BASIC"))

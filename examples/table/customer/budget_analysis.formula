@@ -1,0 +1,1 @@
+first_name & " " & last_name & " | Budget Range: $" & STRING(ROUND(budget_max - budget_min, 0)) & " | Flexibility: " & STRING(ROUND((budget_max - budget_min) / budget_min * 100, 0)) & "% | Avg Target: $" & STRING(ROUND((budget_min + budget_max) / 2, 0))

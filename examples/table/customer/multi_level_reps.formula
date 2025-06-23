@@ -1,0 +1,1 @@
+first_name & " " & last_name & " | Reps: " & STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_opportunity_id, rep_rel.name, ", ") & " | Opportunities: " & STRING(COUNT_AGG(opportunitys_customer_id, id))

@@ -4,6 +4,7 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 
 ## 🌟 Features
 
+### Core Compiler
 - **No Dependencies**: Pure JavaScript implementation
 - **Three-Stage Compilation**: Lexer → Parser → Compiler
 - **Comprehensive Function Library**: 36+ functions including math, text, date, and logical operations
@@ -12,6 +13,15 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 - **Relationship Support**: Handles table relationships with proper alias generation
 - **Type Safety**: Validates column types and operations at compile time
 - **Precise Error Reporting**: Errors include exact character positions
+
+### Live Execution & Developer Experience ⚡
+- **Live Formula Execution**: Formulas execute automatically as you type (800ms debounce)
+- **Real-time Validation**: Immediate syntax error detection with visual indicators
+- **Smart Autocomplete**: Field names, relationships, and functions with Tab completion
+- **Intelligent Status Display**: Color-coded status indicators (🟡 Validating, 🔵 Executing, 🟢 Success, 🔴 Error)
+- **Error Prevention**: Clear error messages in prominent display panels
+- **Toggle Modes**: Switch between live and manual execution
+- **Performance Optimized**: Smart caching and debounced execution
 
 ## 🚀 Quick Start
 

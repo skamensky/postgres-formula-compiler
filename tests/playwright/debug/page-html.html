@@ -1,0 +1,725 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Formula Compiler</title>
+    <link rel="stylesheet" href="styles.css">
+<style>
+.autocomplete-dropdown {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.completion-main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.completion-icon {
+    width: 16px;
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+}
+
+.completion-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.completion-detail {
+    color: #666;
+    font-size: 11px;
+    margin-left: auto;
+}
+
+.completion-doc {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #888;
+    font-style: italic;
+}
+
+.autocomplete-tooltip {
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+/* Left-positioned dropdown styling */
+.autocomplete-dropdown.positioned-left {
+    border-left: 3px solid #667eea;
+}
+
+.autocomplete-dropdown.positioned-left::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: -8px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid #667eea;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+}
+</style><style>
+/* Syntax highlighting styles */
+.formula-function {
+    color: #0066cc;
+    font-weight: bold;
+}
+
+.formula-keyword {
+    color: #7c3aed;
+    font-weight: bold;
+}
+
+.formula-number {
+    color: #059669;
+}
+
+.formula-string {
+    color: #dc2626;
+}
+
+.formula-operator {
+    color: #7c2d12;
+    font-weight: bold;
+}
+
+.formula-punctuation {
+    color: #6b7280;
+}
+
+.formula-identifier {
+    color: #374151;
+}
+
+.formula-column {
+    color: #0891b2;
+    font-weight: 500;
+}
+
+.formula-relationship {
+    color: #be185d;
+    font-style: italic;
+}
+
+.formula-literal {
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+.formula-comment {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.formula-error {
+    color: #dc2626;
+    background-color: #fef2f2;
+    text-decoration: underline wavy #dc2626;
+}
+
+/* Hover effects */
+.formula-function:hover,
+.formula-column:hover,
+.formula-relationship:hover {
+    background-color: #f3f4f6;
+    border-radius: 2px;
+}
+
+/* Container positioning */
+.syntax-highlight-container {
+    pointer-events: none;
+}
+
+.syntax-highlight-overlay {
+    overflow: hidden;
+}
+
+/* Diagnostic markers */
+.diagnostic-marker:hover {
+    transform: scale(1.2);
+    transition: transform 0.1s;
+}
+
+.diagnostic-error {
+    background-color: #dc2626 !important;
+}
+
+.diagnostic-warning {
+    background-color: #f59e0b !important;
+}
+
+.diagnostic-info {
+    background-color: #0ea5e9 !important;
+}
+
+/* Enhanced textarea wrapper */
+.enhanced-textarea-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.enhanced-textarea-wrapper textarea {
+    background: transparent;
+    z-index: 2;
+    position: relative;
+}
+
+.enhanced-textarea-wrapper .syntax-highlight-container {
+    z-index: 1;
+}
+</style><style>
+.format-button:hover {
+    background-color: #e9ecef !important;
+    border-color: #adb5bd !important;
+}
+
+.format-button:active {
+    background-color: #dee2e6 !important;
+    transform: translateY(1px);
+}
+
+.format-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.format-feedback {
+    animation: formatFeedbackSlide 0.3s ease-out;
+}
+
+@keyframes formatFeedbackSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Format button variants */
+.format-button-compact {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-width: 60px;
+}
+
+.format-button-large {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-width: 80px;
+}
+
+/* Format status indicator */
+.format-status {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 4px;
+}
+
+.format-status.formatted {
+    background-color: #28a745;
+}
+
+.format-status.unformatted {
+    background-color: #ffc107;
+}
+
+.format-status.unknown {
+    background-color: #6c757d;
+}
+</style></head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Interactive Formula Compiler</h1>
+            <p>Real Estate CRM with Excel-like Formula Syntax</p>
+            <div class="client-side-notice">
+                🚀 <strong>Fully Client-Side</strong> - Powered by PGlite in your browser
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab" data-tab="compiler">Formula Compiler</button>
+                <button class="tab active" data-tab="examples">Examples</button>
+                <button class="tab" data-tab="schema">Schema</button>
+            </div>
+            
+            <!-- Formula Compiler Tab -->
+            <div id="compiler" class="tab-content">
+                <div class="form-group">
+                    <label for="tableSelect">Select Table:</label>
+                    <select id="tableSelect"><option value="">Select a table...</option><option value="app_user">app_user</option><option value="customer">customer</option><option value="listing">listing</option><option value="opportunity">opportunity</option><option value="rep">rep</option><option value="rep_link">rep_link</option></select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="formulaInput">Enter Formula:</label>
+                    <div class="formula-input-container">
+                        <textarea id="formulaInput" placeholder="Type your formula here... (executes automatically)" style=""></textarea><div class="syntax-highlight-container" style="position: absolute; pointer-events: none; z-index: 1; overflow: hidden; white-space: pre-wrap; overflow-wrap: break-word; font-family: Monaco, Menlo, &quot;Ubuntu Mono&quot;, monospace; font-size: 16px; line-height: normal; padding: 12px; border: 2px solid transparent; background: transparent; left: 0px; top: 0px; width: 0px; height: 0px;"><div class="syntax-highlight-overlay" style="margin: 0px; padding: 0px; border: 0px; background: transparent; color: transparent; font: inherit; white-space: pre-wrap; overflow-wrap: break-word; min-height: 120px; width: 100%;"><span class="formula-function" title="Converts a string to uppercase" data-token-type="function" data-description="Converts a string to uppercase" data-category="String" data-returntype="Symbol(STRING)" data-arguments="[object Object]">UPPER</span><span class="formula-punctuation" title="" data-token-type="punctuation" data-matching-paren="3">(</span><span class="formula-string" title="" data-token-type="string">"test"</span><span class="formula-punctuation" title="" data-token-type="punctuation" data-matching-paren="1">)</span></div></div>
+                        <div id="formulaStatus" class="formula-status">
+                            <div class="status-indicator ready" id="statusIndicator">
+                                <span class="status-icon">⚪</span>
+                                <span class="status-text">Manual mode</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="formulaError" class="formula-error hidden"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button id="executeBtn" class="btn btn-secondary" style="display: inline-block;">Execute Formula</button>
+                    <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                    <button id="toggleLiveBtn" class="btn btn-outline live-off">Live Mode: OFF</button>
+                <button type="button" class="btn btn-secondary" title="Format formula (Shift+Alt+F)">Format</button></div>
+                
+                <div id="formulaResults">
+                <div class="results success">
+                    <h4>✅ Formula executed successfully</h4>
+                    
+            <div class="sql-section">
+                <h5>Generated SQL:</h5>
+                <pre class="sql-code">SELECT
+  UPPER('test') AS formula_result
+FROM app_user s</pre>
+            </div>
+        
+                    <div class="data-table-container"><table class="data-table"><thead><tr><th>formula_result</th></tr></thead><tbody><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr><tr><td>TEST</td></tr></tbody></table></div>
+                </div>
+            </div>
+                
+                <div class="form-group" style="margin-top: 30px;">
+                    <label>Recent Formulas:</label>
+                    <div id="recentFormulas">
+            <div class="recent-formula" onclick="RecentFormulas.loadFormula('id_1750696670701_ao7edzque')">
+                <div class="recent-formula-text">UPPER("test")</div>
+                <div class="recent-formula-meta">
+                    app_user • just now
+                </div>
+            </div>
+        </div>
+                </div>
+            </div>
+            
+            <!-- Examples Tab -->
+            <div id="examples" class="tab-content active">
+                <h3>Formula Examples</h3>
+                <p>Click any example to load it into the compiler:</p>
+                <div id="examplesList">
+            <div class="examples-container">
+                <div class="examples-header">
+                    <h3>📝 Formula Examples</h3>
+                    <p>Click any example to auto-execute in the compiler!</p>
+                    <div class="examples-stats">
+                        <span class="stat-item">📊 17 total examples</span>
+                        <span class="stat-item">🗃️ 4 tables</span>
+                    </div>
+                </div>
+        
+            <div class="examples-section">
+                <h4>📚 All Examples by Table</h4>
+                <div class="examples-accordion">
+        
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('customer')">
+                        <span class="table-name">customer</span>
+                        <span class="table-count">5 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-customer">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('customer_budget_analysis')">
+            <div class="example-header">
+                <h5 class="example-title">Budget Analysis</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Budget Analysis with numeric rounding</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " | Budget Range: $" &amp; STRING(ROUND(budget_max - budget_min, 0)) &amp; " ...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_contact_card')">
+            <div class="example-header">
+                <h5 class="example-title">Contact Card</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Contact Card with text formatting</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " | " &amp; email &amp; " | " &amp; phone &amp; " | Budget: $" &amp; STRING(ROUND(budget_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_lead_score')">
+            <div class="example-header">
+                <h5 class="example-title">Lead Score</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Lead Score using aggregate counting</div>
+            <div class="example-formula">
+                <code>STRING(ROUND(
+  IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_multi_level_reps')">
+            <div class="example-header">
+                <h5 class="example-title">Multi Level Reps</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Multi Level Reps using aggregate counting</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " | Reps: " &amp; STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('customer_rep_network')">
+            <div class="example-header">
+                <h5 class="example-title">Rep Network</h5>
+                <span class="example-table">customer</span>
+            </div>
+            <div class="example-description">Rep Network with text concatenation</div>
+            <div class="example-formula">
+                <code>first_name &amp; " " &amp; last_name &amp; " → " &amp; STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_opport...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('listing')">
+                        <span class="table-name">listing</span>
+                        <span class="table-count">6 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-listing">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('listing_agent_listing_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Agent Listing Summary</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Agent Listing Summary with conditional logic</div>
+            <div class="example-formula">
+                <code>address &amp; " - Listed by " &amp; listing_agent_rel.name &amp; " (" &amp; listing_agent_rel.region &amp; ") | " &amp; IF(s...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_features_highlight')">
+            <div class="example-header">
+                <h5 class="example-title">Features Highlight</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Features Highlight with conditional logic</div>
+            <div class="example-formula">
+                <code>address &amp; " | Built: " &amp; STRING(year_built) &amp; " | Lot: " &amp; STRING(lot_size) &amp; " acres | Features: Pr...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_luxury_indicator')">
+            <div class="example-header">
+                <h5 class="example-title">Luxury Indicator</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Luxury Indicator with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(listing_price &gt; 800000, "💎 LUXURY", IF(listing_price &gt; 500000, "⭐ PREMIUM", IF(listing_price &gt; 3...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_market_analysis')">
+            <div class="example-header">
+                <h5 class="example-title">Market Analysis</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Market Analysis with conditional logic</div>
+            <div class="example-formula">
+                <code>address &amp; " | Market Position: " &amp; IF(days_on_market &lt; 30, "🔥 HOT", IF(days_on_market &lt; 60, "📈 NOR...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_market_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Market Summary</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Market Summary with text formatting</div>
+            <div class="example-formula">
+                <code>address &amp; " | $" &amp; STRING(ROUND(listing_price/1000, 0)) &amp; "K | " &amp; STRING(bedrooms) &amp; "bed/" &amp; STRIN...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('listing_price_per_sqft')">
+            <div class="example-header">
+                <h5 class="example-title">Price Per Sqft</h5>
+                <span class="example-table">listing</span>
+            </div>
+            <div class="example-description">Price Per Sqft with numeric rounding</div>
+            <div class="example-formula">
+                <code>ROUND(listing_price / square_feet, 2)</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('opportunity')">
+                        <span class="table-name">opportunity</span>
+                        <span class="table-count">3 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-opportunity">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('opportunity_commission_projection')">
+            <div class="example-header">
+                <h5 class="example-title">Commission Projection</h5>
+                <span class="example-table">opportunity</span>
+            </div>
+            <div class="example-description">Commission Projection using aggregate counting</div>
+            <div class="example-formula">
+                <code>IF(stage = "closed", "✅ PAID: $" &amp; STRING(ROUND(commission_total, 0)), "📊 PROJECTED: $" &amp; STRING(RO...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('opportunity_deal_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Deal Summary</h5>
+                <span class="example-table">opportunity</span>
+            </div>
+            <div class="example-description">Deal Summary with text formatting</div>
+            <div class="example-formula">
+                <code>customer_rel.first_name &amp; " " &amp; customer_rel.last_name &amp; " → " &amp; listing_rel.address &amp; " | " &amp; UPPER...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('opportunity_pipeline_status')">
+            <div class="example-header">
+                <h5 class="example-title">Pipeline Status</h5>
+                <span class="example-table">opportunity</span>
+            </div>
+            <div class="example-description">Pipeline Status with conditional logic</div>
+            <div class="example-formula">
+                <code>IF(stage = "closed", "🎉 CLOSED", IF(stage = "under_contract", "📋 CONTRACT", IF(stage = "negotiatin...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="examples-table-group ">
+                    <div class="examples-table-header" onclick="toggleTableExamples('rep')">
+                        <span class="table-name">rep</span>
+                        <span class="table-count">3 examples</span>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="examples-table-content" id="examples-rep">
+                        <div class="examples-grid">
+            
+        <div class="example-card " onclick="loadAndExecuteExample('rep_commission_summary')">
+            <div class="example-header">
+                <h5 class="example-title">Commission Summary</h5>
+                <span class="example-table">rep</span>
+            </div>
+            <div class="example-description">Commission Summary using aggregate counting</div>
+            <div class="example-formula">
+                <code>name &amp; " | Earned: $" &amp; STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0))...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('rep_performance_dashboard')">
+            <div class="example-header">
+                <h5 class="example-title">Performance Dashboard</h5>
+                <span class="example-table">rep</span>
+            </div>
+            <div class="example-description">Performance Dashboard using aggregate counting</div>
+            <div class="example-formula">
+                <code>name &amp; " (" &amp; region &amp; ") | Goal: $" &amp; STRING(ROUND(sales_goal/1000, 0)) &amp; "K | Active Listings: " &amp;...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+        <div class="example-card " onclick="loadAndExecuteExample('rep_team_structure')">
+            <div class="example-header">
+                <h5 class="example-title">Team Structure</h5>
+                <span class="example-table">rep</span>
+            </div>
+            <div class="example-description">Team Structure with conditional logic</div>
+            <div class="example-formula">
+                <code>name &amp; " | " &amp; NULLVALUE(manager_rel.name, "🏆 MANAGER") &amp; " | Team: " &amp; region &amp; " | Hired: " &amp; STR...</code>
+            </div>
+            <div class="example-actions">
+                <span class="example-action">🖱️ Click to execute</span>
+            </div>
+        </div>
+    
+                        </div>
+                    </div>
+                </div>
+            
+                </div>
+            </div>
+            </div>
+        </div>
+            </div>
+            
+            <!-- Schema Browser Tab -->
+            <div id="schema" class="tab-content">
+                <div class="form-group">
+                    <label for="schemaTableSelect">Choose Table:</label>
+                    <select id="schemaTableSelect"><option value="">Choose a table to view its schema</option><option value="app_user">app_user</option><option value="customer">customer</option><option value="listing">listing</option><option value="opportunity">opportunity</option><option value="rep">rep</option><option value="rep_link">rep_link</option></select>
+                </div>
+                
+                <div id="schemaDetails">
+        <div class="schema-display">
+            <h3>📋 app_user Schema</h3>
+    
+            <div class="schema-section">
+                <h4>🏛️ Columns (8)</h4>
+                <div class="columns-grid">
+        
+                <div class="column-item">
+                    <strong>id</strong><span class="column-type">number!</span>
+                    
+                    
+                </div>
+            
+                <div class="column-item">
+                    <strong>email</strong><span class="column-type">string!</span>
+                    
+                    
+                </div>
+            
+                <div class="column-item">
+                    <strong>full_name</strong><span class="column-type">string!</span>
+                    
+                    
+                </div>
+            
+                <div class="column-item">
+                    <strong>role</strong><span class="column-type">string!</span>
+                    
+                    
+                </div>
+            
+                <div class="column-item">
+                    <strong>last_login_at</strong><span class="column-type">date!</span>
+                    
+                    
+                </div>
+            
+                <div class="column-item">
+                    <strong>is_active</strong><span class="column-type">boolean!</span>
+                    
+                    
+                </div>
+            
+                <div class="column-item">
+                    <strong>created_at</strong><span class="column-type">date!</span>
+                    
+                    
+                </div>
+            
+                <div class="column-item">
+                    <strong>updated_at</strong><span class="column-type">date!</span>
+                    
+                    
+                </div>
+            
+                </div>
+            </div>
+        
+            <div class="schema-section">
+                <h4>🔙 Reverse Relationships (1)</h4>
+                <div class="relationships-list">
+        
+                <div class="relationship-item">
+                    <strong>rep_user_id</strong> ← 
+                    <span class="clickable-table" onclick="navigateToTable('rep')" title="Click to view rep schema">rep</span>
+                    <div class="relationship-detail">via user_id</div>
+                </div>
+            
+                </div>
+            </div>
+        </div></div>
+            </div>
+        </div>
+        </div>
+
+    <!-- Developer Tools Client -->
+    <script type="module" src="tooling-client/developer-tools-client.js"></script>
+    <script type="module" src="tooling-client/autocomplete.js"></script>
+    <script type="module" src="tooling-client/syntax-highlighting.js"></script>
+    <script type="module" src="tooling-client/formatter-integration.js"></script>
+    
+    <!-- Client-Side Application (ES6 Modules) -->
+    <script type="module" src="browser-script.js"></script>
+
+<div class="autocomplete-dropdown" style="position: absolute; z-index: 1000; background: white; border: 1px solid rgb(204, 204, 204); border-radius: 4px; box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 12px; max-height: 200px; overflow-y: auto; display: none; min-width: 200px;"></div></body></html>
