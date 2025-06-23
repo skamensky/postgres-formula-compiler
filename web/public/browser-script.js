@@ -551,33 +551,45 @@ function enhanceFormulaInput(input, tableName = null) {
 
 async function updateSchemaForDeveloperTools() {
     try {
-        const schema = { tables: {}, relationships: [] };
+        // Build schema in the format expected by LSP: schema[tableName] directly
+        const lspSchema = {};
         
         // Fetch detailed schema for each table
         for (const tableName of AppState.availableTables) {
             const tableData = await getTableSchema(tableName);
             
-            schema.tables[tableName] = {
+            lspSchema[tableName] = {
                 columns: tableData.columns || [],
                 directRelationships: tableData.directRelationships || [],
                 reverseRelationships: tableData.reverseRelationships || []
             };
-            
-            schema.relationships.push(...(tableData.directRelationships || []));
         }
+        
+        console.log('🔧 Schema built for developer tools:', Object.keys(lspSchema));
         
         // Update developer tools with schema using client
         if (window.developerToolsClient) {
-            window.developerToolsClient.updateSchema(schema);
+            window.developerToolsClient.updateSchema(lspSchema);
         }
         
-        // Update individual UI tools with schema
+        // Also build legacy format for other tools that might need it
+        const legacySchema = { 
+            tables: lspSchema, 
+            relationships: []
+        };
+        
+        // Collect all relationships
+        Object.values(lspSchema).forEach(table => {
+            legacySchema.relationships.push(...(table.directRelationships || []));
+        });
+        
+        // Update individual UI tools with legacy schema format
         if (window.autocomplete) {
-            window.autocomplete.updateSchema(schema);
+            window.autocomplete.updateSchema(legacySchema);
         }
         
         if (window.syntaxHighlighting) {
-            window.syntaxHighlighting.updateSchema(schema);
+            window.syntaxHighlighting.updateSchema(legacySchema);
         }
         
     } catch (error) {

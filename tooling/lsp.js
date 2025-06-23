@@ -233,7 +233,11 @@ export class FormulaLanguageServer {
         expectingIdentifier = true;
       } else if (lastToken.type === TokenType.IDENTIFIER) {
         currentToken = lastToken;
+        // For autocomplete, if we're at the end of an identifier, we could be:
+        // 1. Trying to complete the identifier (expecting identifier)
+        // 2. Trying to add an operator after it (expecting operator)
         expectingOperator = true;
+        expectingIdentifier = true; // Also allow identifier completion
       } else if ([TokenType.PLUS, TokenType.MINUS, TokenType.MULTIPLY, 
                  TokenType.DIVIDE, TokenType.GT, TokenType.LT, TokenType.EQ].includes(lastToken.type)) {
         expectingFunction = true;
@@ -302,7 +306,9 @@ export class FormulaLanguageServer {
     const columns = this.schema[tableName].columns || [];
 
     columns.forEach(column => {
-      if (column.column_name.toUpperCase().startsWith(upperPrefix)) {
+      const columnName = column.column_name.toUpperCase();
+      // Match if column starts with prefix OR if prefix is a substring of column name
+      if (columnName.startsWith(upperPrefix) || columnName.includes(upperPrefix)) {
         completions.push({
           label: column.column_name,
           kind: CompletionItemKind.FIELD,
@@ -331,7 +337,9 @@ export class FormulaLanguageServer {
 
     relationships.forEach(rel => {
       const relName = `${rel.relationship_name}_REL`;
-      if (relName.toUpperCase().startsWith(upperPrefix)) {
+      const upperRelName = relName.toUpperCase();
+      // Match if relationship starts with prefix OR if prefix is a substring of relationship name
+      if (upperRelName.startsWith(upperPrefix) || upperRelName.includes(upperPrefix)) {
         completions.push({
           label: relName,
           kind: CompletionItemKind.RELATIONSHIP,

@@ -61,31 +61,59 @@ class AutocompleteManager {
      * Attach autocomplete to a textarea or input
      */
     attachTo(inputElement, tableName = null) {
+        // Remove existing listeners if already attached
+        this.detachFrom(inputElement);
+        
         // Store reference
         const context = { tableName };
         
-        // Bind events to the input
-        inputElement.addEventListener('input', (e) => {
-            this.handleInput(e.target, context);
-        });
-
-        inputElement.addEventListener('keydown', (e) => {
-            this.handleKeydown(e, inputElement, context);
-        });
-
-        inputElement.addEventListener('focus', (e) => {
+        // Create bound functions so we can remove them later
+        const inputHandler = (e) => this.handleInput(e.target, context);
+        const keydownHandler = (e) => this.handleKeydown(e, inputElement, context);
+        const focusHandler = (e) => {
             // Small delay to show completions when focusing empty input
             setTimeout(() => {
                 if (e.target.value.trim() === '') {
                     this.handleInput(e.target, context);
                 }
             }, 100);
-        });
-
-        inputElement.addEventListener('blur', () => {
+        };
+        const blurHandler = () => {
             // Delay hiding to allow click on dropdown
             setTimeout(() => this.hide(), 150);
-        });
+        };
+        
+        // Bind events to the input
+        inputElement.addEventListener('input', inputHandler);
+        inputElement.addEventListener('keydown', keydownHandler);
+        inputElement.addEventListener('focus', focusHandler);
+        inputElement.addEventListener('blur', blurHandler);
+        
+        // Store handlers for cleanup
+        inputElement._autocompleteHandlers = {
+            input: inputHandler,
+            keydown: keydownHandler,
+            focus: focusHandler,
+            blur: blurHandler,
+            context: context
+        };
+        
+        console.log('🔧 Autocomplete attached to input for table:', tableName);
+    }
+
+    /**
+     * Detach autocomplete from an input
+     */
+    detachFrom(inputElement) {
+        if (inputElement._autocompleteHandlers) {
+            const handlers = inputElement._autocompleteHandlers;
+            inputElement.removeEventListener('input', handlers.input);
+            inputElement.removeEventListener('keydown', handlers.keydown);
+            inputElement.removeEventListener('focus', handlers.focus);
+            inputElement.removeEventListener('blur', handlers.blur);
+            delete inputElement._autocompleteHandlers;
+            console.log('🔧 Autocomplete detached from input');
+        }
     }
 
     /**
@@ -307,7 +335,9 @@ class AutocompleteManager {
      * Insert selected completion
      */
     insertCompletion(input) {
-        if (!this.completions[this.selectedIndex]) return;
+        if (!this.completions[this.selectedIndex]) {
+            return;
+        }
         
         const completion = this.completions[this.selectedIndex];
         const text = input.value;

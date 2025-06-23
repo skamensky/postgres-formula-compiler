@@ -54,6 +54,10 @@ class DeveloperToolsClient {
         this.schema = schema;
         if (this.tools && this.isLoaded) {
             this.tools.updateSchema(schema);
+            console.log('🔧 Developer tools client schema updated');
+        } else {
+            // If tools aren't loaded yet, they'll get the schema when they are loaded
+            console.log('🔧 Schema stored for when developer tools are loaded');
         }
     }
 
@@ -167,6 +171,13 @@ class DeveloperToolsClient {
      */
     isReady() {
         return this.isLoaded && this.tools;
+    }
+
+    /**
+     * Get current schema
+     */
+    get currentSchema() {
+        return this.schema;
     }
 
     /**
