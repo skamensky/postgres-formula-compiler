@@ -23,6 +23,38 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 - **Toggle Modes**: Switch between live and manual execution
 - **Performance Optimized**: Smart caching and debounced execution
 
+## 🎯 Live Demo & Screenshots
+
+> **🚀 [Live Demo Available](https://skamensky.github.io/js-to-sql/)** - Automatically deployed via GitHub Actions
+
+### Formula Compiler Interface
+![Formula Compiler](tests/playwright/screenshots/compiler-tab.png)
+*Interactive formula editor with live execution and autocomplete*
+
+### Language Tooling & Autocomplete  
+![Language Tooling](tests/playwright/screenshots/language-tooling-test.png)
+*Smart autocomplete with field names, relationships, and functions*
+
+![Autocomplete Details](tests/playwright/screenshots/autocomplete-final-test.png)
+*Advanced autocomplete showing function suggestions and documentation*
+
+### Live Execution & Error Handling
+![Live Execution](tests/playwright/screenshots/live-execution-test.png)
+*Real-time formula execution with immediate results*
+
+![Error Handling](tests/playwright/screenshots/live-execution-error.png)
+*Clear error messages with syntax highlighting*
+
+### Schema Browser & Examples
+![Schema Browser](tests/playwright/screenshots/schema-tab.png)
+*Interactive schema browser showing table relationships*
+
+![Examples Gallery](tests/playwright/screenshots/examples-tab.png)
+*Rich collection of formula examples organized by table*
+
+![Examples Functionality](tests/playwright/screenshots/examples-functionality.png)
+*One-click example loading with full context*
+
 ## 🚀 Quick Start
 
 ### Basic Usage
@@ -105,7 +137,7 @@ node tests/math-functions.test.js
 - `ME()` - Current user ID
 - `STRING(value)` - Convert to string
 
-## � Multi-Level Relationships
+## 🔗 Multi-Level Relationships
 
 The compiler supports navigating complex table relationships up to 3 levels deep with automatic JOIN generation:
 
@@ -155,7 +187,7 @@ AVG_AGG(merchant_rel.main_rep_rel.performance_score)
 - **Intelligent Alias Generation**: Hierarchical aliases prevent conflicts
 - **Context Structure**: Flat relationship format for improved startup performance
 
-## �🔧 SQL Optimization
+## 🔧 SQL Optimization
 
 The compiler includes intelligent SQL optimization:
 
@@ -314,6 +346,37 @@ try {
   console.log(error.message); // "Compiler error: Unknown column: UNKNOWN_COLUMN"
   console.log(error.position); // 0
 }
+```
+
+## 🚀 Deployment
+
+### GitHub Pages (Automated)
+
+This project is configured for automatic deployment to GitHub Pages using GitHub Actions:
+
+1. **Automatic Deployment**: Push to `main` branch triggers deployment
+2. **Build Process**: Runs `npm run build` to compile frontend modules
+3. **Live Demo**: Available at `https://skamensky.github.io/js-to-sql/`
+
+### Manual Deployment Setup
+
+1. Enable GitHub Pages in repository settings
+2. Set source to "GitHub Actions"
+3. Push to main branch or manually trigger workflow
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build frontend modules
+npm run build
+
+# Start development server
+npm run dev
+
+# Open http://localhost:3000
 ```
 
 ## 📄 License
