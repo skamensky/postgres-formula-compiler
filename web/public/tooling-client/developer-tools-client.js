@@ -24,29 +24,15 @@ class DeveloperToolsClient {
     }
 
     /**
-     * Load developer tools from server
+     * Load developer tools directly from modules
      */
     async _loadTools() {
         try {
-            // Load the developer tools module from server
-            const response = await fetch('/api/developer-tools');
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            const toolsData = await response.text();
-            
-            // Create a module URL and import it
-            const blob = new Blob([toolsData], { type: 'application/javascript' });
-            const moduleUrl = URL.createObjectURL(blob);
-            
-            const module = await import(moduleUrl);
-            
-            // Clean up the blob URL
-            URL.revokeObjectURL(moduleUrl);
+            // Load the developer tools module directly from modules
+            const { createDeveloperTools } = await import('../modules/tooling/developer-tools.js');
             
             // Initialize tools with current schema
-            this.tools = module.createDeveloperTools('default', this.schema);
+            this.tools = createDeveloperTools('default', this.schema);
             this.isLoaded = true;
             
             console.log('✅ Developer tools loaded successfully');
@@ -209,4 +195,4 @@ class DeveloperToolsClient {
 }
 
 // Create global instance
-window.developerTools = new DeveloperToolsClient();
+window.developerToolsClient = new DeveloperToolsClient();

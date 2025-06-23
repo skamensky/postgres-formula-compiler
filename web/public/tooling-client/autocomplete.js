@@ -159,7 +159,7 @@ class AutocompleteManager {
             const position = input.selectionStart;
             
             // Get completions from developer tools
-            const completions = await window.developerTools.getCompletions(
+            const completions = await window.developerToolsClient.getCompletions(
                 text, 
                 position, 
                 context.tableName
@@ -375,7 +375,7 @@ class AutocompleteManager {
             const text = input.value;
             const position = input.selectionStart;
             
-            const hover = await window.developerTools.getHover(text, position);
+            const hover = await window.developerToolsClient.getHover(text, position);
             
             if (hover && hover.contents) {
                 this.showTooltip(input, hover.contents);

@@ -214,7 +214,7 @@ class SyntaxHighlightingManager {
 
         try {
             const text = textarea.value;
-            const html = await window.developerTools.highlightToHTML(text, tableName);
+            const html = await window.developerToolsClient.highlightToHTML(text, tableName);
             
             // Update overlay content
             data.overlay.innerHTML = html;
@@ -268,7 +268,7 @@ class SyntaxHighlightingManager {
     async updateDiagnostics(textarea, tableName) {
         try {
             const text = textarea.value;
-            const diagnostics = await window.developerTools.getDiagnostics(text, tableName);
+            const diagnostics = await window.developerToolsClient.getDiagnostics(text, tableName);
             
             this.showDiagnosticMarkers(textarea, diagnostics);
             

@@ -239,7 +239,7 @@ class FormatterIntegration {
             }
 
             // Format the text
-            const formatted = await window.developerTools.format(originalValue);
+            const formatted = await window.developerToolsClient.format(originalValue);
 
             // Only update if text actually changed
             if (formatted !== originalValue) {
@@ -449,7 +449,7 @@ class FormatterIntegration {
     async isFormatted(textarea) {
         try {
             const text = textarea.value;
-            const formatted = await window.developerTools.format(text);
+            const formatted = await window.developerToolsClient.format(text);
             return text === formatted;
         } catch (error) {
             console.warn('Format check error:', error);

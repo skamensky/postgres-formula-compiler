@@ -401,13 +401,151 @@ async function initializeDeveloperToolsIntegration() {
     try {
         console.log('🔧 Setting up developer tools integration...');
         
-        // Update schema for developer tools
-        await updateSchemaForDeveloperTools();
+        // Initialize developer tools client
+        if (window.developerToolsClient) {
+            await window.developerToolsClient.initialize();
+            
+            // Update schema for developer tools
+            await updateSchemaForDeveloperTools();
+            
+            console.log('🔧 Developer tools schema updated');
+            
+            // Initialize UI enhancements
+            await initializeUIEnhancements();
+        } else {
+            console.warn('⚠️ Developer tools client not available');
+        }
         
         console.log('✅ Developer tools ready');
         
     } catch (error) {
         console.warn('⚠️ Developer tools integration failed:', error);
+    }
+}
+
+async function initializeUIEnhancements() {
+    try {
+        console.log('🎨 Initializing UI enhancements...');
+        
+        // Wait for UI enhancement modules to be available
+        let retries = 0;
+        while ((!window.autocomplete || !window.syntaxHighlighting || !window.formatterIntegration) && retries < 20) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retries++;
+        }
+        
+        if (retries >= 20) {
+            console.warn('⚠️ UI enhancement modules not available after waiting');
+            return;
+        }
+        
+        // Get formula input element
+        const formulaInput = document.getElementById('formulaInput');
+        if (formulaInput) {
+            console.log('🎨 Enhancing formula input...');
+            
+            // Attach autocomplete
+            if (window.autocomplete) {
+                window.autocomplete.attachTo(formulaInput, AppState.currentTable);
+                console.log('💭 Autocomplete attached');
+            }
+            
+            // Attach syntax highlighting
+            if (window.syntaxHighlighting) {
+                window.syntaxHighlighting.attachTo(formulaInput, AppState.currentTable);
+                console.log('🎨 Syntax highlighting attached');
+            }
+            
+            // Attach formatter with button
+            if (window.formatterIntegration) {
+                const buttonGroup = document.querySelector('.button-group');
+                if (buttonGroup) {
+                    window.formatterIntegration.addToButtonGroup(buttonGroup, formulaInput, {
+                        text: 'Format',
+                        className: 'btn btn-secondary'
+                    });
+                    console.log('📐 Format button added');
+                } else {
+                    // Fallback to inline button
+                    window.formatterIntegration.attachTo(formulaInput, {
+                        buttonPosition: 'after',
+                        buttonText: 'Format'
+                    });
+                    console.log('📐 Formatter attached with inline button');
+                }
+            }
+            
+            console.log('✅ Formula input enhanced with all tools');
+        } else {
+            console.warn('⚠️ Formula input element not found');
+        }
+        
+        // Set up dynamic enhancement for new inputs
+        setupDynamicEnhancement();
+        
+    } catch (error) {
+        console.warn('⚠️ UI enhancement initialization failed:', error);
+    }
+}
+
+function setupDynamicEnhancement() {
+    // Use MutationObserver to enhance new formula inputs
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    // Check if this is a formula input or contains formula inputs
+                    const inputs = node.matches?.('textarea, input[type="text"]') ? [node] : 
+                                  Array.from(node.querySelectorAll?.('textarea, input[type="text"]') || []);
+                    
+                    inputs.forEach(input => {
+                        // Only enhance if it looks like a formula input and isn't already enhanced
+                        if ((input.id?.includes('formula') || input.className?.includes('formula') || 
+                             input.placeholder?.toLowerCase().includes('formula')) &&
+                            !input.hasAttribute('data-enhanced')) {
+                            
+                            console.log('🎨 Auto-enhancing new formula input:', input.id || input.className);
+                            enhanceFormulaInput(input);
+                        }
+                    });
+                }
+            });
+        });
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
+function enhanceFormulaInput(input, tableName = null) {
+    // Mark as enhanced to prevent double-enhancement
+    input.setAttribute('data-enhanced', 'true');
+    
+    const currentTable = tableName || AppState.currentTable;
+    
+    try {
+        // Attach all available tools
+        if (window.autocomplete) {
+            window.autocomplete.attachTo(input, currentTable);
+        }
+        
+        if (window.syntaxHighlighting) {
+            window.syntaxHighlighting.attachTo(input, currentTable);
+        }
+        
+        if (window.formatterIntegration) {
+            window.formatterIntegration.attachTo(input, {
+                buttonPosition: 'after',
+                showButton: true
+            });
+        }
+        
+        console.log('✅ Enhanced formula input:', input.id || input.className);
+        
+    } catch (error) {
+        console.warn('⚠️ Failed to enhance formula input:', error);
     }
 }
 
@@ -428,8 +566,19 @@ async function updateSchemaForDeveloperTools() {
             schema.relationships.push(...(tableData.directRelationships || []));
         }
         
-        // Update developer tools with schema
-        updateDeveloperToolsSchema(schema);
+        // Update developer tools with schema using client
+        if (window.developerToolsClient) {
+            window.developerToolsClient.updateSchema(schema);
+        }
+        
+        // Update individual UI tools with schema
+        if (window.autocomplete) {
+            window.autocomplete.updateSchema(schema);
+        }
+        
+        if (window.syntaxHighlighting) {
+            window.syntaxHighlighting.updateSchema(schema);
+        }
         
     } catch (error) {
         console.warn('Failed to update developer tools schema:', error);
@@ -465,6 +614,12 @@ function setupEventListeners() {
             // Load tab-specific data
             if (tabName === 'examples') {
                 loadExamples();
+            } else if (tabName === 'schema') {
+                // Load schema details if a table is already selected
+                const schemaTableSelect = document.getElementById('schemaTableSelect');
+                if (schemaTableSelect && schemaTableSelect.value) {
+                    loadSchemaDetails(schemaTableSelect.value);
+                }
             }
         });
     });
@@ -477,6 +632,15 @@ function setupEventListeners() {
     document.getElementById('tableSelect').addEventListener('change', (e) => {
         AppState.currentTable = e.target.value;
         
+        // Also sync schema table selector
+        const schemaTableSelect = document.getElementById('schemaTableSelect');
+        if (schemaTableSelect) {
+            schemaTableSelect.value = e.target.value;
+        }
+        
+        // Update UI enhancements with new table context
+        updateUIEnhancementsForTable(e.target.value);
+        
         // Refresh examples if on examples tab
         const examplesTab = document.getElementById('examples');
         if (examplesTab && examplesTab.classList.contains('active')) {
@@ -487,6 +651,13 @@ function setupEventListeners() {
     // Schema table selection
     document.getElementById('schemaTableSelect').addEventListener('change', (e) => {
         loadSchemaDetails(e.target.value);
+        
+        // Also sync main table selector
+        const tableSelect = document.getElementById('tableSelect');
+        if (tableSelect) {
+            tableSelect.value = e.target.value;
+            AppState.currentTable = e.target.value;
+        }
     });
     
     // Formula input - Enter key handling
@@ -823,3 +994,37 @@ window.UI = UI;
 window.loadSchemaDetails = loadSchemaDetails;
 window.toggleTableExamples = toggleTableExamples;
 window.loadAndExecuteExample = loadAndExecuteExample;
+
+function updateUIEnhancementsForTable(tableName) {
+    try {
+        // Update autocomplete with new table context
+        if (window.autocomplete) {
+            const formulaInput = document.getElementById('formulaInput');
+            if (formulaInput) {
+                // Reattach with new table name
+                window.autocomplete.attachTo(formulaInput, tableName);
+            }
+        }
+        
+        // Update syntax highlighting with new table context
+        if (window.syntaxHighlighting) {
+            const formulaInput = document.getElementById('formulaInput');
+            if (formulaInput) {
+                // Update table name and re-highlight
+                const data = window.syntaxHighlighting.highlightedElements.get(formulaInput);
+                if (data) {
+                    data.tableName = tableName;
+                    window.syntaxHighlighting.updateHighlighting(formulaInput, tableName);
+                }
+            }
+        }
+        
+        console.log(`🔄 UI enhancements updated for table: ${tableName}`);
+        
+    } catch (error) {
+        console.warn('⚠️ Failed to update UI enhancements for table:', error);
+    }
+}
+
+// Make enhanceFormulaInput globally available
+window.enhanceFormulaInput = enhanceFormulaInput;
