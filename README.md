@@ -7,6 +7,15 @@
 A JavaScript-based Excel-like formula compiler that converts formulas to PostgreSQL SQL. This project implements a complete lexer, parser, and compiler pipeline with comprehensive function support and optimized and injection-proof SQL generation.
 
 
+## 📃 Documentation
+
+Complete documentation available in [`docs/`](docs/):
+
+- **[Formula Language Reference](docs/usage/README.md)** - Functions, types, operators
+- **[Function Categories](docs/usage/functions/)** - Math, String, Date, Logical, Aggregate, Core, Null handling  
+- **[Technical Integration](docs/lang/)** - Developer guides and metadata reference
+
+
 
 ## 🎯 Live Demo & Screenshots
 
@@ -39,15 +48,6 @@ A JavaScript-based Excel-like formula compiler that converts formulas to Postgre
 
 ![Examples Functionality](tests/playwright/screenshots/examples-functionality.png)
 *One-click example loading with full context*
-
-## 📃 Documentation
-
-Complete documentation available in [`docs/`](docs/):
-
-- **[Formula Language Reference](docs/usage/README.md)** - Functions, types, operators
-- **[Function Categories](docs/usage/functions/)** - Math, String, Date, Logical, Aggregate, Core, Null handling  
-- **[Technical Integration](docs/lang/)** - Developer guides and metadata reference
-
 
 ## 🌟 Features
 
