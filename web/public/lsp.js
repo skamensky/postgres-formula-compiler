@@ -3,10 +3,10 @@
  * Provides autocomplete, error detection, and contextual help for formula language
  */
 
-import { Lexer, TokenType } from './modules/compiler/lexer.js';
-import { Parser } from './modules/compiler/parser.js';
-import { FUNCTION_METADATA, FUNCTIONS, CATEGORIES } from './modules/compiler/function-metadata.js';
-import { TYPE } from './modules/compiler/types-unified.js';
+import { Lexer, TokenType } from '../compiler/lexer.js';
+import { Parser } from '../compiler/parser.js';
+import { FUNCTION_METADATA, FUNCTIONS, CATEGORIES } from '../compiler/function-metadata.js';
+import { TYPE } from '../compiler/types-unified.js';
 
 // LSP Response Types (Monaco/VS Code compatible)
 const CompletionItemKind = {
@@ -60,27 +60,50 @@ export class FormulaLanguageServer {
       const context = this.analyzeContext(text, position);
       const completions = [];
 
-      // Function completions
-      if (context.expectingFunction || context.expectingIdentifier) {
-        completions.push(...this.getFunctionCompletions(context.prefix, useMonacoFormat));
-      }
-
-      // Column completions (for current table)
-      if (context.expectingIdentifier && tableName && this.schema) {
-        completions.push(...this.getColumnCompletions(tableName, context.prefix, useMonacoFormat));
+      // Check if we're in relationship navigation context
+      if (context.relationshipNavigation && context.expectingIdentifier) {
+        // We're after a relationship like "assigned_rep_id_rel."
+        // Get completions from the target table
+        const targetTable = this.resolveTargetTable(context.relationshipNavigation, tableName);
         
-        // Relationship completions
-        completions.push(...this.getRelationshipCompletions(tableName, context.prefix, useMonacoFormat));
-      }
+        if (targetTable) {
+          console.log(`🔗 Relationship navigation: ${tableName} → ${targetTable} via ${context.relationshipNavigation.relationshipChain.join(' → ')}`);
+          
+          // Get related field completions from target table
+          const relatedFields = this.getRelatedFieldCompletions(targetTable, context.prefix, context.relationshipNavigation, useMonacoFormat);
+          completions.push(...relatedFields);
+          
+          // Also get relationship completions from target table (for nested navigation)
+          const nestedRels = this.getRelationshipCompletions(targetTable, context.prefix, useMonacoFormat);
+          completions.push(...nestedRels);
+        } else {
+          console.warn(`⚠️ Could not resolve target table for relationship navigation: ${context.relationshipNavigation.relationshipChain.join(' → ')}`);
+        }
+      } else {
+        // Normal completion context (not in relationship navigation)
+        
+        // Function completions
+        if (context.expectingFunction || context.expectingIdentifier) {
+          completions.push(...this.getFunctionCompletions(context.prefix, useMonacoFormat));
+        }
 
-      // Keyword completions
-      if (context.expectingIdentifier || context.expectingKeyword) {
-        completions.push(...this.getKeywordCompletions(context.prefix, useMonacoFormat));
-      }
+        // Column completions (for current table)
+        if (context.expectingIdentifier && tableName && this.schema) {
+          completions.push(...this.getColumnCompletions(tableName, context.prefix, useMonacoFormat));
+          
+          // Relationship completions
+          completions.push(...this.getRelationshipCompletions(tableName, context.prefix, useMonacoFormat));
+        }
 
-      // Operator completions (when appropriate)
-      if (context.expectingOperator) {
-        completions.push(...this.getOperatorCompletions(context.prefix, useMonacoFormat));
+        // Keyword completions
+        if (context.expectingIdentifier || context.expectingKeyword) {
+          completions.push(...this.getKeywordCompletions(context.prefix, useMonacoFormat));
+        }
+
+        // Operator completions (when appropriate)
+        if (context.expectingOperator) {
+          completions.push(...this.getOperatorCompletions(context.prefix, useMonacoFormat));
+        }
       }
 
       return this.filterAndRankCompletions(completions, context.prefix);
@@ -270,8 +293,60 @@ export class FormulaLanguageServer {
       expectingKeyword,
       currentToken,
       beforeCursor,
-      afterCursor
+      afterCursor,
+      relationshipNavigation: this.parseRelationshipNavigation(beforeCursor)
     };
+  }
+
+  /**
+   * Parse relationship navigation from text before cursor
+   * Returns information about relationship chain and target table
+   */
+  parseRelationshipNavigation(beforeCursor) {
+    // Look for patterns like "relationship_name_rel." or "rel1_rel.rel2_rel."
+    const relationshipPattern = /([a-zA-Z_][a-zA-Z0-9_]*_rel\.)+$/;
+    const match = beforeCursor.match(relationshipPattern);
+    
+    if (!match) {
+      return null;
+    }
+    
+    // Extract the relationship chain
+    const chainText = match[0];
+    const relationshipParts = chainText.split('.').filter(part => part.length > 0);
+    
+    // Remove "_rel" suffix from each part to get relationship names
+    const relationshipChain = relationshipParts.map(part => 
+      part.endsWith('_rel') ? part.slice(0, -4) : part
+    );
+    
+    return {
+      hasRelationshipNavigation: true,
+      relationshipChain,
+      fullMatch: chainText
+    };
+  }
+
+  /**
+   * Resolve target table from relationship navigation
+   */
+  resolveTargetTable(relationshipNavigation, startingTable) {
+    if (!relationshipNavigation || !this.schema || !startingTable) {
+      return null;
+    }
+    
+    let currentTable = startingTable;
+    
+    for (const relationshipName of relationshipNavigation.relationshipChain) {
+      const relationship = this.findRelationshipInTable(currentTable, relationshipName);
+      if (!relationship) {
+        // Relationship not found, can't resolve further
+        return null;
+      }
+      currentTable = relationship.target_table_name;
+    }
+    
+    return currentTable;
   }
 
   /**
@@ -356,6 +431,54 @@ export class FormulaLanguageServer {
             kind: CompletionItemKindString.FIELD,
             detail: `${column.data_type} column`,
             documentation: `Column from ${tableName} table`,
+            insertText: column.column_name,
+            sortText: `1_${column.column_name}`
+          });
+        }
+      }
+    });
+
+    return completions;
+  }
+
+  /**
+   * Get related field completions (fields from related table via relationship navigation)
+   */
+  getRelatedFieldCompletions(targetTableName, prefix = '', relationshipNavigation, useMonacoFormat = true) {
+    if (!this.schema || !this.schema[targetTableName]) {
+      return [];
+    }
+
+    const completions = [];
+    const upperPrefix = prefix.toUpperCase();
+    const columns = this.schema[targetTableName].columns || [];
+    
+    // Build relationship path for documentation
+    const relationshipPath = relationshipNavigation.relationshipChain.join('_rel.') + '_rel';
+
+    columns.forEach(column => {
+      const columnName = column.column_name.toUpperCase();
+      // Match if column starts with prefix OR if prefix is a substring of column name
+      if (columnName.startsWith(upperPrefix) || columnName.includes(upperPrefix)) {
+        if (useMonacoFormat) {
+          completions.push({
+            label: column.column_name,
+            kind: CompletionItemKind.FIELD,
+            detail: `${column.data_type} field from ${targetTableName}`,
+            documentation: {
+              value: `**Related Field:** \`${column.column_name}\`\n\n**Type:** \`${column.data_type}\`\n\n**From Table:** \`${targetTableName}\`\n\n**Via:** \`${relationshipPath}\`\n\n**Usage:** Field from related ${targetTableName} records`
+            },
+            insertText: column.column_name,
+            sortText: `1_${column.column_name}`,
+            filterText: column.column_name,
+            range: null
+          });
+        } else {
+          completions.push({
+            label: column.column_name,
+            kind: CompletionItemKindString.FIELD,
+            detail: `${column.data_type} field from ${targetTableName}`,
+            documentation: `Related field from ${targetTableName} table via ${relationshipPath}`,
             insertText: column.column_name,
             sortText: `1_${column.column_name}`
           });
@@ -748,7 +871,7 @@ export class FormulaLanguageServer {
       });
     }
     
-    // Convert Symbol to string safely
+    // Fix Symbol conversion by properly converting to string
     const returnTypeStr = typeof metadata.returnType === 'symbol' 
       ? metadata.returnType.toString().replace('Symbol(', '').replace(')', '')
       : String(metadata.returnType);
@@ -759,4 +882,4 @@ export class FormulaLanguageServer {
 }
 
 // Export completion item kinds and diagnostic severities for use by clients
-export { CompletionItemKind, CompletionItemKindString, DiagnosticSeverity };
+export {  CompletionItemKind, CompletionItemKindString, DiagnosticSeverity  };
