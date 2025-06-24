@@ -33,6 +33,10 @@ class DeveloperToolsClient {
             
             // Initialize tools with current schema
             this.tools = createDeveloperTools('default', this.schema);
+            
+            // Expose LSP instance for direct access
+            this.lsp = this.tools.lsp;
+            
             this.isLoaded = true;
             
             console.log('✅ Developer tools loaded successfully');
@@ -42,6 +46,7 @@ class DeveloperToolsClient {
             console.error('❌ Failed to load developer tools:', error);
             // Create a fallback mock implementation
             this.tools = this._createFallbackTools();
+            this.lsp = null;
             this.isLoaded = false;
             return false;
         }

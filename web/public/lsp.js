@@ -748,7 +748,12 @@ export class FormulaLanguageServer {
       });
     }
     
-    markdown += `\n**Returns:** \`${metadata.returnType}\``;
+    // Convert Symbol to string safely
+    const returnTypeStr = typeof metadata.returnType === 'symbol' 
+      ? metadata.returnType.toString().replace('Symbol(', '').replace(')', '')
+      : String(metadata.returnType);
+    
+    markdown += `\n**Returns:** \`${returnTypeStr}\``;
     return markdown;
   }
 }

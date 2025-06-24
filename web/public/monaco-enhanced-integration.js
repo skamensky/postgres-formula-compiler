@@ -52,7 +52,14 @@ export class EnhancedMonacoIntegration {
             });
 
             // Initialize language services
-            languageServer = new FormulaLanguageServer();
+            // Use the shared LSP instance from developer tools client if available
+            if (window.developerToolsClient && window.developerToolsClient.lsp) {
+                languageServer = window.developerToolsClient.lsp;
+                console.log('✅ Using shared LSP instance from developer tools client');
+            } else {
+                languageServer = new FormulaLanguageServer();
+                console.log('⚠️ Created new LSP instance (developer tools client LSP not available)');
+            }
             syntaxHighlighter = new FormulaSyntaxHighlighter();
 
             // Register the language
@@ -168,7 +175,8 @@ export class EnhancedMonacoIntegration {
         this.editors.set(containerId, {
             editor,
             wrapper: editorWrapper,
-            tableName: null
+            tableName: null,
+            currentTable: null // Compatibility with existing code
         });
 
         // Set up change listener for diagnostics
@@ -240,11 +248,14 @@ export class EnhancedMonacoIntegration {
             
             // Enhanced methods
             setTableContext(tableName) {
-                const editorInfo = Array.from(this._monaco.getModel().editors || [])
-                    .find(info => info.editor === this._monaco);
-                if (editorInfo) {
-                    editorInfo.tableName = tableName;
+                // Find the container ID for this editor
+                for (const [containerId, editorInfo] of enhancedMonaco.editors) {
+                    if (editorInfo.editor === this._monaco) {
+                        enhancedMonaco.setTableContext(containerId, tableName);
+                        return;
+                    }
                 }
+                console.warn('⚠️ Could not find editor container for table context update');
             },
             
             updateSchema(schema) {
@@ -264,6 +275,9 @@ export class EnhancedMonacoIntegration {
      */
     async provideCompletions(model, position) {
         try {
+            // Ensure we're using the latest LSP instance
+            this.syncWithDeveloperToolsLSP();
+            
             const textUntilPosition = model.getValueInRange({
                 startLineNumber: 1,
                 startColumn: 1,
@@ -277,8 +291,8 @@ export class EnhancedMonacoIntegration {
             // Get table context
             const tableName = this.getTableContext(model);
             
-            // Get completions from LSP
-            const completions = await languageServer.getCompletions(
+            // Get completions from LSP (synchronous method)
+            const completions = languageServer.getCompletions(
                 fullText, 
                 offset, 
                 tableName, 
@@ -404,7 +418,9 @@ export class EnhancedMonacoIntegration {
         // Try to find editor info with table context
         for (const [containerId, editorInfo] of this.editors) {
             if (editorInfo.editor.getModel() === model) {
-                return editorInfo.tableName;
+                if (editorInfo.tableName) {
+                    return editorInfo.tableName;
+                }
             }
         }
         
@@ -418,8 +434,13 @@ export class EnhancedMonacoIntegration {
      */
     updateSchema(schema) {
         currentSchema = schema;
+        
+        // Try to sync with developer tools client LSP if available
+        this.syncWithDeveloperToolsLSP();
+        
         if (languageServer) {
             languageServer.updateSchema(schema);
+            console.log('🔧 Monaco LSP schema updated');
         }
         if (syntaxHighlighter) {
             syntaxHighlighter.updateSchema(schema);
@@ -432,13 +453,30 @@ export class EnhancedMonacoIntegration {
     }
 
     /**
+     * Sync with developer tools client LSP if available
+     */
+    syncWithDeveloperToolsLSP() {
+        if (window.developerToolsClient && window.developerToolsClient.lsp && 
+            languageServer !== window.developerToolsClient.lsp) {
+            console.log('🔄 Syncing Monaco with developer tools client LSP');
+            languageServer = window.developerToolsClient.lsp;
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Set table context for specific editor
      */
     setTableContext(containerId, tableName) {
         const editorInfo = this.editors.get(containerId);
         if (editorInfo) {
             editorInfo.tableName = tableName;
+            editorInfo.currentTable = tableName; // Compatibility
+            console.log(`🔧 Set table context for ${containerId}: ${tableName}`);
             this.updateDiagnostics(editorInfo.editor);
+        } else {
+            console.warn(`⚠️ Editor ${containerId} not found for table context update`);
         }
     }
 }

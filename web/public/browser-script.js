@@ -5,6 +5,7 @@
 
 import { initializeBrowserAPI, executeFormula, getTables, getTableSchema, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
 import { getExamplesForTable, getAllExamples, getExampleStats } from './modules/shared/examples.js';
+import { FUNCTION_METADATA } from './modules/compiler/function-metadata.js';
 
 // =============================================================================
 // APPLICATION STATE  
@@ -615,6 +616,10 @@ async function setupDeveloperTools() {
     console.log('🔧 Setting up developer tools integration...');
     
     try {
+        // Expose function metadata globally for autocomplete and LSP features
+        window.FUNCTION_METADATA = FUNCTION_METADATA;
+        console.log('✅ Function metadata exposed globally:', Object.keys(FUNCTION_METADATA).length, 'functions');
+        
         // Initialize developer tools client
         if (window.developerToolsClient) {
             await window.developerToolsClient.initialize();
@@ -636,9 +641,22 @@ async function setupDeveloperTools() {
                 // Store global reference for backward compatibility
                 window.formulaEditor = editor;
                 
-                // Set up table context if available
-                if (AppState.currentTable) {
-                    editor.setTableContext && editor.setTableContext(AppState.currentTable);
+                // Set up table context - use currently selected table
+                const currentTable = AppState.currentTable || document.getElementById('tableSelect')?.value;
+                if (currentTable) {
+                    console.log(`🔧 Setting Monaco editor table context to: ${currentTable}`);
+                    if (editor.setTableContext) {
+                        editor.setTableContext(currentTable);
+                    } else {
+                        // Fallback: set it directly on the editor info
+                        const editorInfo = Array.from(window.enhancedMonaco.editors.values())[0];
+                        if (editorInfo) {
+                            editorInfo.currentTable = currentTable;
+                            console.log('✅ Table context set via fallback method');
+                        }
+                    }
+                } else {
+                    console.warn('⚠️ No current table available for Monaco editor context');
                 }
             } else {
                 console.warn('⚠️ Failed to create Monaco editor');
@@ -1298,6 +1316,20 @@ window.loadAndExecuteExample = loadAndExecuteExample;
 
 function updateUIEnhancementsForTable(tableName) {
     try {
+        // Update Monaco editor table context
+        if (window.enhancedMonaco && window.enhancedMonaco.editors.size > 0) {
+            const editorInfo = Array.from(window.enhancedMonaco.editors.values())[0];
+            if (editorInfo) {
+                editorInfo.currentTable = tableName;
+                console.log(`🔧 Monaco editor table context updated to: ${tableName}`);
+                
+                // Also update via setTableContext if available
+                if (editorInfo.editor && editorInfo.editor.setTableContext) {
+                    editorInfo.editor.setTableContext(tableName);
+                }
+            }
+        }
+        
         // Update autocomplete with new table context
         if (window.autocomplete) {
             const formulaInput = document.getElementById('formulaInput');
