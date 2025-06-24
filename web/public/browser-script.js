@@ -3,7 +3,7 @@
  * Uses client-side modules for all processing - no server APIs needed!
  */
 
-import { initializeBrowserAPI, executeFormula, getTables, getTableSchema, validateFormula, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
+import { initializeBrowserAPI, executeFormula, getTables, getTableSchema, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
 import { getExamplesForTable, getAllExamples, getExampleStats } from './modules/shared/examples.js';
 
 // =============================================================================
@@ -212,7 +212,7 @@ async function initializeBrowser() {
         await loadTables();
         
         // Initialize developer tools integration
-        await initializeDeveloperToolsIntegration();
+        await setupDeveloperTools();
         
         console.log('🚀 Application ready!');
         
@@ -371,11 +371,18 @@ const LiveExecution = {
         
         // Validate formula syntax
         try {
-            const validation = await validateFormula(formula, tableName);
-            if (!validation.valid) {
-                this.showError(validation.error || 'Invalid formula syntax');
-                this.updateStatus('error', 'Invalid');
-                return;
+            // Use frontend-only validation via developer tools
+            const tools = getDeveloperTools();
+            if (tools) {
+                const diagnostics = tools.getDiagnostics(formula, tableName);
+                const hasErrors = diagnostics.some(d => d.severity === 'error');
+                
+                if (hasErrors) {
+                    const errorDiagnostic = diagnostics.find(d => d.severity === 'error');
+                    this.showError(errorDiagnostic.message || 'Invalid formula syntax');
+                    this.updateStatus('error', 'Invalid');
+                    return;
+                }
             }
         } catch (error) {
             this.showError(`Validation error: ${error.message}`);
@@ -604,29 +611,53 @@ const RecentFormulas = {
 // DEVELOPER TOOLS INTEGRATION 
 // =============================================================================
 
-async function initializeDeveloperToolsIntegration() {
+async function setupDeveloperTools() {
+    console.log('🔧 Setting up developer tools integration...');
+    
     try {
-        console.log('🔧 Setting up developer tools integration...');
-        
         // Initialize developer tools client
         if (window.developerToolsClient) {
             await window.developerToolsClient.initialize();
+            console.log('✅ Developer tools loaded successfully');
             
-            // Update schema for developer tools
-            await updateSchemaForDeveloperTools();
-            
-            console.log('🔧 Developer tools schema updated');
-            
-            // Initialize UI enhancements
-            await initializeUIEnhancements();
-        } else {
-            console.warn('⚠️ Developer tools client not available');
+            // Set up schema when tables are loaded
+            if (AppState.availableTables.length > 0) {
+                await updateSchemaForDeveloperTools();
+            }
         }
+        
+        // Create Monaco editor for formula input
+        console.log('🔧 Creating Monaco editor for formula input...');
+        if (window.enhancedMonaco && window.enhancedMonaco.createEditor) {
+            const editor = window.enhancedMonaco.createEditor('formulaInput');
+            if (editor) {
+                console.log('✅ Monaco editor created successfully');
+                
+                // Store global reference for backward compatibility
+                window.formulaEditor = editor;
+                
+                // Set up table context if available
+                if (AppState.currentTable) {
+                    editor.setTableContext && editor.setTableContext(AppState.currentTable);
+                }
+            } else {
+                console.warn('⚠️ Failed to create Monaco editor');
+            }
+        } else {
+            console.warn('⚠️ Enhanced Monaco not available for editor creation');
+        }
+        
+        // Initialize UI enhancements with a short delay to allow Monaco to settle
+        setTimeout(() => {
+            console.log('🎨 Initializing UI enhancements...');
+            setupUIEnhancements();
+        }, 500);
         
         console.log('✅ Developer tools ready');
         
     } catch (error) {
-        console.warn('⚠️ Developer tools integration failed:', error);
+        console.error('❌ Developer tools setup failed:', error);
+        // Continue anyway, app should still work without developer tools
     }
 }
 
@@ -1308,6 +1339,24 @@ window.initializeBrowserAPI = initializeBrowserAPI;
 window.executeFormula = executeFormula;
 window.getTables = getTables;
 window.getTableSchema = getTableSchema;
-window.validateFormula = validateFormula;
 window.getDeveloperTools = getDeveloperTools;
 window.updateDeveloperToolsSchema = updateDeveloperToolsSchema;
+
+function setupUIEnhancements() {
+    try {
+        // Set up dynamic formula input enhancement
+        setupDynamicEnhancement();
+        
+        // Enhance existing formula inputs
+        const formulaInputs = document.querySelectorAll('textarea[id*="formula"], input[id*="formula"]');
+        formulaInputs.forEach(input => {
+            if (!input.getAttribute('data-enhanced')) {
+                enhanceFormulaInput(input, AppState.currentTable);
+            }
+        });
+        
+        console.log('🎨 UI enhancements ready');
+    } catch (error) {
+        console.warn('⚠️ UI enhancement modules not available after waiting');
+    }
+}

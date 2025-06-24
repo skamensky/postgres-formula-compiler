@@ -112,9 +112,19 @@ export class FormulaSyntaxHighlighter {
             }
           }],
           
+          // Column names (lowercase identifiers) - better highlighting
           [/[a-z][a-zA-Z0-9_]*/, {
             cases: {
               '@keywords': 'keyword',
+              '@default': 'identifier'
+            }
+          }],
+          
+          // Mixed case identifiers (could be columns)
+          [/[a-zA-Z][a-zA-Z0-9_]*/, {
+            cases: {
+              '@functions': 'function',
+              '@keywords': 'keyword', 
               '@default': 'identifier'
             }
           }],

@@ -421,40 +421,6 @@ export async function getTableSchema(tableName) {
 }
 
 /**
- * Validate formula - replaces /api/validate
- */
-export async function validateFormula(formula, tableName) {
-    try {
-        if (!dbClient) {
-            throw new Error('Database not initialized');
-        }
-        
-        // Get minimal context for validation
-        const allTableNames = await getTableNames(dbClient);
-        const columnLists = await getColumnListsForTables(allTableNames, dbClient);
-        const allRelationships = await getAllRelationships(dbClient);
-        
-        // Build simplified context for validation
-        const context = {
-            tableName: tableName,
-            columnList: columnLists[tableName],
-            relationshipInfos: allRelationships,
-            tableInfos: [{ tableName, columnList: columnLists[tableName] }]
-        };
-        
-        // Try to compile formula
-        const compilation = evaluateFormula(formula, context);
-        return { valid: true, compilation: compilation };
-        
-    } catch (error) {
-        return { 
-            valid: false, 
-            error: error.message || error.toString() 
-        };
-    }
-}
-
-/**
  * Get developer tools instance
  */
 export function getDeveloperTools() {

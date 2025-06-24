@@ -94,10 +94,18 @@ const ApiService = {
     },
 
     async getTables() {
+        // Use browser API instead of server API
+        if (window.getTables) {
+            return window.getTables();
+        }
         return this.request('/api/tables');
     },
 
     async getTableSchema(tableName) {
+        // Use browser API instead of server API
+        if (window.getTableSchema) {
+            return window.getTableSchema(tableName);
+        }
         return this.request(`/api/tables/${tableName}/schema`);
     },
 
@@ -106,13 +114,27 @@ const ApiService = {
     },
 
     async validateFormula(formula, tableName) {
-        return this.request('/api/validate', {
-            method: 'POST',
-            body: JSON.stringify({ formula, tableName })
-        });
+        // Server-based validation no longer needed
+        // Use frontend-only validation via developer tools
+        if (window.getDeveloperTools) {
+            const tools = window.getDeveloperTools();
+            if (tools) {
+                const diagnostics = tools.getDiagnostics(formula, tableName);
+                const hasErrors = diagnostics.some(d => d.severity === 'error');
+                return {
+                    valid: !hasErrors,
+                    error: hasErrors ? diagnostics.find(d => d.severity === 'error').message : null
+                };
+            }
+        }
+        return { valid: true }; // Fallback
     },
 
     async executeFormula(formula, tableName) {
+        // Use browser API instead of server API
+        if (window.executeFormula) {
+            return window.executeFormula(formula, tableName);
+        }
         return this.request('/api/execute', {
             method: 'POST',
             body: JSON.stringify({ formula, tableName })
@@ -362,6 +384,26 @@ const Validation = {
 
     async validateFormula(formula, tableName, element) {
         try {
+            // Use frontend-only validation via developer tools
+            if (window.getDeveloperTools) {
+                const tools = window.getDeveloperTools();
+                if (tools) {
+                    const diagnostics = tools.getDiagnostics(formula, tableName);
+                    const hasErrors = diagnostics.some(d => d.severity === 'error');
+                    
+                    if (!hasErrors) {
+                        element.className = 'formula-input success';
+                        Utils.hideErrorTooltip();
+                    } else {
+                        const errorDiagnostic = diagnostics.find(d => d.severity === 'error');
+                        element.className = 'formula-input error';
+                        Utils.showErrorTooltip(element, errorDiagnostic.message || 'Invalid formula');
+                    }
+                    return;
+                }
+            }
+            
+            // Fallback: try basic compilation for validation
             const result = await ApiService.validateFormula(formula, tableName);
             
             if (result.valid) {
@@ -1148,15 +1190,39 @@ const DeveloperToolsIntegration = {
 
     async validateFormula(formula, tableName, editorWrapper) {
         try {
+            // Use frontend-only validation via developer tools
+            if (window.getDeveloperTools) {
+                const tools = window.getDeveloperTools();
+                if (tools) {
+                    const diagnostics = tools.getDiagnostics(formula, tableName);
+                    const hasErrors = diagnostics.some(d => d.severity === 'error');
+                    
+                    if (!hasErrors) {
+                        const container = editorWrapper._monaco.getDomNode().parentElement;
+                        container.classList.remove('error');
+                        container.classList.add('success');
+                        this.hideErrorMessage();
+                    } else {
+                        const errorDiagnostic = diagnostics.find(d => d.severity === 'error');
+                        const container = editorWrapper._monaco.getDomNode().parentElement;
+                        container.classList.remove('success');
+                        container.classList.add('error');
+                        this.showErrorMessage(errorDiagnostic.message || 'Invalid formula');
+                    }
+                    return;
+                }
+            }
+            
+            // Fallback: try basic compilation for validation
             const result = await ApiService.validateFormula(formula, tableName);
             
-            // Update visual feedback
-            const container = editorWrapper._monaco.getDomNode().parentElement;
             if (result.valid) {
+                const container = editorWrapper._monaco.getDomNode().parentElement;
                 container.classList.remove('error');
                 container.classList.add('success');
                 this.hideErrorMessage();
             } else {
+                const container = editorWrapper._monaco.getDomNode().parentElement;
                 container.classList.remove('success');
                 container.classList.add('error');
                 this.showErrorMessage(result.error);
@@ -1450,11 +1516,20 @@ const DeveloperToolsIntegration = {
 // APPLICATION INITIALIZATION
 // =============================================================================
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initializeApp() {
+    console.log('🎬 [MAIN] Starting application initialization...');
+    
     try {
-        console.log('🎬 [MAIN] Starting application initialization...');
+        // Initialize browser API first
+        if (window.initializeBrowserAPI) {
+            console.log('🎬 [MAIN] Initializing browser API...');
+            await window.initializeBrowserAPI();
+            console.log('🎬 [MAIN] Browser API initialized successfully');
+        } else {
+            console.warn('🎬 [MAIN] Browser API not available, will use server APIs');
+        }
         
-        // Initialize event listeners
+        // Set up event listeners
         console.log('🎬 [MAIN] Initializing event listeners...');
         EventListeners.init();
         
@@ -1462,7 +1537,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('🎬 [MAIN] Loading initial data...');
         await Tables.load();
         
-        // Initialize report builder with one row
+        // Initialize report builder
         console.log('🎬 [MAIN] Initializing report builder...');
         ReportBuilder.init();
         
@@ -1483,9 +1558,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
         
+        // Switch to first tab
+        UI.switchTab('compiler');
+        
         console.log('🚀 Interactive Formula Compiler with Developer Tools initialized');
         
     } catch (error) {
-        console.error('🎬 [MAIN] Application initialization failed:', error);
+        console.error('❌ Application initialization failed:', error);
+        // Show user-friendly error message
+        document.body.innerHTML = `
+            <div style="padding: 20px; text-align: center;">
+                <h2>Application Failed to Initialize</h2>
+                <p>There was an error starting the application. Please refresh the page and try again.</p>
+                <details>
+                    <summary>Technical Details</summary>
+                    <pre>${error.message}</pre>
+                </details>
+            </div>
+        `;
     }
-});
+}
+
+document.addEventListener('DOMContentLoaded', initializeApp);
