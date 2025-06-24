@@ -443,12 +443,20 @@ const FormulaCompiler = {
 
 const ReportBuilder = {
     init() {
-        // Initialize with one formula row
-        this.addFormulaRow();
+        // Initialize with one formula row only if formulaBuilder exists
+        const formulaBuilder = document.getElementById('formulaBuilder');
+        if (formulaBuilder) {
+            this.addFormulaRow();
+        }
     },
 
     addFormulaRow() {
         const formulaBuilder = document.getElementById('formulaBuilder');
+        if (!formulaBuilder) {
+            console.warn('formulaBuilder element not found, skipping row addition');
+            return;
+        }
+        
         const newRow = document.createElement('div');
         newRow.className = 'formula-row';
         newRow.innerHTML = `
@@ -883,6 +891,8 @@ const Tables = {
 
 const EventListeners = {
     init() {
+        console.log('🎬 [MAIN] Setting up event listeners...');
+        
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -890,36 +900,75 @@ const EventListeners = {
             });
         });
 
-        // Formula compiler
-        document.getElementById('executeBtn').addEventListener('click', FormulaCompiler.execute);
-        document.getElementById('clearBtn').addEventListener('click', FormulaCompiler.clear);
+        // Formula compiler - only if elements exist
+        const executeBtn = document.getElementById('executeBtn');
+        if (executeBtn) {
+            executeBtn.addEventListener('click', FormulaCompiler.execute);
+        }
+        
+        const clearBtn = document.getElementById('clearBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', FormulaCompiler.clear);
+        }
         
         // Table selection
-        document.getElementById('tableSelect').addEventListener('change', (e) => {
-            AppState.currentTable = e.target.value;
-        });
-        
-        // Report builder
-        document.getElementById('executeReportBtn').addEventListener('click', ReportBuilder.executeReport);
-        document.getElementById('clearReportBtn').addEventListener('click', ReportBuilder.clearReport);
-        document.getElementById('reportTableSelect').addEventListener('change', () => {
-            document.querySelectorAll('.formula-input').forEach(textarea => {
-                Validation.addToElement(textarea);
+        const tableSelect = document.getElementById('tableSelect');
+        if (tableSelect) {
+            tableSelect.addEventListener('change', (e) => {
+                AppState.currentTable = e.target.value;
             });
-        });
+        }
+        
+        // Report builder - only if elements exist
+        const executeReportBtn = document.getElementById('executeReportBtn');
+        if (executeReportBtn) {
+            executeReportBtn.addEventListener('click', ReportBuilder.executeReport);
+        }
+        
+        const clearReportBtn = document.getElementById('clearReportBtn');
+        if (clearReportBtn) {
+            clearReportBtn.addEventListener('click', ReportBuilder.clearReport);
+        }
+        
+        const reportTableSelect = document.getElementById('reportTableSelect');
+        if (reportTableSelect) {
+            reportTableSelect.addEventListener('change', () => {
+                document.querySelectorAll('.formula-input').forEach(textarea => {
+                    Validation.addToElement(textarea);
+                });
+            });
+        }
         
         // Schema browser
-        document.getElementById('schemaTableSelect').addEventListener('change', (e) => {
-            DatabaseSchema.loadTableSchema(e.target.value);
-        });
+        const schemaTableSelect = document.getElementById('schemaTableSelect');
+        if (schemaTableSelect) {
+            schemaTableSelect.addEventListener('change', (e) => {
+                DatabaseSchema.loadTableSchema(e.target.value);
+            });
+        }
         
-        // Database management
-        document.getElementById('dbType').addEventListener('change', (e) => {
-            const connectionStringGroup = document.getElementById('connectionStringGroup');
-            connectionStringGroup.style.display = e.target.value === 'postgresql' ? 'block' : 'none';
-        });
-        document.getElementById('testConnectionBtn').addEventListener('click', DatabaseManager.testConnection);
-        document.getElementById('switchDatabaseBtn').addEventListener('click', DatabaseManager.switchDatabase);
+        // Database management - only if elements exist
+        const dbType = document.getElementById('dbType');
+        if (dbType) {
+            dbType.addEventListener('change', (e) => {
+                const connectionStringGroup = document.getElementById('connectionStringGroup');
+                if (connectionStringGroup) {
+                    connectionStringGroup.style.display = e.target.value === 'postgresql' ? 'block' : 'none';
+                }
+            });
+        }
+        
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        if (testConnectionBtn) {
+            testConnectionBtn.addEventListener('click', DatabaseManager.testConnection);
+        }
+        
+        const switchDatabaseBtn = document.getElementById('switchDatabaseBtn');
+        if (switchDatabaseBtn) {
+            switchDatabaseBtn.addEventListener('click', DatabaseManager.switchDatabase);
+        }
+        
+        console.log('🎬 [MAIN] Event listeners set up successfully');
         
         // Note: Formula input event handling is now done in Monaco setup
     },
@@ -955,19 +1004,22 @@ const DeveloperToolsIntegration = {
         try {
             console.log('🔧 Initializing developer tools...');
             
-            // Initialize the developer tools client
-            await window.developerTools.initialize();
-            
-            // Initialize Enhanced Monaco Editor
+            // Initialize Enhanced Monaco Editor first (independent of developer tools)
             await this.setupMonacoEditor();
+            
+            // Try to initialize the developer tools client if available
+            if (window.developerTools) {
+                await window.developerTools.initialize();
+                console.log('✅ Developer tools initialized successfully');
+            } else {
+                console.log('⚠️ Developer tools not available, continuing with Monaco only');
+            }
             
             // Watch for new inputs (legacy support)
             this.setupDynamicAttachment();
             
             // Update schema
             await this.updateSchema();
-            
-            console.log('✅ Developer tools initialized successfully');
             
         } catch (error) {
             console.warn('⚠️ Failed to initialize developer tools:', error);
@@ -976,28 +1028,46 @@ const DeveloperToolsIntegration = {
 
     async setupMonacoEditor() {
         try {
+            console.log('🔧 [DEBUG] Starting setupMonacoEditor...');
+            
             // Wait for enhanced Monaco to be ready
-            while (!window.enhancedMonaco) {
+            console.log('🔧 [DEBUG] Waiting for enhanced Monaco...');
+            let waitTime = 0;
+            while (!window.enhancedMonaco && waitTime < 10000) {
                 await new Promise(resolve => setTimeout(resolve, 100));
+                waitTime += 100;
             }
+            
+            if (!window.enhancedMonaco) {
+                throw new Error('Enhanced Monaco not available after waiting 10 seconds');
+            }
+            
+            console.log('🔧 [DEBUG] Enhanced Monaco found, creating editor...');
             
             // Create enhanced editor for the main formula input
             const editorWrapper = window.enhancedMonaco.createEditor('formulaInput');
             
+            console.log('🔧 [DEBUG] createEditor returned:', editorWrapper ? 'success' : 'null');
+            
             if (editorWrapper) {
                 // Store reference for later access
                 window.formulaEditor = editorWrapper;
+                console.log('🔧 [DEBUG] Stored formulaEditor reference');
                 
                 // Set up event handlers for compatibility
                 this.setupEditorEventHandlers(editorWrapper);
+                console.log('🔧 [DEBUG] Event handlers set up');
                 
                 // Set initial table context
                 const currentTable = AppState.currentTable;
                 if (currentTable) {
                     window.enhancedMonaco.setTableContext('formulaInput', currentTable);
+                    console.log('🔧 [DEBUG] Table context set to:', currentTable);
                 }
                 
                 console.log('🚀 Enhanced Monaco Editor initialized');
+            } else {
+                console.error('🔧 [DEBUG] createEditor returned null - editor creation failed');
             }
         } catch (error) {
             console.error('Failed to setup enhanced Monaco editor:', error);
@@ -1299,34 +1369,62 @@ const DeveloperToolsIntegration = {
 
     async updateSchema() {
         try {
-            // Get current database schema
-            const schemaResponse = await fetch('/api/tables');
-            const { tables } = await schemaResponse.json();
+            // Try to get schema from browser API first (for client-side app)
+            let schema = null;
             
-            const schema = { tables: {}, relationships: [] };
-            
-            // Fetch detailed schema for each table
-            for (const tableName of tables) {
-                const tableResponse = await fetch(`/api/tables/${tableName}/schema`);
-                const tableData = await tableResponse.json();
+            if (window.browserAPI) {
+                // Get schema from browser API
+                const tables = await window.browserAPI.getTables();
+                schema = { tables: {}, relationships: [] };
                 
-                schema.tables[tableName] = {
-                    columns: tableData.columns || [],
-                    directRelationships: tableData.directRelationships || [],
-                    reverseRelationships: tableData.reverseRelationships || []
-                };
+                for (const tableName of tables) {
+                    const tableData = await window.browserAPI.getTableSchema(tableName);
+                    schema.tables[tableName] = {
+                        columns: tableData.columns || [],
+                        directRelationships: tableData.directRelationships || [],
+                        reverseRelationships: tableData.reverseRelationships || []
+                    };
+                    schema.relationships.push(...(tableData.directRelationships || []));
+                }
                 
-                schema.relationships.push(...(tableData.directRelationships || []));
+                console.log('📋 Schema loaded from browser API');
+            } else {
+                // Fallback to server API
+                const schemaResponse = await fetch('/api/tables');
+                const { tables } = await schemaResponse.json();
+                
+                schema = { tables: {}, relationships: [] };
+                
+                for (const tableName of tables) {
+                    const tableResponse = await fetch(`/api/tables/${tableName}/schema`);
+                    const tableData = await tableResponse.json();
+                    
+                    schema.tables[tableName] = {
+                        columns: tableData.columns || [],
+                        directRelationships: tableData.directRelationships || [],
+                        reverseRelationships: tableData.reverseRelationships || []
+                    };
+                    schema.relationships.push(...(tableData.directRelationships || []));
+                }
+                
+                console.log('📋 Schema loaded from server API');
             }
             
-            // Update all developer tools
-            window.developerTools.updateSchema(schema);
-            if (window.autocomplete) window.autocomplete.updateSchema(schema);
-            if (window.syntaxHighlighting) window.syntaxHighlighting.updateSchema(schema);
+            // Update all available tools
+            if (window.developerTools) {
+                window.developerTools.updateSchema(schema);
+            }
+            if (window.autocomplete) {
+                window.autocomplete.updateSchema(schema);
+            }
+            if (window.syntaxHighlighting) {
+                window.syntaxHighlighting.updateSchema(schema);
+            }
             
             // Update enhanced Monaco with schema
             if (window.enhancedMonaco) {
                 window.enhancedMonaco.updateSchema(schema);
+                console.log('📋 Enhanced Monaco schema updated');
             }
             
         } catch (error) {
@@ -1353,24 +1451,41 @@ const DeveloperToolsIntegration = {
 // =============================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize event listeners
-    EventListeners.init();
-    
-    // Load initial data
-    await Tables.load();
-    
-    // Initialize report builder with one row
-    ReportBuilder.init();
-    
-    // Initialize developer tools
-    await DeveloperToolsIntegration.init();
-    
-    // Listen for table changes to update developer tools context
-    document.addEventListener('change', (e) => {
-        if (e.target.matches('select[id*="table"]')) {
-            DeveloperToolsIntegration.onTableChange(e.target.value);
+    try {
+        console.log('🎬 [MAIN] Starting application initialization...');
+        
+        // Initialize event listeners
+        console.log('🎬 [MAIN] Initializing event listeners...');
+        EventListeners.init();
+        
+        // Load initial data
+        console.log('🎬 [MAIN] Loading initial data...');
+        await Tables.load();
+        
+        // Initialize report builder with one row
+        console.log('🎬 [MAIN] Initializing report builder...');
+        ReportBuilder.init();
+        
+        // Initialize developer tools
+        console.log('🎬 [MAIN] About to initialize developer tools...');
+        try {
+            await DeveloperToolsIntegration.init();
+            console.log('🎬 [MAIN] Developer tools initialization completed');
+        } catch (error) {
+            console.error('🎬 [MAIN] Developer tools initialization failed:', error);
         }
-    });
-    
-    console.log('🚀 Interactive Formula Compiler with Developer Tools initialized');
+        
+        // Listen for table changes to update developer tools context
+        console.log('🎬 [MAIN] Setting up table change listeners...');
+        document.addEventListener('change', (e) => {
+            if (e.target.matches('select[id*="table"]')) {
+                DeveloperToolsIntegration.onTableChange(e.target.value);
+            }
+        });
+        
+        console.log('🚀 Interactive Formula Compiler with Developer Tools initialized');
+        
+    } catch (error) {
+        console.error('🎬 [MAIN] Application initialization failed:', error);
+    }
 });
