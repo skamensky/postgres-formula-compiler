@@ -612,6 +612,58 @@ const RecentFormulas = {
 // DEVELOPER TOOLS INTEGRATION 
 // =============================================================================
 
+async function createMonacoEditorWithRetry() {
+    const maxRetries = 10;
+    let retries = 0;
+    
+    while (retries < maxRetries) {
+        if (window.enhancedMonaco && window.enhancedMonaco.createEditor) {
+            try {
+                const editor = window.enhancedMonaco.createEditor('formulaInput');
+                if (editor) {
+                    console.log('✅ Monaco editor created successfully');
+                    
+                    // Store global reference for backward compatibility
+                    window.formulaEditor = editor;
+                    
+                    // Set up table context - use currently selected table
+                    const currentTable = AppState.currentTable || document.getElementById('tableSelect')?.value;
+                    if (currentTable) {
+                        console.log(`🔧 Setting Monaco editor table context to: ${currentTable}`);
+                        if (editor.setTableContext) {
+                            editor.setTableContext(currentTable);
+                        } else {
+                            // Fallback: set it directly on the editor info
+                            const editorInfo = Array.from(window.enhancedMonaco.editors.values())[0];
+                            if (editorInfo) {
+                                editorInfo.currentTable = currentTable;
+                                console.log('✅ Table context set via fallback method');
+                            }
+                        }
+                    } else {
+                        console.warn('⚠️ No current table available for Monaco editor context');
+                    }
+                    return editor;
+                } else {
+                    console.warn(`⚠️ Failed to create Monaco editor (attempt ${retries + 1})`);
+                }
+            } catch (error) {
+                console.warn(`⚠️ Monaco editor creation error (attempt ${retries + 1}):`, error);
+            }
+        } else {
+            console.log(`⏳ Waiting for Enhanced Monaco to be available (attempt ${retries + 1}/${maxRetries})...`);
+        }
+        
+        retries++;
+        if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+    
+    console.warn('⚠️ Enhanced Monaco not available after maximum retries - continuing without Monaco editor');
+    return null;
+}
+
 async function setupDeveloperTools() {
     console.log('🔧 Setting up developer tools integration...');
     
@@ -631,39 +683,9 @@ async function setupDeveloperTools() {
             }
         }
         
-        // Create Monaco editor for formula input
+        // Create Monaco editor for formula input with retry logic
         console.log('🔧 Creating Monaco editor for formula input...');
-        if (window.enhancedMonaco && window.enhancedMonaco.createEditor) {
-            const editor = window.enhancedMonaco.createEditor('formulaInput');
-            if (editor) {
-                console.log('✅ Monaco editor created successfully');
-                
-                // Store global reference for backward compatibility
-                window.formulaEditor = editor;
-                
-                // Set up table context - use currently selected table
-                const currentTable = AppState.currentTable || document.getElementById('tableSelect')?.value;
-                if (currentTable) {
-                    console.log(`🔧 Setting Monaco editor table context to: ${currentTable}`);
-                    if (editor.setTableContext) {
-                        editor.setTableContext(currentTable);
-                    } else {
-                        // Fallback: set it directly on the editor info
-                        const editorInfo = Array.from(window.enhancedMonaco.editors.values())[0];
-                        if (editorInfo) {
-                            editorInfo.currentTable = currentTable;
-                            console.log('✅ Table context set via fallback method');
-                        }
-                    }
-                } else {
-                    console.warn('⚠️ No current table available for Monaco editor context');
-                }
-            } else {
-                console.warn('⚠️ Failed to create Monaco editor');
-            }
-        } else {
-            console.warn('⚠️ Enhanced Monaco not available for editor creation');
-        }
+        await createMonacoEditorWithRetry();
         
         // Initialize UI enhancements with a short delay to allow Monaco to settle
         setTimeout(() => {
