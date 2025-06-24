@@ -958,8 +958,8 @@ const DeveloperToolsIntegration = {
             // Initialize the developer tools client
             await window.developerTools.initialize();
             
-            // Initialize Monaco Editor
-            // await this.setupMonacoEditor(); // Using direct integration instead
+            // Initialize Enhanced Monaco Editor
+            await this.setupMonacoEditor();
             
             // Watch for new inputs (legacy support)
             this.setupDynamicAttachment();
@@ -976,29 +976,31 @@ const DeveloperToolsIntegration = {
 
     async setupMonacoEditor() {
         try {
-            // Wait for Monaco wrapper to be ready
-            while (!window.monacoWrapper) {
+            // Wait for enhanced Monaco to be ready
+            while (!window.enhancedMonaco) {
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
             
-            // Initialize Monaco editor for the main formula input
-            const formulaInputContainer = document.getElementById('formulaInput');
-            if (formulaInputContainer) {
-                const editorWrapper = window.monacoWrapper.createEditor('formulaInput');
-                
+            // Create enhanced editor for the main formula input
+            const editorWrapper = window.enhancedMonaco.createEditor('formulaInput');
+            
+            if (editorWrapper) {
                 // Store reference for later access
                 window.formulaEditor = editorWrapper;
-                
-                // Attach tooling
-                await this.attachToolingToEditor(editorWrapper);
                 
                 // Set up event handlers for compatibility
                 this.setupEditorEventHandlers(editorWrapper);
                 
-                console.log('🚀 Monaco Editor initialized');
+                // Set initial table context
+                const currentTable = AppState.currentTable;
+                if (currentTable) {
+                    window.enhancedMonaco.setTableContext('formulaInput', currentTable);
+                }
+                
+                console.log('🚀 Enhanced Monaco Editor initialized');
             }
         } catch (error) {
-            console.error('Failed to setup Monaco editor:', error);
+            console.error('Failed to setup enhanced Monaco editor:', error);
         }
     },
 
@@ -1319,8 +1321,13 @@ const DeveloperToolsIntegration = {
             
             // Update all developer tools
             window.developerTools.updateSchema(schema);
-            window.autocomplete.updateSchema(schema);
-            window.syntaxHighlighting.updateSchema(schema);
+            if (window.autocomplete) window.autocomplete.updateSchema(schema);
+            if (window.syntaxHighlighting) window.syntaxHighlighting.updateSchema(schema);
+            
+            // Update enhanced Monaco with schema
+            if (window.enhancedMonaco) {
+                window.enhancedMonaco.updateSchema(schema);
+            }
             
         } catch (error) {
             console.warn('Failed to update developer tools schema:', error);
@@ -1333,6 +1340,11 @@ const DeveloperToolsIntegration = {
         this.getFormulaInputs().forEach(textarea => {
             textarea.dataset.tableName = tableName;
         });
+        
+        // Update enhanced Monaco context
+        if (window.enhancedMonaco) {
+            window.enhancedMonaco.setTableContext('formulaInput', tableName);
+        }
     }
 };
 
