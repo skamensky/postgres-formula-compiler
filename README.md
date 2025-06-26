@@ -17,37 +17,13 @@ Complete documentation available in [`docs/`](docs/):
 
 
 
-## 🎯 Live Demo & Screenshots
+## 🎯 Live Demo
 
 > **🚀 [Live Demo Available](https://skamensky.github.io/postgres-formula-compiler/)** - Automatically deployed via GitHub Actions
 
 ### Formula Compiler Interface
 ![Formula Compiler](tests/playwright/screenshots/compiler-tab.png)
 *Interactive formula editor with live execution and autocomplete*
-
-### Language Tooling & Autocomplete  
-![Language Tooling](tests/playwright/screenshots/language-tooling-test.png)
-*Smart autocomplete with field names, relationships, and functions*
-
-![Autocomplete Details](tests/playwright/screenshots/autocomplete-final-test.png)
-*Advanced autocomplete showing function suggestions and documentation*
-
-### Live Execution & Error Handling
-![Live Execution](tests/playwright/screenshots/live-execution-test.png)
-*Real-time formula execution with immediate results*
-
-![Error Handling](tests/playwright/screenshots/live-execution-error.png)
-*Clear error messages with syntax highlighting*
-
-### Schema Browser & Examples
-![Schema Browser](tests/playwright/screenshots/schema-tab.png)
-*Interactive schema browser showing table relationships*
-
-![Examples Gallery](tests/playwright/screenshots/examples-tab.png)
-*Rich collection of formula examples organized by table*
-
-![Examples Functionality](tests/playwright/screenshots/examples-functionality.png)
-*One-click example loading with full context*
 
 ## 🌟 Features
 
