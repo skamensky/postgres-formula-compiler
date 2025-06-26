@@ -172,7 +172,8 @@ async function getInverseRelationshipsForTables(tableNames, client) {
             if (targetColumnList) {
                 nestedRelationshipInfo[sourceRel.name] = {
                     joinColumn: sourceRel.joinColumn,
-                    columnList: targetColumnList
+                    columnList: targetColumnList,
+                    tableName: sourceRel.toTable
                 };
             }
         }
