@@ -287,6 +287,17 @@ export function buildFrontend() {
     console.log('🔧 Copying tooling files...');
     copyDirectory(toolingDir, join(modulesDir, 'tooling'));
     
+    // Special handling for LSP - also copy to web/public/ for direct imports
+    console.log('📋 Copying LSP to direct location...');
+    const lspSourcePath = join(modulesDir, 'tooling', 'lsp.js');
+    const lspDirectPath = join(webDir, 'lsp.js');
+    
+    // Read the generated LSP file and fix import paths for direct location
+    let lspContent = readFileSync(lspSourcePath, 'utf8');
+    lspContent = lspContent.replace(/from '\.\.\/compiler\//g, "from './modules/compiler/");
+    writeFileSync(lspDirectPath, lspContent);
+    console.log(`   ${lspSourcePath} → ${lspDirectPath} (with path fixes)`);
+    
     console.log('📄 Shared modules (db-client.js, browser-api.js, seed.sql) are source files');
     
     // Extract formula examples
