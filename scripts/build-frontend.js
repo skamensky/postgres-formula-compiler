@@ -35,6 +35,19 @@ function copyJavaScriptFiles(sourceFile, targetFile) {
     
     let content = readFileSync(sourceFile, 'utf8');
     
+    // Add generation comment at the beginning
+    const relativePath = sourceFile.replace(projectRoot + '/', '');
+    const generationComment = `/**
+ * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY
+ * Generated from: ${relativePath}
+ * Build script: scripts/build-frontend.js
+ * 
+ * To make changes, edit the source file and run: npm run build:frontend
+ */
+
+`;
+    content = generationComment + content;
+    
     // Transform import paths for browser use
     // src/ files importing from src/ → ./
     // tooling/ files importing from ../src/ → ../compiler/

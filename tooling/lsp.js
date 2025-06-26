@@ -502,7 +502,18 @@ export class FormulaLanguageServer {
 
     const completions = [];
     const upperPrefix = prefix.toUpperCase();
-    const relationships = this.schema[tableName].directRelationships || [];
+    
+    // Try directRelationships first (new format)
+    let relationships = this.schema[tableName].directRelationships;
+    
+    // Fall back to relationships (old format)
+    if (!relationships) {
+      relationships = this.schema[tableName].relationships;
+    }
+    
+    if (!relationships) return [];
+    
+    relationships = relationships || [];
 
     relationships.forEach(rel => {
       const relName = `${rel.relationship_name}_rel`;
@@ -818,7 +829,16 @@ export class FormulaLanguageServer {
   findRelationshipInTable(tableName, relationshipName) {
     if (!this.schema || !this.schema[tableName]) return null;
     
-    const relationships = this.schema[tableName].directRelationships || [];
+    // Try directRelationships first (new format)
+    let relationships = this.schema[tableName].directRelationships;
+    
+    // Fall back to relationships (old format) 
+    if (!relationships) {
+      relationships = this.schema[tableName].relationships;
+    }
+    
+    if (!relationships) return null;
+    
     return relationships.find(rel => 
       rel.relationship_name.toLowerCase() === relationshipName.toLowerCase()
     );
@@ -831,7 +851,16 @@ export class FormulaLanguageServer {
     if (!this.schema) return null;
 
     for (const table of Object.values(this.schema)) {
-      const relationships = table.directRelationships || [];
+      // Try directRelationships first (new format)
+      let relationships = table.directRelationships;
+      
+      // Fall back to relationships (old format)
+      if (!relationships) {
+        relationships = table.relationships;
+      }
+      
+      if (!relationships) continue;
+      
       const found = relationships.find(rel => 
         rel.relationship_name.toLowerCase() === relationshipName.toLowerCase()
       );

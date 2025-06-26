@@ -1,4 +1,12 @@
 /**
+ * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY
+ * Generated from: tooling/lsp.js
+ * Build script: scripts/build-frontend.js
+ * 
+ * To make changes, edit the source file and run: npm run build:frontend
+ */
+
+/**
  * Language Server Protocol (LSP) Implementation
  * Provides autocomplete, error detection, and contextual help for formula language
  */
@@ -511,7 +519,7 @@ export class FormulaLanguageServer {
       relationships = this.schema[tableName].relationships;
     }
     
-    if (!relationships) return null;
+    if (!relationships) return [];
     
     relationships = relationships || [];
 
@@ -851,7 +859,16 @@ export class FormulaLanguageServer {
     if (!this.schema) return null;
 
     for (const table of Object.values(this.schema)) {
-      const relationships = table.directRelationships || [];
+      // Try directRelationships first (new format)
+      let relationships = table.directRelationships;
+      
+      // Fall back to relationships (old format)
+      if (!relationships) {
+        relationships = table.relationships;
+      }
+      
+      if (!relationships) continue;
+      
       const found = relationships.find(rel => 
         rel.relationship_name.toLowerCase() === relationshipName.toLowerCase()
       );
