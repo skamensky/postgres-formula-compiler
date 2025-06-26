@@ -635,6 +635,18 @@ const Examples = {
         UI.switchTab('compiler');
         document.getElementById('tableSelect').value = table;
         
+        // Clear any previous error states before loading new example
+        if (window.LiveExecution) {
+            window.LiveExecution.hideError();
+            window.LiveExecution.updateStatus('ready', 'Ready');
+        }
+        
+        // Clear previous results
+        const resultsElement = document.getElementById('formulaResults');
+        if (resultsElement) {
+            resultsElement.innerHTML = '';
+        }
+        
         // Set formula in Monaco editor if available, otherwise fallback to textarea
         try {
             if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {

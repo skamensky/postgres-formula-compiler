@@ -1433,6 +1433,16 @@ async function loadAndExecuteExample(exampleId) {
             }
         }
         
+        // Clear any previous error states before executing
+        LiveExecution.hideError();
+        LiveExecution.updateStatus('ready', 'Ready');
+        
+        // Clear previous results
+        const resultsElement = document.getElementById('formulaResults');
+        if (resultsElement) {
+            resultsElement.innerHTML = '';
+        }
+        
         // Wait a moment for UI to update
         await new Promise(resolve => setTimeout(resolve, 100));
         
