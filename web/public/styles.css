@@ -10,7 +10,7 @@ body {
     color: #333;
     background: 
         linear-gradient(135deg, rgba(102, 126, 234, 0.85) 0%, rgba(118, 75, 162, 0.85) 100%),
-        url('images/chameleon-3d.png') center center/cover no-repeat fixed;
+        url('images/chameleon-3d.jpg') center center/cover no-repeat fixed;
     min-height: 100vh;
 }
 

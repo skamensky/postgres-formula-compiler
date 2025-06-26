@@ -135,8 +135,8 @@ function copyImageAssets() {
         }
         
         // Copy background image  
-        const bgImageSource = join(imagesSourceDir, 'chameleon-3d.png');
-        const bgImageTarget = join(imagesTargetDir, 'chameleon-3d.png');
+        const bgImageSource = join(imagesSourceDir, 'chameleon-3d.jpg');
+        const bgImageTarget = join(imagesTargetDir, 'chameleon-3d.jpg');
         
         const bgImageContent = readFileSync(bgImageSource);
         writeFileSync(bgImageTarget, bgImageContent);
