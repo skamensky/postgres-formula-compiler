@@ -14,8 +14,26 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware for static files only
-app.use(express.static(join(__dirname, 'public')));
+// Configure MIME types for JavaScript modules
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js')) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  } else if (req.path.endsWith('.mjs')) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  }
+  next();
+});
+
+// Middleware for static files with proper options
+app.use(express.static(join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js') || path.endsWith('.mjs')) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    }
+  }
+}));
+
+// Monaco Editor now served from CDN - no local serving needed
 
 // Serve the main application
 app.get('/', (req, res) => {
@@ -32,9 +50,20 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Catch-all for SPA routing
+// Catch-all for SPA routing - only for HTML requests, not modules
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'public', 'index.html'));
+  // Don't intercept JavaScript module requests
+  if (req.path.endsWith('.js') || req.path.endsWith('.mjs') || req.path.includes('/modules/')) {
+    res.status(404).send('File not found');
+    return;
+  }
+  
+  // Only serve HTML for non-file requests
+  if (!req.path.includes('.') || req.path.endsWith('.html')) {
+    res.sendFile(join(__dirname, 'public', 'index.html'));
+  } else {
+    res.status(404).send('File not found');
+  }
 });
 
 // Start server with frontend build

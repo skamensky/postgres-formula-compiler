@@ -35,6 +35,19 @@ function copyJavaScriptFiles(sourceFile, targetFile) {
     
     let content = readFileSync(sourceFile, 'utf8');
     
+    // Add generation comment at the beginning
+    const relativePath = sourceFile.replace(projectRoot + '/', '');
+    const generationComment = `/**
+ * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY
+ * Generated from: ${relativePath}
+ * Build script: scripts/build-frontend.js
+ * 
+ * To make changes, edit the source file and run: npm run build:frontend
+ */
+
+`;
+    content = generationComment + content;
+    
     // Transform import paths for browser use
     // src/ files importing from src/ → ./
     // tooling/ files importing from ../src/ → ../compiler/
@@ -273,6 +286,17 @@ export function buildFrontend() {
     
     console.log('🔧 Copying tooling files...');
     copyDirectory(toolingDir, join(modulesDir, 'tooling'));
+    
+    // Special handling for LSP - also copy to web/public/ for direct imports
+    console.log('📋 Copying LSP to direct location...');
+    const lspSourcePath = join(modulesDir, 'tooling', 'lsp.js');
+    const lspDirectPath = join(webDir, 'lsp.js');
+    
+    // Read the generated LSP file and fix import paths for direct location
+    let lspContent = readFileSync(lspSourcePath, 'utf8');
+    lspContent = lspContent.replace(/from '\.\.\/compiler\//g, "from './modules/compiler/");
+    writeFileSync(lspDirectPath, lspContent);
+    console.log(`   ${lspSourcePath} → ${lspDirectPath} (with path fixes)`);
     
     console.log('📄 Shared modules (db-client.js, browser-api.js, seed.sql) are source files');
     

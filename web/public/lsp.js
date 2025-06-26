@@ -1,12 +1,20 @@
 /**
+ * AUTO-GENERATED FILE - DO NOT EDIT DIRECTLY
+ * Generated from: tooling/lsp.js
+ * Build script: scripts/build-frontend.js
+ * 
+ * To make changes, edit the source file and run: npm run build:frontend
+ */
+
+/**
  * Language Server Protocol (LSP) Implementation
  * Provides autocomplete, error detection, and contextual help for formula language
  */
 
-import { Lexer, TokenType } from '../src/lexer.js';
-import { Parser } from '../src/parser.js';
-import { FUNCTION_METADATA, FUNCTIONS, CATEGORIES } from '../src/function-metadata.js';
-import { TYPE } from '../src/types-unified.js';
+import { Lexer, TokenType } from './modules/compiler/lexer.js';
+import { Parser } from './modules/compiler/parser.js';
+import { FUNCTION_METADATA, FUNCTIONS, CATEGORIES } from './modules/compiler/function-metadata.js';
+import { TYPE } from './modules/compiler/types-unified.js';
 
 // LSP Response Types (Monaco/VS Code compatible)
 const CompletionItemKind = {
@@ -914,4 +922,4 @@ export class FormulaLanguageServer {
 }
 
 // Export completion item kinds and diagnostic severities for use by clients
-export { CompletionItemKind, CompletionItemKindString, DiagnosticSeverity };
+export {  CompletionItemKind, CompletionItemKindString, DiagnosticSeverity  };

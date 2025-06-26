@@ -3,8 +3,9 @@
  * Uses client-side modules for all processing - no server APIs needed!
  */
 
-import { initializeBrowserAPI, executeFormula, getTables, getTableSchema, validateFormula, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
+import { initializeBrowserAPI, executeFormula, getTables, getTableSchema, getDeveloperTools, updateDeveloperToolsSchema } from './modules/shared/browser-api.js';
 import { getExamplesForTable, getAllExamples, getExampleStats } from './modules/shared/examples.js';
+import { FUNCTION_METADATA } from './modules/compiler/function-metadata.js';
 
 // =============================================================================
 // APPLICATION STATE  
@@ -212,7 +213,7 @@ async function initializeBrowser() {
         await loadTables();
         
         // Initialize developer tools integration
-        await initializeDeveloperToolsIntegration();
+        await setupDeveloperTools();
         
         console.log('🚀 Application ready!');
         
@@ -309,7 +310,21 @@ const LiveExecution = {
         // Table change listener
         document.addEventListener('change', (e) => {
             if (e.target.id === 'tableSelect' && this.enabled) {
-                const formula = formulaInput.value.trim();
+                // Get formula from Monaco editor if available, otherwise from textarea
+                let formula;
+                try {
+                    if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                        formula = window.enhancedMonaco.editors.get('formulaInput').editor.getValue().trim();
+                    } else if (window.formulaEditor && window.formulaEditor.editor) {
+                        formula = window.formulaEditor.editor.getValue().trim();
+                    } else {
+                        formula = formulaInput.value.trim();
+                    }
+                } catch (error) {
+                    console.warn('Failed to get Monaco editor value in table change, using textarea:', error);
+                    formula = formulaInput.value.trim();
+                }
+                
                 if (formula) {
                     this.handleInput(formula);
                 }
@@ -371,11 +386,18 @@ const LiveExecution = {
         
         // Validate formula syntax
         try {
-            const validation = await validateFormula(formula, tableName);
-            if (!validation.valid) {
-                this.showError(validation.error || 'Invalid formula syntax');
-                this.updateStatus('error', 'Invalid');
-                return;
+            // Use frontend-only validation via developer tools
+            const tools = getDeveloperTools();
+            if (tools) {
+                const diagnostics = tools.getDiagnostics(formula, tableName);
+                const hasErrors = diagnostics.some(d => d.severity === 'error');
+                
+                if (hasErrors) {
+                    const errorDiagnostic = diagnostics.find(d => d.severity === 'error');
+                    this.showError(errorDiagnostic.message || 'Invalid formula syntax');
+                    this.updateStatus('error', 'Invalid');
+                    return;
+                }
             }
         } catch (error) {
             this.showError(`Validation error: ${error.message}`);
@@ -449,7 +471,21 @@ const LiveExecution = {
         
         if (this.enabled) {
             // If enabling, trigger immediate validation if there's content
-            const formula = document.getElementById('formulaInput').value.trim();
+            // Get formula from Monaco editor if available, otherwise from textarea
+            let formula;
+            try {
+                if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                    formula = window.enhancedMonaco.editors.get('formulaInput').editor.getValue().trim();
+                } else if (window.formulaEditor && window.formulaEditor.editor) {
+                    formula = window.formulaEditor.editor.getValue().trim();
+                } else {
+                    formula = document.getElementById('formulaInput').value.trim();
+                }
+            } catch (error) {
+                console.warn('Failed to get Monaco editor value in toggle, using textarea:', error);
+                formula = document.getElementById('formulaInput').value.trim();
+            }
+            
             if (formula) {
                 this.handleInput(formula);
             }
@@ -486,7 +522,22 @@ const LiveExecution = {
 
 const FormulaCompiler = {
     async execute() {
-        const formula = document.getElementById('formulaInput').value.trim();
+        // Get formula from Monaco editor if available, otherwise fallback to textarea
+        let formula;
+        try {
+            if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                formula = window.enhancedMonaco.editors.get('formulaInput').editor.getValue().trim();
+            } else if (window.formulaEditor && window.formulaEditor.editor) {
+                formula = window.formulaEditor.editor.getValue().trim();
+            } else {
+                // Fallback to regular textarea
+                formula = document.getElementById('formulaInput').value.trim();
+            }
+        } catch (error) {
+            console.warn('Failed to get Monaco editor value, using textarea fallback:', error);
+            formula = document.getElementById('formulaInput').value.trim();
+        }
+        
         const tableName = document.getElementById('tableSelect').value;
         
         if (!formula) {
@@ -520,7 +571,21 @@ const FormulaCompiler = {
     },
 
     clear() {
-        document.getElementById('formulaInput').value = '';
+        // Clear formula in Monaco editor if available, otherwise fallback to textarea
+        try {
+            if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                window.enhancedMonaco.editors.get('formulaInput').editor.setValue('');
+            } else if (window.formulaEditor && window.formulaEditor.editor) {
+                window.formulaEditor.editor.setValue('');
+            } else {
+                // Fallback to regular textarea
+                document.getElementById('formulaInput').value = '';
+            }
+        } catch (error) {
+            console.warn('Failed to clear Monaco editor, using textarea fallback:', error);
+            document.getElementById('formulaInput').value = '';
+        }
+        
         document.getElementById('formulaResults').innerHTML = '';
         
         // Clear live execution state
@@ -592,9 +657,33 @@ const RecentFormulas = {
         const formula = recent.find(item => item.id === id);
         
         if (formula) {
-            document.getElementById('formulaInput').value = formula.formula;
+            // Set formula in Monaco editor if available, otherwise fallback to textarea
+            try {
+                if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                    window.enhancedMonaco.editors.get('formulaInput').editor.setValue(formula.formula);
+                } else if (window.formulaEditor && window.formulaEditor.editor) {
+                    window.formulaEditor.editor.setValue(formula.formula);
+                } else {
+                    // Fallback to regular textarea
+                    document.getElementById('formulaInput').value = formula.formula;
+                }
+            } catch (error) {
+                console.warn('Failed to set Monaco editor value, using textarea fallback:', error);
+                document.getElementById('formulaInput').value = formula.formula;
+            }
+            
             document.getElementById('tableSelect').value = formula.tableName;
             AppState.currentTable = formula.tableName;
+            
+            // Update table context for Monaco editor
+            if (window.enhancedMonaco) {
+                try {
+                    window.enhancedMonaco.setTableContext('formulaInput', formula.tableName);
+                } catch (error) {
+                    console.warn('Failed to update Monaco table context:', error);
+                }
+            }
+            
             UI.switchTab('compiler');
         }
     }
@@ -604,29 +693,92 @@ const RecentFormulas = {
 // DEVELOPER TOOLS INTEGRATION 
 // =============================================================================
 
-async function initializeDeveloperToolsIntegration() {
+async function createMonacoEditorWithRetry() {
+    const maxRetries = 10;
+    let retries = 0;
+    
+    while (retries < maxRetries) {
+        if (window.enhancedMonaco && window.enhancedMonaco.createEditor) {
+            try {
+                const editor = window.enhancedMonaco.createEditor('formulaInput');
+                if (editor) {
+                    console.log('✅ Monaco editor created successfully');
+                    
+                    // Store global reference for backward compatibility
+                    window.formulaEditor = editor;
+                    
+                    // Set up table context - use currently selected table
+                    const currentTable = AppState.currentTable || document.getElementById('tableSelect')?.value;
+                    if (currentTable) {
+                        console.log(`🔧 Setting Monaco editor table context to: ${currentTable}`);
+                        if (editor.setTableContext) {
+                            editor.setTableContext(currentTable);
+                        } else {
+                            // Fallback: set it directly on the editor info
+                            const editorInfo = Array.from(window.enhancedMonaco.editors.values())[0];
+                            if (editorInfo) {
+                                editorInfo.currentTable = currentTable;
+                                console.log('✅ Table context set via fallback method');
+                            }
+                        }
+                    } else {
+                        console.warn('⚠️ No current table available for Monaco editor context');
+                    }
+                    return editor;
+                } else {
+                    console.warn(`⚠️ Failed to create Monaco editor (attempt ${retries + 1})`);
+                }
+            } catch (error) {
+                console.warn(`⚠️ Monaco editor creation error (attempt ${retries + 1}):`, error);
+            }
+        } else {
+            console.log(`⏳ Waiting for Enhanced Monaco to be available (attempt ${retries + 1}/${maxRetries})...`);
+        }
+        
+        retries++;
+        if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+    }
+    
+    console.warn('⚠️ Enhanced Monaco not available after maximum retries - continuing without Monaco editor');
+    return null;
+}
+
+async function setupDeveloperTools() {
+    console.log('🔧 Setting up developer tools integration...');
+    
     try {
-        console.log('🔧 Setting up developer tools integration...');
+        // Expose function metadata globally for autocomplete and LSP features
+        window.FUNCTION_METADATA = FUNCTION_METADATA;
+        console.log('✅ Function metadata exposed globally:', Object.keys(FUNCTION_METADATA).length, 'functions');
         
         // Initialize developer tools client
         if (window.developerToolsClient) {
             await window.developerToolsClient.initialize();
+            console.log('✅ Developer tools loaded successfully');
             
-            // Update schema for developer tools
-            await updateSchemaForDeveloperTools();
-            
-            console.log('🔧 Developer tools schema updated');
-            
-            // Initialize UI enhancements
-            await initializeUIEnhancements();
-        } else {
-            console.warn('⚠️ Developer tools client not available');
+            // Set up schema when tables are loaded
+            if (AppState.availableTables.length > 0) {
+                await updateSchemaForDeveloperTools();
+            }
         }
+        
+        // Create Monaco editor for formula input with retry logic
+        console.log('🔧 Creating Monaco editor for formula input...');
+        await createMonacoEditorWithRetry();
+        
+        // Initialize UI enhancements with a short delay to allow Monaco to settle
+        setTimeout(() => {
+            console.log('🎨 Initializing UI enhancements...');
+            setupUIEnhancements();
+        }, 500);
         
         console.log('✅ Developer tools ready');
         
     } catch (error) {
-        console.warn('⚠️ Developer tools integration failed:', error);
+        console.error('❌ Developer tools setup failed:', error);
+        // Continue anyway, app should still work without developer tools
     }
 }
 
@@ -890,7 +1042,21 @@ function setupEventListeners() {
                 FormulaCompiler.execute();
             } else {
                 // In live mode, Enter triggers immediate execution
-                const formula = e.target.value.trim();
+                // Get formula from Monaco editor if available, otherwise from textarea
+                let formula;
+                try {
+                    if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                        formula = window.enhancedMonaco.editors.get('formulaInput').editor.getValue().trim();
+                    } else if (window.formulaEditor && window.formulaEditor.editor) {
+                        formula = window.formulaEditor.editor.getValue().trim();
+                    } else {
+                        formula = e.target.value.trim();
+                    }
+                } catch (error) {
+                    console.warn('Failed to get Monaco editor value in keydown, using textarea:', error);
+                    formula = e.target.value.trim();
+                }
+                
                 if (formula) {
                     LiveExecution.validateAndExecute(formula, document.getElementById('tableSelect').value);
                 }
@@ -1233,10 +1399,48 @@ async function loadAndExecuteExample(exampleId) {
             AppState.currentTable = example.tableName;
         }
         
-        // Set the formula
-        const formulaInput = document.getElementById('formulaInput');
-        if (formulaInput) {
-            formulaInput.value = example.formula;
+        // Set the formula in Monaco editor if available, otherwise fallback to textarea
+        try {
+            if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                window.enhancedMonaco.editors.get('formulaInput').editor.setValue(example.formula);
+                console.log('📝 Example loaded into Monaco editor:', example.formula);
+            } else if (window.formulaEditor && window.formulaEditor.editor) {
+                window.formulaEditor.editor.setValue(example.formula);
+                console.log('📝 Example loaded into formula editor:', example.formula);
+            } else {
+                // Fallback to regular textarea
+                const formulaInput = document.getElementById('formulaInput');
+                if (formulaInput) {
+                    formulaInput.value = example.formula;
+                    console.log('📝 Example loaded into textarea (fallback):', example.formula);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to set Monaco editor value, using textarea fallback:', error);
+            const formulaInput = document.getElementById('formulaInput');
+            if (formulaInput) {
+                formulaInput.value = example.formula;
+            }
+        }
+        
+        // Update table context for Monaco editor
+        if (window.enhancedMonaco) {
+            try {
+                window.enhancedMonaco.setTableContext('formulaInput', example.tableName);
+                console.log('📊 Monaco table context updated to:', example.tableName);
+            } catch (error) {
+                console.warn('Failed to update Monaco table context:', error);
+            }
+        }
+        
+        // Clear any previous error states before executing
+        LiveExecution.hideError();
+        LiveExecution.updateStatus('ready', 'Ready');
+        
+        // Clear previous results
+        const resultsElement = document.getElementById('formulaResults');
+        if (resultsElement) {
+            resultsElement.innerHTML = '';
         }
         
         // Wait a moment for UI to update
@@ -1267,6 +1471,20 @@ window.loadAndExecuteExample = loadAndExecuteExample;
 
 function updateUIEnhancementsForTable(tableName) {
     try {
+        // Update Monaco editor table context
+        if (window.enhancedMonaco && window.enhancedMonaco.editors.size > 0) {
+            const editorInfo = Array.from(window.enhancedMonaco.editors.values())[0];
+            if (editorInfo) {
+                editorInfo.currentTable = tableName;
+                console.log(`🔧 Monaco editor table context updated to: ${tableName}`);
+                
+                // Also update via setTableContext if available
+                if (editorInfo.editor && editorInfo.editor.setTableContext) {
+                    editorInfo.editor.setTableContext(tableName);
+                }
+            }
+        }
+        
         // Update autocomplete with new table context
         if (window.autocomplete) {
             const formulaInput = document.getElementById('formulaInput');
@@ -1308,6 +1526,24 @@ window.initializeBrowserAPI = initializeBrowserAPI;
 window.executeFormula = executeFormula;
 window.getTables = getTables;
 window.getTableSchema = getTableSchema;
-window.validateFormula = validateFormula;
 window.getDeveloperTools = getDeveloperTools;
 window.updateDeveloperToolsSchema = updateDeveloperToolsSchema;
+
+function setupUIEnhancements() {
+    try {
+        // Set up dynamic formula input enhancement
+        setupDynamicEnhancement();
+        
+        // Enhance existing formula inputs
+        const formulaInputs = document.querySelectorAll('textarea[id*="formula"], input[id*="formula"]');
+        formulaInputs.forEach(input => {
+            if (!input.getAttribute('data-enhanced')) {
+                enhanceFormulaInput(input, AppState.currentTable);
+            }
+        });
+        
+        console.log('🎨 UI enhancements ready');
+    } catch (error) {
+        console.warn('⚠️ UI enhancement modules not available after waiting');
+    }
+}

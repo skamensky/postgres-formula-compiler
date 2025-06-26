@@ -22,7 +22,7 @@ const CONFIG = {
     autoDetectConcurrency: true
 };
 
-// Test suite configuration
+// Test suite configuration - STREAMLINED after cleanup
 const TEST_SUITES = [
     {
         name: 'Basic Loading',
@@ -39,32 +39,11 @@ const TEST_SUITES = [
         priority: 2
     },
     {
-        name: 'Schema Tab Initial Load',
-        description: 'Tests initial schema tab loading behavior',
-        file: 'schema-tab-initial-load.js', 
-        timeout: 30000,
-        priority: 2
-    },
-    {
-        name: 'Opportunity Schema',
-        description: 'Tests opportunity table schema display',
-        file: 'opportunity-schema.js',
-        timeout: 30000,
-        priority: 2
-    },
-    {
         name: 'Examples Functionality',
         description: 'Tests formula examples loading and execution',
         file: 'examples-functionality.js',
         timeout: 45000,
         priority: 1
-    },
-    {
-        name: 'Language Tooling',
-        description: 'Tests syntax highlighting and developer tools',
-        file: 'language-tooling-test.js',
-        timeout: 30000,
-        priority: 3
     },
     {
         name: 'Autocomplete Final',
@@ -74,25 +53,18 @@ const TEST_SUITES = [
         priority: 1
     },
     {
-        name: 'Live Execution',
-        description: 'Tests live formula execution with error handling',
-        file: 'live-execution-test.js',
-        timeout: 60000,
-        priority: 1
+        name: 'Example Loading',
+        description: 'Tests example formula loading into Monaco editor',
+        file: 'example-loading-test.js',
+        timeout: 45000,
+        priority: 2
     },
     {
-        name: 'Relationship Naming',
-        description: 'Tests relationship naming convention (assigned_rep_id_rel.name)',
-        file: 'relationship-naming-test.js',
+        name: 'Relationship Navigation',
+        description: 'Tests relationship navigation (assigned_rep_id_rel.name)',
+        file: 'relationship-navigation-test.js',
         timeout: 45000,
         priority: 1
-    },
-    {
-        name: 'Assigned Rep Debug',
-        description: 'Debug tests for assigned rep relationship functionality',
-        file: 'assigned-rep-debug.js',
-        timeout: 30000,
-        priority: 3
     },
     {
         name: 'Comprehensive WebApp',

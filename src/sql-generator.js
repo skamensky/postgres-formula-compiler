@@ -637,6 +637,9 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
     case FUNCTIONS.TODAY:
       return 'current_date';
       
+    case FUNCTIONS.NOW:
+      return 'current_timestamp';
+      
     case FUNCTIONS.ME:
       return "(select auth().uid())";
       
@@ -704,6 +707,12 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
       const isblankArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `(${isblankArgSQL} IS NULL OR ${isblankArgSQL} = '')`;
       
+    case FUNCTIONS.COALESCE:
+      const coalesceArgSQLs = expr.children.map(child => 
+        generateExpressionSQL(child, joinAliases, aggregateColumnMappings, baseTableName)
+      );
+      return `COALESCE(${coalesceArgSQLs.join(', ')})`;
+      
     case FUNCTIONS.AND:
       const andArgSQLs = expr.children.map(child => 
         generateExpressionSQL(child, joinAliases, aggregateColumnMappings, baseTableName)
@@ -730,6 +739,16 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
       const subOldSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
       const subNewSQL = generateExpressionSQL(expr.children[2], joinAliases, aggregateColumnMappings, baseTableName);
       return `REPLACE(${subTextSQL}, ${subOldSQL}, ${subNewSQL})`;
+      
+    case FUNCTIONS.STARTS_WITH:
+      const startsTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const startsPrefixSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `(${startsTextSQL} LIKE ${startsPrefixSQL} || '%')`;
+      
+    case FUNCTIONS.ENDS_WITH:
+      const endsTextSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const endsSuffixSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `(${endsTextSQL} LIKE '%' || ${endsSuffixSQL})`;
       
     case FUNCTIONS.ABS:
       const absArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
@@ -763,6 +782,46 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
       const floorArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `FLOOR(${floorArgSQL})`;
       
+    case FUNCTIONS.POWER:
+      const powerBaseSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const powerExpSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `POWER(${powerBaseSQL}, ${powerExpSQL})`;
+      
+    case FUNCTIONS.SQRT:
+      const sqrtArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `SQRT(${sqrtArgSQL})`;
+      
+    case FUNCTIONS.LOG:
+      const logArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `LN(${logArgSQL})`;
+      
+    case FUNCTIONS.LOG10:
+      const log10ArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `LOG(${log10ArgSQL})`;
+      
+    case FUNCTIONS.EXP:
+      const expArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXP(${expArgSQL})`;
+      
+    case FUNCTIONS.SIN:
+      const sinArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `SIN(${sinArgSQL})`;
+      
+    case FUNCTIONS.COS:
+      const cosArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `COS(${cosArgSQL})`;
+      
+    case FUNCTIONS.TAN:
+      const tanArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `TAN(${tanArgSQL})`;
+      
+    case FUNCTIONS.RANDOM:
+      return `RANDOM()`;
+      
+    case FUNCTIONS.SIGN:
+      const signArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `SIGN(${signArgSQL})`;
+      
     case FUNCTIONS.YEAR:
       const yearArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `EXTRACT(YEAR FROM ${yearArgSQL})`;
@@ -774,6 +833,23 @@ function generateFunctionSQL(expr, joinAliases, aggregateColumnMappings, baseTab
     case FUNCTIONS.DAY:
       const dayArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
       return `EXTRACT(DAY FROM ${dayArgSQL})`;
+      
+    case FUNCTIONS.HOUR:
+      const hourArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXTRACT(HOUR FROM ${hourArgSQL})`;
+      
+    case FUNCTIONS.MINUTE:
+      const minuteArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXTRACT(MINUTE FROM ${minuteArgSQL})`;
+      
+    case FUNCTIONS.SECOND:
+      const secondArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      return `EXTRACT(SECOND FROM ${secondArgSQL})`;
+      
+    case FUNCTIONS.FORMAT_DATE:
+      const formatDateSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);
+      const formatStringSQL = generateExpressionSQL(expr.children[1], joinAliases, aggregateColumnMappings, baseTableName);
+      return `TO_CHAR(${formatDateSQL}, ${formatStringSQL})`;
       
     case FUNCTIONS.WEEKDAY:
       const weekdayArgSQL = generateExpressionSQL(expr.children[0], joinAliases, aggregateColumnMappings, baseTableName);

@@ -4,8 +4,8 @@
  * Now Monaco/VS Code compatible
  */
 
-import { Lexer, TokenType } from '../src/lexer.js';
-import { FUNCTION_METADATA } from '../src/function-metadata.js';
+import { Lexer, TokenType } from './modules/compiler/lexer.js';
+import { FUNCTION_METADATA } from './modules/compiler/function-metadata.js';
 
 // Token style mapping
 const TokenStyles = {
@@ -112,19 +112,9 @@ export class FormulaSyntaxHighlighter {
             }
           }],
           
-          // Column names (lowercase identifiers) - better highlighting
           [/[a-z][a-zA-Z0-9_]*/, {
             cases: {
               '@keywords': 'keyword',
-              '@default': 'identifier'
-            }
-          }],
-          
-          // Mixed case identifiers (could be columns)
-          [/[a-zA-Z][a-zA-Z0-9_]*/, {
-            cases: {
-              '@functions': 'function',
-              '@keywords': 'keyword', 
               '@default': 'identifier'
             }
           }],
