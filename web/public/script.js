@@ -634,8 +634,36 @@ const Examples = {
     loadExample(formula, table) {
         UI.switchTab('compiler');
         document.getElementById('tableSelect').value = table;
-        document.getElementById('formulaInput').value = formula;
+        
+        // Set formula in Monaco editor if available, otherwise fallback to textarea
+        try {
+            if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                window.enhancedMonaco.editors.get('formulaInput').editor.setValue(formula);
+                console.log('📝 Example loaded into Monaco editor:', formula);
+            } else if (window.formulaEditor && window.formulaEditor.editor) {
+                window.formulaEditor.editor.setValue(formula);
+                console.log('📝 Example loaded into formula editor:', formula);
+            } else {
+                // Fallback to regular textarea
+                document.getElementById('formulaInput').value = formula;
+                console.log('📝 Example loaded into textarea (fallback):', formula);
+            }
+        } catch (error) {
+            console.warn('Failed to set Monaco editor value, using textarea fallback:', error);
+            document.getElementById('formulaInput').value = formula;
+        }
+        
         AppState.currentTable = table;
+        
+        // Update table context for Monaco editor
+        if (window.enhancedMonaco) {
+            try {
+                window.enhancedMonaco.setTableContext('formulaInput', table);
+                console.log('📊 Table context updated to:', table);
+            } catch (error) {
+                console.warn('Failed to update table context:', error);
+            }
+        }
     }
 };
 
