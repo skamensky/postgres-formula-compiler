@@ -103,8 +103,9 @@ async function getAllRelationships(client) {
   const relationships = [];
   
   for (const row of result.rows) {
-    // Use the base name (without _id suffix) as the relationship name
-    const relationshipName = row.source_column.replace(/_id$/, '');
+    // Use the full column name as the relationship name (matching frontend behavior)
+    // This ensures compatibility between frontend and command-line tools
+    const relationshipName = row.source_column;
     
     relationships.push({
       name: relationshipName,
