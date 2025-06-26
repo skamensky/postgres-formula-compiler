@@ -24,6 +24,7 @@ function createDirectories() {
     
     mkdirSync(join(modulesDir, 'compiler'), { recursive: true });
     mkdirSync(join(modulesDir, 'tooling'), { recursive: true });
+    mkdirSync(join(webDir, 'images'), { recursive: true });
     // Note: shared/ is now source code, not auto-generated
 }
 
@@ -110,6 +111,41 @@ function copyDirectory(sourceDir, targetDir, transformJs = true) {
                 writeFileSync(targetPath, content);
             }
         }
+    }
+}
+
+/**
+ * Copy image assets for the frontend
+ */
+function copyImageAssets() {
+    console.log('🖼️  Copying image assets...');
+    
+    const imagesSourceDir = join(projectRoot, 'docs', 'images');
+    const imagesTargetDir = join(webDir, 'images');
+    
+    try {
+        // Copy favicon
+        const faviconSource = join(imagesSourceDir, 'chameleon.ico');
+        const faviconTarget = join(webDir, 'favicon.ico'); // Place in root for standard favicon location
+        
+        if (readFileSync && writeFileSync) {
+            const faviconContent = readFileSync(faviconSource);
+            writeFileSync(faviconTarget, faviconContent);
+            console.log(`   favicon: ${faviconSource} → ${faviconTarget}`);
+        }
+        
+        // Copy background image  
+        const bgImageSource = join(imagesSourceDir, 'chameleon-3d.png');
+        const bgImageTarget = join(imagesTargetDir, 'chameleon-3d.png');
+        
+        const bgImageContent = readFileSync(bgImageSource);
+        writeFileSync(bgImageTarget, bgImageContent);
+        console.log(`   background: ${bgImageSource} → ${bgImageTarget}`);
+        
+        console.log('   ✅ Image assets copied successfully');
+        
+    } catch (error) {
+        console.warn(`   ⚠️  Could not copy image assets: ${error.message}`);
     }
 }
 
@@ -299,6 +335,9 @@ export function buildFrontend() {
     console.log(`   ${lspSourcePath} → ${lspDirectPath} (with path fixes)`);
     
     console.log('📄 Shared modules (db-client.js, browser-api.js, seed.sql) are source files');
+    
+    // Copy image assets
+    copyImageAssets();
     
     // Extract formula examples
     const examples = extractFormulaExamples();

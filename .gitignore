@@ -8,3 +8,5 @@ web/public/modules/tooling/
 web/public/modules/shared/examples.js
 # Playwright test artifacts (can be regenerated)
 tests/playwright/debug/
+web/public/favicon.ico
+web/public/images/
