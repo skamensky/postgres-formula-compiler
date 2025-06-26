@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enhanced LSP Diagnostic Test</title>
+</head>
+<body>
+    <h1>Enhanced LSP Relationship Navigation Diagnostic</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        const resultsDiv = document.getElementById('results');
+        
+        function log(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            resultsDiv.appendChild(p);
+            console.log(message);
+        }
+        
+        async function runEnhancedDiagnostic() {
+            log('🚀 Starting Enhanced LSP Diagnostic...');
+            
+            try {
+                const { FormulaLanguageServer } = await import('./lsp.js');
+                log('✅ LSP module imported successfully');
+                
+                const mockSchema = {
+                    customer: {
+                        columns: [
+                            { column_name: 'id', data_type: 'integer' },
+                            { column_name: 'first_name', data_type: 'text' },
+                            { column_name: 'assigned_rep_id', data_type: 'integer' }
+                        ],
+                        directRelationships: [
+                            { relationship_name: 'assigned_rep_id', target_table_name: 'rep' }
+                        ]
+                    },
+                    rep: {
+                        columns: [
+                            { column_name: 'id', data_type: 'integer' },
+                            { column_name: 'name', data_type: 'text' },
+                            { column_name: 'commission_rate', data_type: 'decimal' }
+                        ]
+                    }
+                };
+                
+                const lsp = new FormulaLanguageServer(mockSchema);
+                log('✅ LSP instance created');
+                
+                // Test context analysis in detail
+                log('\n🔍 Testing context analysis...');
+                
+                const testCases = [
+                    'assigned_rep_id_rel.',
+                    'assigned_rep_id_rel.n',
+                    'assigned_rep_id_rel.name'
+                ];
+                
+                for (const testCase of testCases) {
+                    log(`\n📝 Test case: "${testCase}"`);
+                    const position = testCase.length;
+                    
+                    // Analyze context
+                    const context = lsp.analyzeContext(testCase, position);
+                    log(`   • prefix: "${context.prefix}"`);
+                    log(`   • expectingIdentifier: ${context.expectingIdentifier}`);
+                    log(`   • expectingFunction: ${context.expectingFunction}`);
+                    log(`   • relationshipNavigation: ${!!context.relationshipNavigation}`);
+                    
+                    if (context.relationshipNavigation) {
+                        log(`   • relationshipChain: [${context.relationshipNavigation.relationshipChain.join(', ')}]`);
+                        log(`   • fullMatch: "${context.relationshipNavigation.fullMatch}"`);
+                    }
+                    
+                    // Test full getCompletions
+                    const completions = lsp.getCompletions(testCase, position, 'customer', false);
+                    log(`   • Total completions: ${completions.length}`);
+                    
+                    const fieldCompletions = completions.filter(c => c.kind === 'field');
+                    log(`   • Field completions: ${fieldCompletions.length}`);
+                    
+                    if (fieldCompletions.length > 0) {
+                        log(`   • First 3 field completions: ${fieldCompletions.slice(0, 3).map(c => c.label).join(', ')}`);
+                    }
+                }
+                
+                log('\n🎉 Enhanced diagnostic complete!');
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+                log(`Stack: ${error.stack}`);
+            }
+        }
+        
+        runEnhancedDiagnostic();
+    </script>
+</body>
+</html>

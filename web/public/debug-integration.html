@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Integration Test</title>
+</head>
+<body>
+    <h1>Debug Integration Test</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        const resultsDiv = document.getElementById('results');
+        
+        function log(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            resultsDiv.appendChild(p);
+            console.log(message);
+        }
+        
+        async function runDebugTest() {
+            log('🔍 Starting Debug Integration Test...');
+            
+            try {
+                const { FormulaLanguageServer } = await import('./lsp.js');
+                
+                const mockSchema = {
+                    customer: {
+                        columns: [
+                            { column_name: 'id', data_type: 'integer' },
+                            { column_name: 'first_name', data_type: 'text' },
+                            { column_name: 'assigned_rep_id', data_type: 'integer' }
+                        ],
+                        directRelationships: [
+                            { relationship_name: 'assigned_rep_id', target_table_name: 'rep' }
+                        ]
+                    },
+                    rep: {
+                        columns: [
+                            { column_name: 'id', data_type: 'integer' },
+                            { column_name: 'name', data_type: 'text' },
+                            { column_name: 'commission_rate', data_type: 'decimal' }
+                        ]
+                    }
+                };
+                
+                const lsp = new FormulaLanguageServer(mockSchema);
+                
+                // Test the exact case that's failing
+                const testText = 'assigned_rep_id_rel.';
+                const position = testText.length;
+                
+                log(`📝 Testing: "${testText}" at position ${position}`);
+                
+                // Debug context
+                const context = lsp.analyzeContext(testText, position);
+                log(`🔍 Context analysis:`);
+                log(`   • prefix: "${context.prefix}"`);
+                log(`   • expectingIdentifier: ${context.expectingIdentifier}`);
+                log(`   • expectingFunction: ${context.expectingFunction}`);
+                log(`   • relationshipNavigation: ${JSON.stringify(context.relationshipNavigation)}`);
+                
+                // Check the condition
+                const condition1 = !!context.relationshipNavigation;
+                const condition2 = context.expectingIdentifier;
+                const condition3 = context.relationshipNavigation?.hasRelationshipNavigation;
+                const finalCondition = condition1 && (condition2 || condition3);
+                
+                log(`🧮 Condition analysis:`);
+                log(`   • context.relationshipNavigation exists: ${condition1}`);
+                log(`   • context.expectingIdentifier: ${condition2}`);
+                log(`   • hasRelationshipNavigation: ${condition3}`);
+                log(`   • Final condition (should enter branch): ${finalCondition}`);
+                
+                // Test getCompletions
+                const completions = lsp.getCompletions(testText, position, 'customer', false);
+                log(`📊 getCompletions result: ${completions.length} total completions`);
+                
+                const fieldCompletions = completions.filter(c => c.kind === 'field');
+                log(`   • Field completions: ${fieldCompletions.length}`);
+                
+                if (fieldCompletions.length > 0) {
+                    fieldCompletions.slice(0, 3).forEach((comp, i) => {
+                        log(`   • Field ${i + 1}: ${comp.label} (${comp.detail})`);
+                    });
+                } else {
+                    log(`   • No field completions found`);
+                    
+                    // Let's see what we got instead
+                    completions.slice(0, 5).forEach((comp, i) => {
+                        log(`   • Completion ${i + 1}: ${comp.label} (${comp.kind})`);
+                    });
+                }
+                
+                log('🎯 Debug test complete!');
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+                log(`Stack: ${error.stack}`);
+            }
+        }
+        
+        runDebugTest();
+    </script>
+</body>
+</html>

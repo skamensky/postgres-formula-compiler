@@ -8,6 +8,17 @@ DROP TABLE IF EXISTS listing CASCADE;
 DROP TABLE IF EXISTS customer CASCADE;
 DROP TABLE IF EXISTS rep CASCADE;
 DROP TABLE IF EXISTS app_user CASCADE;
+
+-- Mock auth() function to return dummy user ID for development
+-- we use supabase so this would usually point to an auth schema with a user id
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE OR REPLACE FUNCTION auth.uid()
+RETURNS INTEGER AS $$
+BEGIN
+  RETURN 123;
+END;
+$$ LANGUAGE plpgsql;
+
  
 -- Core user table
 CREATE TABLE app_user (

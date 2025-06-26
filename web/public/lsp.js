@@ -61,20 +61,23 @@ export class FormulaLanguageServer {
       const completions = [];
 
       // Check if we're in relationship navigation context
-      if (context.relationshipNavigation && context.expectingIdentifier) {
+      if (context.relationshipNavigation && (context.expectingIdentifier || context.relationshipNavigation.hasRelationshipNavigation)) {
         // We're after a relationship like "assigned_rep_id_rel."
         // Get completions from the target table
         const targetTable = this.resolveTargetTable(context.relationshipNavigation, tableName);
         
         if (targetTable) {
           console.log(`🔗 Relationship navigation: ${tableName} → ${targetTable} via ${context.relationshipNavigation.relationshipChain.join(' → ')}`);
+          console.log(`🔍 Context prefix: "${context.prefix}"`);
           
           // Get related field completions from target table
           const relatedFields = this.getRelatedFieldCompletions(targetTable, context.prefix, context.relationshipNavigation, useMonacoFormat);
+          console.log(`📊 Related fields found: ${relatedFields.length}`);
           completions.push(...relatedFields);
           
           // Also get relationship completions from target table (for nested navigation)
           const nestedRels = this.getRelationshipCompletions(targetTable, context.prefix, useMonacoFormat);
+          console.log(`📊 Nested relationships found: ${nestedRels.length}`);
           completions.push(...nestedRels);
         } else {
           console.warn(`⚠️ Could not resolve target table for relationship navigation: ${context.relationshipNavigation.relationshipChain.join(' → ')}`);
@@ -499,7 +502,18 @@ export class FormulaLanguageServer {
 
     const completions = [];
     const upperPrefix = prefix.toUpperCase();
-    const relationships = this.schema[tableName].directRelationships || [];
+    
+    // Try directRelationships first (new format)
+    let relationships = this.schema[tableName].directRelationships;
+    
+    // Fall back to relationships (old format)
+    if (!relationships) {
+      relationships = this.schema[tableName].relationships;
+    }
+    
+    if (!relationships) return null;
+    
+    relationships = relationships || [];
 
     relationships.forEach(rel => {
       const relName = `${rel.relationship_name}_rel`;
@@ -815,7 +829,16 @@ export class FormulaLanguageServer {
   findRelationshipInTable(tableName, relationshipName) {
     if (!this.schema || !this.schema[tableName]) return null;
     
-    const relationships = this.schema[tableName].directRelationships || [];
+    // Try directRelationships first (new format)
+    let relationships = this.schema[tableName].directRelationships;
+    
+    // Fall back to relationships (old format) 
+    if (!relationships) {
+      relationships = this.schema[tableName].relationships;
+    }
+    
+    if (!relationships) return null;
+    
     return relationships.find(rel => 
       rel.relationship_name.toLowerCase() === relationshipName.toLowerCase()
     );

@@ -1,0 +1,103 @@
+
+> js-to-sql-formula-compiler@1.0.0 dev
+> npm run build && npm run serve
+
+
+> js-to-sql-formula-compiler@1.0.0 build
+> node scripts/build-frontend.js
+
+🏗️  Building frontend modules...
+
+📁 Creating module directories...
+📦 Copying compiler files...
+   /workspace/src/compiler.js → /workspace/web/public/modules/compiler/compiler.js
+   /workspace/src/function-dispatcher.js → /workspace/web/public/modules/compiler/function-dispatcher.js
+   /workspace/src/function-metadata.js → /workspace/web/public/modules/compiler/function-metadata.js
+   /workspace/src/functions/aggregate-functions.js → /workspace/web/public/modules/compiler/functions/aggregate-functions.js
+   /workspace/src/functions/core-functions.js → /workspace/web/public/modules/compiler/functions/core-functions.js
+   /workspace/src/functions/date-functions.js → /workspace/web/public/modules/compiler/functions/date-functions.js
+   /workspace/src/functions/logical-functions.js → /workspace/web/public/modules/compiler/functions/logical-functions.js
+   /workspace/src/functions/math-functions.js → /workspace/web/public/modules/compiler/functions/math-functions.js
+   /workspace/src/functions/null-functions.js → /workspace/web/public/modules/compiler/functions/null-functions.js
+   /workspace/src/functions/string-functions.js → /workspace/web/public/modules/compiler/functions/string-functions.js
+   /workspace/src/index.js → /workspace/web/public/modules/compiler/index.js
+   /workspace/src/lexer.js → /workspace/web/public/modules/compiler/lexer.js
+   /workspace/src/parser.js → /workspace/web/public/modules/compiler/parser.js
+   /workspace/src/relationship-compiler.js → /workspace/web/public/modules/compiler/relationship-compiler.js
+   /workspace/src/sql-generator.js → /workspace/web/public/modules/compiler/sql-generator.js
+   /workspace/src/types-unified.js → /workspace/web/public/modules/compiler/types-unified.js
+   /workspace/src/utils.js → /workspace/web/public/modules/compiler/utils.js
+🔧 Copying tooling files...
+   /workspace/tooling/developer-tools.js → /workspace/web/public/modules/tooling/developer-tools.js
+   /workspace/tooling/formatter.js → /workspace/web/public/modules/tooling/formatter.js
+   /workspace/tooling/lsp.js → /workspace/web/public/modules/tooling/lsp.js
+   /workspace/tooling/syntax-highlighter.js → /workspace/web/public/modules/tooling/syntax-highlighter.js
+📄 Shared modules (db-client.js, browser-api.js, seed.sql) are source files
+📝 Extracting formula examples...
+   📊 Processing customer table...
+      ✅ Found 5 examples
+   📊 Processing listing table...
+      ✅ Found 6 examples
+   📊 Processing opportunity table...
+      ✅ Found 3 examples
+   📊 Processing rep table...
+      ✅ Found 3 examples
+   ✅ Generated examples module with 17 examples
+
+✅ Frontend build complete!
+📁 Modules available at: web/public/modules/
+🚀 Ready for client-side compilation!
+
+📝 Extracted 17 formula examples across 4 tables
+
+> js-to-sql-formula-compiler@1.0.0 serve
+> node web/server.js
+
+🏗️  Building frontend modules...
+🏗️  Building frontend modules...
+
+📁 Creating module directories...
+📦 Copying compiler files...
+   /workspace/src/compiler.js → /workspace/web/public/modules/compiler/compiler.js
+   /workspace/src/function-dispatcher.js → /workspace/web/public/modules/compiler/function-dispatcher.js
+   /workspace/src/function-metadata.js → /workspace/web/public/modules/compiler/function-metadata.js
+   /workspace/src/functions/aggregate-functions.js → /workspace/web/public/modules/compiler/functions/aggregate-functions.js
+   /workspace/src/functions/core-functions.js → /workspace/web/public/modules/compiler/functions/core-functions.js
+   /workspace/src/functions/date-functions.js → /workspace/web/public/modules/compiler/functions/date-functions.js
+   /workspace/src/functions/logical-functions.js → /workspace/web/public/modules/compiler/functions/logical-functions.js
+   /workspace/src/functions/math-functions.js → /workspace/web/public/modules/compiler/functions/math-functions.js
+   /workspace/src/functions/null-functions.js → /workspace/web/public/modules/compiler/functions/null-functions.js
+   /workspace/src/functions/string-functions.js → /workspace/web/public/modules/compiler/functions/string-functions.js
+   /workspace/src/index.js → /workspace/web/public/modules/compiler/index.js
+   /workspace/src/lexer.js → /workspace/web/public/modules/compiler/lexer.js
+   /workspace/src/parser.js → /workspace/web/public/modules/compiler/parser.js
+   /workspace/src/relationship-compiler.js → /workspace/web/public/modules/compiler/relationship-compiler.js
+   /workspace/src/sql-generator.js → /workspace/web/public/modules/compiler/sql-generator.js
+   /workspace/src/types-unified.js → /workspace/web/public/modules/compiler/types-unified.js
+   /workspace/src/utils.js → /workspace/web/public/modules/compiler/utils.js
+🔧 Copying tooling files...
+   /workspace/tooling/developer-tools.js → /workspace/web/public/modules/tooling/developer-tools.js
+   /workspace/tooling/formatter.js → /workspace/web/public/modules/tooling/formatter.js
+   /workspace/tooling/lsp.js → /workspace/web/public/modules/tooling/lsp.js
+   /workspace/tooling/syntax-highlighter.js → /workspace/web/public/modules/tooling/syntax-highlighter.js
+📄 Shared modules (db-client.js, browser-api.js, seed.sql) are source files
+📝 Extracting formula examples...
+   📊 Processing customer table...
+      ✅ Found 5 examples
+   📊 Processing listing table...
+      ✅ Found 6 examples
+   📊 Processing opportunity table...
+      ✅ Found 3 examples
+   📊 Processing rep table...
+      ✅ Found 3 examples
+   ✅ Generated examples module with 17 examples
+
+✅ Frontend build complete!
+📁 Modules available at: web/public/modules/
+🚀 Ready for client-side compilation!
+
+📝 Extracted 17 formula examples across 4 tables
+🚀 Static Formula Web Server running at http://localhost:3457
+📊 All processing happens client-side with PGlite
+🔗 Health check: http://localhost:3457/health
+🌐 Deploy anywhere - truly serverless!

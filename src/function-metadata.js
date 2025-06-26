@@ -16,7 +16,6 @@ export const FUNCTIONS = {
   // Math functions
   ROUND: 'ROUND',
   ABS: 'ABS',
-  CEIL: 'CEIL',
   CEILING: 'CEILING',
   FLOOR: 'FLOOR',
   POWER: 'POWER',
@@ -34,7 +33,6 @@ export const FUNCTIONS = {
   SIGN: 'SIGN',
   
   // String functions
-  LENGTH: 'LENGTH',
   LEN: 'LEN',
   UPPER: 'UPPER',
   LOWER: 'LOWER',
@@ -42,9 +40,6 @@ export const FUNCTIONS = {
   LEFT: 'LEFT',
   RIGHT: 'RIGHT',
   MID: 'MID',
-  SUBSTR: 'SUBSTR',
-  CONCAT: 'CONCAT',
-  REPLACE: 'REPLACE',
   SUBSTITUTE: 'SUBSTITUTE',
   CONTAINS: 'CONTAINS',
   STARTS_WITH: 'STARTS_WITH',
@@ -63,8 +58,6 @@ export const FUNCTIONS = {
   ADDMONTHS: 'ADDMONTHS',
   ADDDAYS: 'ADDDAYS',
   DATEDIF: 'DATEDIF',
-  DATE_ADD: 'DATE_ADD',
-  DATE_DIFF: 'DATE_DIFF',
   FORMAT_DATE: 'FORMAT_DATE',
   
   // Logical functions
@@ -136,18 +129,6 @@ export const FUNCTION_METADATA = {
     maxArgs: 1,
     arguments: [
       { name: 'number', type: TYPE.NUMBER, description: 'Number to get absolute value of' }
-    ]
-  },
-  
-  [FUNCTIONS.CEIL]: {
-    name: FUNCTIONS.CEIL,
-    category: CATEGORIES.MATH,
-    description: 'Rounds a number up to the nearest integer',
-    returnType: TYPE.NUMBER,
-    minArgs: 1,
-    maxArgs: 1,
-    arguments: [
-      { name: 'number', type: TYPE.NUMBER, description: 'Number to round up' }
     ]
   },
   
@@ -334,8 +315,8 @@ export const FUNCTION_METADATA = {
   },
   
   // String functions
-  [FUNCTIONS.LENGTH]: {
-    name: FUNCTIONS.LENGTH,
+  [FUNCTIONS.LEN]: {
+    name: FUNCTIONS.LEN,
     category: CATEGORIES.STRING,
     description: 'Returns the length of a string',
     returnType: TYPE.NUMBER,
@@ -379,85 +360,6 @@ export const FUNCTION_METADATA = {
     maxArgs: 1,
     arguments: [
       { name: 'requires string argument', type: TYPE.STRING, description: 'String to trim' }
-    ]
-  },
-  
-  [FUNCTIONS.SUBSTR]: {
-    name: FUNCTIONS.SUBSTR,
-    category: CATEGORIES.STRING,
-    description: 'Extracts a substring from a string',
-    returnType: TYPE.STRING,
-    minArgs: 2,
-    maxArgs: 3,
-    arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'Source string' },
-      { name: 'start', type: TYPE.NUMBER, description: 'Starting position (1-based)' },
-      { name: 'length', type: TYPE.NUMBER, description: 'Length of substring (optional)', optional: true }
-    ]
-  },
-  
-  [FUNCTIONS.CONCAT]: {
-    name: FUNCTIONS.CONCAT,
-    category: CATEGORIES.STRING,
-    description: 'Concatenates two or more strings',
-    returnType: TYPE.STRING,
-    minArgs: 2,
-    maxArgs: null, // unlimited
-    variadic: true,
-    arguments: [
-      { name: 'strings', type: TYPE.STRING, description: 'Strings to concatenate', variadic: true }
-    ]
-  },
-  
-  [FUNCTIONS.REPLACE]: {
-    name: FUNCTIONS.REPLACE,
-    category: CATEGORIES.STRING,
-    description: 'Replaces occurrences of a substring with another string',
-    returnType: TYPE.STRING,
-    minArgs: 3,
-    maxArgs: 3,
-    arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'Source string' },
-      { name: 'search', type: TYPE.STRING, description: 'String to search for' },
-      { name: 'replacement', type: TYPE.STRING, description: 'Replacement string' }
-    ]
-  },
-  
-  [FUNCTIONS.CONTAINS]: {
-    name: FUNCTIONS.CONTAINS,
-    category: CATEGORIES.STRING,
-    description: 'Checks if a string contains a substring',
-    returnType: TYPE.BOOLEAN,
-    minArgs: 2,
-    maxArgs: 2,
-    arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'String to search in' },
-      { name: 'second argument', type: TYPE.STRING, description: 'Substring to search for' }
-    ]
-  },
-  
-  [FUNCTIONS.STARTS_WITH]: {
-    name: FUNCTIONS.STARTS_WITH,
-    category: CATEGORIES.STRING,
-    description: 'Checks if a string starts with a substring',
-    returnType: TYPE.BOOLEAN,
-    minArgs: 2,
-    maxArgs: 2,
-    arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'String to check' },
-      { name: 'prefix', type: TYPE.STRING, description: 'Prefix to check for' }
-    ]
-  },
-  
-  [FUNCTIONS.LEN]: {
-    name: FUNCTIONS.LEN,
-    category: CATEGORIES.STRING,
-    description: 'Returns the length of a string',
-    returnType: TYPE.NUMBER,
-    minArgs: 1,
-    maxArgs: 1,
-    arguments: [
-      { name: 'requires string argument', type: TYPE.STRING, description: 'String to get length of' }
     ]
   },
   
@@ -512,6 +414,32 @@ export const FUNCTION_METADATA = {
       { name: 'first argument', type: TYPE.STRING, description: 'Source string' },
       { name: 'second argument', type: TYPE.STRING, description: 'Text to replace' },
       { name: 'third argument', type: TYPE.STRING, description: 'Replacement text' }
+    ]
+  },
+  
+  [FUNCTIONS.CONTAINS]: {
+    name: FUNCTIONS.CONTAINS,
+    category: CATEGORIES.STRING,
+    description: 'Checks if a string contains a substring',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'text', type: TYPE.STRING, description: 'String to search in' },
+      { name: 'second argument', type: TYPE.STRING, description: 'Substring to search for' }
+    ]
+  },
+  
+  [FUNCTIONS.STARTS_WITH]: {
+    name: FUNCTIONS.STARTS_WITH,
+    category: CATEGORIES.STRING,
+    description: 'Checks if a string starts with a substring',
+    returnType: TYPE.BOOLEAN,
+    minArgs: 2,
+    maxArgs: 2,
+    arguments: [
+      { name: 'text', type: TYPE.STRING, description: 'String to check' },
+      { name: 'prefix', type: TYPE.STRING, description: 'Prefix to check for' }
     ]
   },
   
@@ -618,34 +546,6 @@ export const FUNCTION_METADATA = {
     maxArgs: 1,
     arguments: [
       { name: 'date', type: TYPE.DATE, description: 'Date to extract second from' }
-    ]
-  },
-  
-  [FUNCTIONS.DATE_ADD]: {
-    name: FUNCTIONS.DATE_ADD,
-    category: CATEGORIES.DATE,
-    description: 'Adds a specified amount of time to a date',
-    returnType: TYPE.DATE,
-    minArgs: 3,
-    maxArgs: 3,
-    arguments: [
-      { name: 'date', type: TYPE.DATE, description: 'Base date' },
-      { name: 'amount', type: TYPE.NUMBER, description: 'Amount to add' },
-      { name: 'unit', type: TYPE.STRING_LITERAL, description: 'Time unit (day, month, year, hour, minute, second)' }
-    ]
-  },
-  
-  [FUNCTIONS.DATE_DIFF]: {
-    name: FUNCTIONS.DATE_DIFF,
-    category: CATEGORIES.DATE,
-    description: 'Calculates the difference between two dates',
-    returnType: TYPE.NUMBER,
-    minArgs: 3,
-    maxArgs: 3,
-    arguments: [
-      { name: 'date1', type: TYPE.DATE, description: 'First date' },
-      { name: 'date2', type: TYPE.DATE, description: 'Second date' },
-      { name: 'unit', type: TYPE.STRING_LITERAL, description: 'Time unit (day, month, year, hour, minute, second)' }
     ]
   },
   
