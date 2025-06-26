@@ -1304,10 +1304,38 @@ async function loadAndExecuteExample(exampleId) {
             AppState.currentTable = example.tableName;
         }
         
-        // Set the formula
-        const formulaInput = document.getElementById('formulaInput');
-        if (formulaInput) {
-            formulaInput.value = example.formula;
+        // Set the formula in Monaco editor if available, otherwise fallback to textarea
+        try {
+            if (window.enhancedMonaco && window.enhancedMonaco.editors.get('formulaInput')) {
+                window.enhancedMonaco.editors.get('formulaInput').editor.setValue(example.formula);
+                console.log('📝 Example loaded into Monaco editor:', example.formula);
+            } else if (window.formulaEditor && window.formulaEditor.editor) {
+                window.formulaEditor.editor.setValue(example.formula);
+                console.log('📝 Example loaded into formula editor:', example.formula);
+            } else {
+                // Fallback to regular textarea
+                const formulaInput = document.getElementById('formulaInput');
+                if (formulaInput) {
+                    formulaInput.value = example.formula;
+                    console.log('📝 Example loaded into textarea (fallback):', example.formula);
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to set Monaco editor value, using textarea fallback:', error);
+            const formulaInput = document.getElementById('formulaInput');
+            if (formulaInput) {
+                formulaInput.value = example.formula;
+            }
+        }
+        
+        // Update table context for Monaco editor
+        if (window.enhancedMonaco) {
+            try {
+                window.enhancedMonaco.setTableContext('formulaInput', example.tableName);
+                console.log('📊 Monaco table context updated to:', example.tableName);
+            } catch (error) {
+                console.warn('Failed to update Monaco table context:', error);
+            }
         }
         
         // Wait a moment for UI to update
