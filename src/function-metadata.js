@@ -323,7 +323,7 @@ export const FUNCTION_METADATA = {
     minArgs: 1,
     maxArgs: 1,
     arguments: [
-      { name: 'text', type: TYPE.STRING, description: 'String to get length of' }
+      { name: 'requires string argument', type: TYPE.STRING, description: 'String to get length of' }
     ]
   },
   
