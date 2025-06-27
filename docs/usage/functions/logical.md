@@ -37,13 +37,9 @@
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/compliance_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/compliance_check.formula#L1): `IF(AND(amount <= 250000, DATEDIF(created_at, TODAY(), "days") <= 60), "✅ COMPLIANT", "⚠️ REVIEW NEEDED") & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
-
-- **examples/table/submission/seasonal_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/seasonal_analysis.formula#L1): `IF(AND(MONTH(created_at) >= 3, MONTH(created_at) <= 5), "🌸 SPRING", IF(AND(MONTH(created_at) >= 6, MONTH(created_at) <= 8), "☀️ SUMMER", IF(AND(MONTH(created_at) >= 9, MONTH(created_at) <= 11), "🍂 FALL", "❄️ WINTER"))) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name`
+No usage examples found for this function.
 </details>
 
 ---
@@ -79,10 +75,9 @@
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/weekend_detector.formula** (1 reference)
-  - [Line 1](/examples/table/submission/weekend_detector.formula#L1): `IF(OR(WEEKDAY(created_at) = 1, WEEKDAY(created_at) = 7), "📅 WEEKEND SUBMISSION", "🏢 WEEKDAY SUBMISSION") & " | " & STRING(WEEKDAY(created_at)) & "/7"`
+No usage examples found for this function.
 </details>
 
 ---
@@ -121,4 +116,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:53:46.271Z*
+*Documentation generated on 2025-06-27T07:39:53.178Z*

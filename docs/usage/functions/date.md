@@ -61,25 +61,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (6 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/approval_status.formula** (1 reference)
-  - [Line 1](/examples/table/submission/approval_status.formula#L1): `IF(status = "approved", "✅ APPROVED on " & STRING(MONTH(updated_at)) & "/" & STRING(DAY(updated_at)), IF(status = "rejected", "❌ REJECTED", IF(DATEDIF(created_at, TODAY(), "days") > 30, "⚠️ OVERDUE", "📋 IN PROGRESS")))`
-
-- **examples/table/submission/compliance_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/compliance_check.formula#L1): `IF(AND(amount <= 250000, DATEDIF(created_at, TODAY(), "days") <= 60), "✅ COMPLIANT", "⚠️ REVIEW NEEDED") & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
-
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
-
-- **examples/table/submission/performance_score.formula** (1 reference)
-  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
-
-- **examples/table/submission/status_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/status_report.formula#L1): `IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " & UPPER(status))) & " | Days since creation: " & STRING(ROUND(DATEDIF(created_at, TODAY(), "days"),0))`
-
-- **examples/table/submission/timeline_tracker.formula** (1 reference)
-  - [Line 1](/examples/table/submission/timeline_tracker.formula#L1): `"Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) & "/" & STRING(YEAR(created_at)) & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
+No usage examples found for this function.
 </details>
 
 ---
@@ -112,19 +96,10 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (4 found)</summary>
+<summary><strong>Usage Examples</strong> (1 found)</summary>
 
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
-
-- **examples/table/submission/quarterly_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/quarterly_report.formula#L1): `"Q" & STRING(CEILING(MONTH(created_at) / 3)) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name & " | $" & STRING(amount)`
-
-- **examples/table/submission/seasonal_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/seasonal_analysis.formula#L1): `IF(AND(MONTH(created_at) >= 3, MONTH(created_at) <= 5), "🌸 SPRING", IF(AND(MONTH(created_at) >= 6, MONTH(created_at) <= 8), "☀️ SUMMER", IF(AND(MONTH(created_at) >= 9, MONTH(created_at) <= 11), "🍂 FALL", "❄️ WINTER"))) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name`
-
-- **examples/table/submission/timeline_tracker.formula** (1 reference)
-  - [Line 1](/examples/table/submission/timeline_tracker.formula#L1): `"Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) & "/" & STRING(YEAR(created_at)) & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
+- **examples/table/rep/team_structure.formula** (1 reference)
+  - [Line 1](/examples/table/rep/team_structure.formula#L1): `name & " | " & NULLVALUE(manager_id_rel.name, "🏆 MANAGER") & " | Team: " & region & " | Hired: " & STRING(YEAR(hire_date)) & " | " & IF(active, "✅ ACTIVE", "❌ INACTIVE")`
 </details>
 
 ---
@@ -152,22 +127,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (5 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/approval_status.formula** (1 reference)
-  - [Line 1](/examples/table/submission/approval_status.formula#L1): `IF(status = "approved", "✅ APPROVED on " & STRING(MONTH(updated_at)) & "/" & STRING(DAY(updated_at)), IF(status = "rejected", "❌ REJECTED", IF(DATEDIF(created_at, TODAY(), "days") > 30, "⚠️ OVERDUE", "📋 IN PROGRESS")))`
-
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
-
-- **examples/table/submission/quarterly_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/quarterly_report.formula#L1): `"Q" & STRING(CEILING(MONTH(created_at) / 3)) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name & " | $" & STRING(amount)`
-
-- **examples/table/submission/seasonal_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/seasonal_analysis.formula#L1): `IF(AND(MONTH(created_at) >= 3, MONTH(created_at) <= 5), "🌸 SPRING", IF(AND(MONTH(created_at) >= 6, MONTH(created_at) <= 8), "☀️ SUMMER", IF(AND(MONTH(created_at) >= 9, MONTH(created_at) <= 11), "🍂 FALL", "❄️ WINTER"))) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name`
-
-- **examples/table/submission/timeline_tracker.formula** (1 reference)
-  - [Line 1](/examples/table/submission/timeline_tracker.formula#L1): `"Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) & "/" & STRING(YEAR(created_at)) & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
+No usage examples found for this function.
 </details>
 
 ---
@@ -192,13 +154,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/approval_status.formula** (1 reference)
-  - [Line 1](/examples/table/submission/approval_status.formula#L1): `IF(status = "approved", "✅ APPROVED on " & STRING(MONTH(updated_at)) & "/" & STRING(DAY(updated_at)), IF(status = "rejected", "❌ REJECTED", IF(DATEDIF(created_at, TODAY(), "days") > 30, "⚠️ OVERDUE", "📋 IN PROGRESS")))`
-
-- **examples/table/submission/timeline_tracker.formula** (1 reference)
-  - [Line 1](/examples/table/submission/timeline_tracker.formula#L1): `"Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) & "/" & STRING(YEAR(created_at)) & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
+No usage examples found for this function.
 </details>
 
 ---
@@ -275,58 +233,6 @@ No usage examples found for this function.
 
 ---
 
-## DATE_ADD
-
-**Signature:** `DATE_ADD(date, amount, unit)`  
-**Returns:** [date](../types.md#date)  
-**Description:** Adds a specified amount of time to a date
-
-**Arguments:**
-- `date` ([date](../types.md#date)): Base date
-- `amount` ([number](../types.md#number)): Amount to add
-- `unit` ([string literal](../types.md#string-literal)): Time unit (day, month, year, hour, minute, second)
-
-
-<details>
-<summary><strong>Test References</strong> (0 found)</summary>
-
-No test references found for this function.
-</details>
-
-<details>
-<summary><strong>Usage Examples</strong> (0 found)</summary>
-
-No usage examples found for this function.
-</details>
-
----
-
-## DATE_DIFF
-
-**Signature:** `DATE_DIFF(date1, date2, unit)`  
-**Returns:** [number](../types.md#number)  
-**Description:** Calculates the difference between two dates
-
-**Arguments:**
-- `date1` ([date](../types.md#date)): First date
-- `date2` ([date](../types.md#date)): Second date
-- `unit` ([string literal](../types.md#string-literal)): Time unit (day, month, year, hour, minute, second)
-
-
-<details>
-<summary><strong>Test References</strong> (0 found)</summary>
-
-No test references found for this function.
-</details>
-
-<details>
-<summary><strong>Usage Examples</strong> (0 found)</summary>
-
-No usage examples found for this function.
-</details>
-
----
-
 ## FORMAT_DATE
 
 **Signature:** `FORMAT_DATE(date, format)`  
@@ -372,10 +278,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/weekend_detector.formula** (1 reference)
-  - [Line 1](/examples/table/submission/weekend_detector.formula#L1): `IF(OR(WEEKDAY(created_at) = 1, WEEKDAY(created_at) = 7), "📅 WEEKEND SUBMISSION", "🏢 WEEKDAY SUBMISSION") & " | " & STRING(WEEKDAY(created_at)) & "/7"`
+No usage examples found for this function.
 </details>
 
 ---
@@ -469,29 +374,10 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (7 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/advanced_math.formula** (1 reference)
-  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
-
-- **examples/table/submission/approval_status.formula** (1 reference)
-  - [Line 1](/examples/table/submission/approval_status.formula#L1): `IF(status = "approved", "✅ APPROVED on " & STRING(MONTH(updated_at)) & "/" & STRING(DAY(updated_at)), IF(status = "rejected", "❌ REJECTED", IF(DATEDIF(created_at, TODAY(), "days") > 30, "⚠️ OVERDUE", "📋 IN PROGRESS")))`
-
-- **examples/table/submission/compliance_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/compliance_check.formula#L1): `IF(AND(amount <= 250000, DATEDIF(created_at, TODAY(), "days") <= 60), "✅ COMPLIANT", "⚠️ REVIEW NEEDED") & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
-
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
-
-- **examples/table/submission/performance_score.formula** (1 reference)
-  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
-
-- **examples/table/submission/status_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/status_report.formula#L1): `IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " & UPPER(status))) & " | Days since creation: " & STRING(ROUND(DATEDIF(created_at, TODAY(), "days"),0))`
-
-- **examples/table/submission/timeline_tracker.formula** (1 reference)
-  - [Line 1](/examples/table/submission/timeline_tracker.formula#L1): `"Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) & "/" & STRING(YEAR(created_at)) & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
+No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:53:46.259Z*
+*Documentation generated on 2025-06-27T07:39:53.161Z*

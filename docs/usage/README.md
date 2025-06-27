@@ -16,7 +16,6 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 
 - [`ROUND(number, decimals)`](./functions/math.md#round) - Rounds a number to specified decimal places
 - [`ABS(number)`](./functions/math.md#abs) - Returns the absolute value of a number
-- [`CEIL(number)`](./functions/math.md#ceil) - Rounds a number up to the nearest integer
 - [`CEILING(number)`](./functions/math.md#ceiling) - Rounds a number up to the nearest integer
 - [`FLOOR(number)`](./functions/math.md#floor) - Rounds a number down to the nearest integer
 - [`POWER(base, exponent)`](./functions/math.md#power) - Raises a number to a power
@@ -36,20 +35,16 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 
 ### String Functions
 
-- [`LENGTH(text)`](./functions/string.md#length) - Returns the length of a string
+- [`LEN(requires string argument)`](./functions/string.md#len) - Returns the length of a string
 - [`UPPER(requires string argument)`](./functions/string.md#upper) - Converts a string to uppercase
 - [`LOWER(requires string argument)`](./functions/string.md#lower) - Converts a string to lowercase
 - [`TRIM(requires string argument)`](./functions/string.md#trim) - Removes whitespace from both ends of a string
-- [`SUBSTR(text, start, [length])`](./functions/string.md#substr) - Extracts a substring from a string
-- [`CONCAT(strings...)`](./functions/string.md#concat) - Concatenates two or more strings
-- [`REPLACE(text, search, replacement)`](./functions/string.md#replace) - Replaces occurrences of a substring with another string
-- [`CONTAINS(text, second argument)`](./functions/string.md#contains) - Checks if a string contains a substring
-- [`STARTS_WITH(text, prefix)`](./functions/string.md#starts_with) - Checks if a string starts with a substring
-- [`LEN(requires string argument)`](./functions/string.md#len) - Returns the length of a string
 - [`LEFT(first argument, second argument)`](./functions/string.md#left) - Returns the leftmost characters from a string
 - [`RIGHT(first argument, numChars)`](./functions/string.md#right) - Returns the rightmost characters from a string
 - [`MID(first argument, start, length)`](./functions/string.md#mid) - Returns characters from the middle of a string
 - [`SUBSTITUTE(first argument, second argument, third argument)`](./functions/string.md#substitute) - Replaces occurrences of a substring with another string
+- [`CONTAINS(text, second argument)`](./functions/string.md#contains) - Checks if a string contains a substring
+- [`STARTS_WITH(text, prefix)`](./functions/string.md#starts_with) - Checks if a string starts with a substring
 - [`ENDS_WITH(text, suffix)`](./functions/string.md#ends_with) - Checks if a string ends with a substring
 
 
@@ -63,8 +58,6 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 - [`HOUR(date)`](./functions/date.md#hour) - Extracts the hour from a date (0-23)
 - [`MINUTE(date)`](./functions/date.md#minute) - Extracts the minute from a date (0-59)
 - [`SECOND(date)`](./functions/date.md#second) - Extracts the second from a date (0-59)
-- [`DATE_ADD(date, amount, unit)`](./functions/date.md#date_add) - Adds a specified amount of time to a date
-- [`DATE_DIFF(date1, date2, unit)`](./functions/date.md#date_diff) - Calculates the difference between two dates
 - [`FORMAT_DATE(date, format)`](./functions/date.md#format_date) - Formats a date as a string
 - [`WEEKDAY(date)`](./functions/date.md#weekday) - Returns the day of the week as a number (1=Sunday)
 - [`ADDMONTHS(date, months)`](./functions/date.md#addmonths) - Adds months to a date
@@ -121,18 +114,14 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 - [`AND_AGG(relationship, value)`](./functions/Aggregate.md#and_agg) - Returns true if all boolean values are true
 - [`AVG(relationship, value)`](./functions/Aggregate.md#avg) - Calculates the average of numeric values
 - [`AVG_AGG(relationship, value)`](./functions/Aggregate.md#avg_agg) - Calculates the average of numeric values
-- [`CEIL(number)`](./functions/Math.md#ceil) - Rounds a number up to the nearest integer
 - [`CEILING(number)`](./functions/Math.md#ceiling) - Rounds a number up to the nearest integer
 - [`COALESCE(values...)`](./functions/Null Handling.md#coalesce) - Returns the first non-null value from a list of expressions
-- [`CONCAT(strings...)`](./functions/String.md#concat) - Concatenates two or more strings
 - [`CONTAINS(text, second argument)`](./functions/String.md#contains) - Checks if a string contains a substring
 - [`COS(angle)`](./functions/Math.md#cos) - Returns the cosine of an angle in radians
 - [`COUNT(relationship, value)`](./functions/Aggregate.md#count) - Counts the number of non-null values
 - [`COUNT_AGG(relationship, value)`](./functions/Aggregate.md#count_agg) - Counts the number of non-null values
 - [`DATE(dateString)`](./functions/Core.md#date) - Creates a date from a string literal
 - [`DATEDIF(date1, date2, unit)`](./functions/Date.md#datedif) - Returns the difference between two dates in specified units
-- [`DATE_ADD(date, amount, unit)`](./functions/Date.md#date_add) - Adds a specified amount of time to a date
-- [`DATE_DIFF(date1, date2, unit)`](./functions/Date.md#date_diff) - Calculates the difference between two dates
 - [`DAY(date)`](./functions/Date.md#day) - Extracts the day from a date (1-31)
 - [`ENDS_WITH(text, suffix)`](./functions/String.md#ends_with) - Checks if a string ends with a substring
 - [`EVAL(relationshipRef)`](./functions/Core.md#eval) - Evaluates an expression from another table
@@ -145,7 +134,6 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 - [`ISNULL(value)`](./functions/Null Handling.md#isnull) - Returns true if the value is null
 - [`LEFT(first argument, second argument)`](./functions/String.md#left) - Returns the leftmost characters from a string
 - [`LEN(requires string argument)`](./functions/String.md#len) - Returns the length of a string
-- [`LENGTH(text)`](./functions/String.md#length) - Returns the length of a string
 - [`LOG(value)`](./functions/Math.md#log) - Returns the natural logarithm of a number
 - [`LOG10(value)`](./functions/Math.md#log10) - Returns the base-10 logarithm of a number
 - [`LOWER(requires string argument)`](./functions/String.md#lower) - Converts a string to lowercase
@@ -165,7 +153,6 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 - [`OR_AGG(relationship, value)`](./functions/Aggregate.md#or_agg) - Returns true if any boolean value is true
 - [`POWER(base, exponent)`](./functions/Math.md#power) - Raises a number to a power
 - [`RANDOM()`](./functions/Math.md#random) - Returns a random number between 0 and 1
-- [`REPLACE(text, search, replacement)`](./functions/String.md#replace) - Replaces occurrences of a substring with another string
 - [`RIGHT(first argument, numChars)`](./functions/String.md#right) - Returns the rightmost characters from a string
 - [`ROUND(number, decimals)`](./functions/Math.md#round) - Rounds a number to specified decimal places
 - [`SECOND(date)`](./functions/Date.md#second) - Extracts the second from a date (0-59)
@@ -177,7 +164,6 @@ Welcome to the Formula Language Reference! This documentation is automatically g
 - [`STRING_AGG(relationship, value, separator)`](./functions/Aggregate.md#string_agg) - Concatenates string values with a separator
 - [`STRING_AGG_DISTINCT(relationship, value, separator)`](./functions/Aggregate.md#string_agg_distinct) - Concatenates unique string values with a separator
 - [`SUBSTITUTE(first argument, second argument, third argument)`](./functions/String.md#substitute) - Replaces occurrences of a substring with another string
-- [`SUBSTR(text, start, [length])`](./functions/String.md#substr) - Extracts a substring from a string
 - [`SUM(relationship, value)`](./functions/Aggregate.md#sum) - Sums numeric values
 - [`SUM_AGG(relationship, value)`](./functions/Aggregate.md#sum_agg) - Sums numeric values
 - [`TAN(angle)`](./functions/Math.md#tan) - Returns the tangent of an angle in radians
@@ -218,4 +204,4 @@ Logical operations are implemented as functions rather than operators:
 - `OR(condition1, condition2, ...)` - Any condition must be true
 - `NOT(condition)` - Negates the condition
 
-*Documentation generated on 2025-06-22T21:53:46.182Z*
+*Documentation generated on 2025-06-27T07:39:53.064Z*

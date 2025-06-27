@@ -41,7 +41,6 @@ NULL: 'null'
 ```javascript
 ROUND: 'ROUND'
 ABS: 'ABS'
-CEIL: 'CEIL'
 CEILING: 'CEILING'
 FLOOR: 'FLOOR'
 POWER: 'POWER'
@@ -57,7 +56,6 @@ MIN: 'MIN'
 MAX: 'MAX'
 MOD: 'MOD'
 SIGN: 'SIGN'
-LENGTH: 'LENGTH'
 LEN: 'LEN'
 UPPER: 'UPPER'
 LOWER: 'LOWER'
@@ -65,9 +63,6 @@ TRIM: 'TRIM'
 LEFT: 'LEFT'
 RIGHT: 'RIGHT'
 MID: 'MID'
-SUBSTR: 'SUBSTR'
-CONCAT: 'CONCAT'
-REPLACE: 'REPLACE'
 SUBSTITUTE: 'SUBSTITUTE'
 CONTAINS: 'CONTAINS'
 STARTS_WITH: 'STARTS_WITH'
@@ -84,8 +79,6 @@ WEEKDAY: 'WEEKDAY'
 ADDMONTHS: 'ADDMONTHS'
 ADDDAYS: 'ADDDAYS'
 DATEDIF: 'DATEDIF'
-DATE_ADD: 'DATE_ADD'
-DATE_DIFF: 'DATE_DIFF'
 FORMAT_DATE: 'FORMAT_DATE'
 IF: 'IF'
 AND: 'AND'
@@ -156,19 +149,6 @@ CORE: 'Core'
       {
         "name": "number",
         "description": "Number to get absolute value of"
-      }
-    ]
-  },
-  "CEIL": {
-    "name": "CEIL",
-    "category": "Math",
-    "description": "Rounds a number up to the nearest integer",
-    "minArgs": 1,
-    "maxArgs": 1,
-    "arguments": [
-      {
-        "name": "number",
-        "description": "Number to round up"
       }
     ]
   },
@@ -378,15 +358,15 @@ CORE: 'Core'
       }
     ]
   },
-  "LENGTH": {
-    "name": "LENGTH",
+  "LEN": {
+    "name": "LEN",
     "category": "String",
     "description": "Returns the length of a string",
     "minArgs": 1,
     "maxArgs": 1,
     "arguments": [
       {
-        "name": "text",
+        "name": "requires string argument",
         "description": "String to get length of"
       }
     ]
@@ -427,111 +407,6 @@ CORE: 'Core'
       {
         "name": "requires string argument",
         "description": "String to trim"
-      }
-    ]
-  },
-  "SUBSTR": {
-    "name": "SUBSTR",
-    "category": "String",
-    "description": "Extracts a substring from a string",
-    "minArgs": 2,
-    "maxArgs": 3,
-    "arguments": [
-      {
-        "name": "text",
-        "description": "Source string"
-      },
-      {
-        "name": "start",
-        "description": "Starting position (1-based)"
-      },
-      {
-        "name": "length",
-        "description": "Length of substring (optional)",
-        "optional": true
-      }
-    ]
-  },
-  "CONCAT": {
-    "name": "CONCAT",
-    "category": "String",
-    "description": "Concatenates two or more strings",
-    "minArgs": 2,
-    "maxArgs": null,
-    "variadic": true,
-    "arguments": [
-      {
-        "name": "strings",
-        "description": "Strings to concatenate",
-        "variadic": true
-      }
-    ]
-  },
-  "REPLACE": {
-    "name": "REPLACE",
-    "category": "String",
-    "description": "Replaces occurrences of a substring with another string",
-    "minArgs": 3,
-    "maxArgs": 3,
-    "arguments": [
-      {
-        "name": "text",
-        "description": "Source string"
-      },
-      {
-        "name": "search",
-        "description": "String to search for"
-      },
-      {
-        "name": "replacement",
-        "description": "Replacement string"
-      }
-    ]
-  },
-  "CONTAINS": {
-    "name": "CONTAINS",
-    "category": "String",
-    "description": "Checks if a string contains a substring",
-    "minArgs": 2,
-    "maxArgs": 2,
-    "arguments": [
-      {
-        "name": "text",
-        "description": "String to search in"
-      },
-      {
-        "name": "second argument",
-        "description": "Substring to search for"
-      }
-    ]
-  },
-  "STARTS_WITH": {
-    "name": "STARTS_WITH",
-    "category": "String",
-    "description": "Checks if a string starts with a substring",
-    "minArgs": 2,
-    "maxArgs": 2,
-    "arguments": [
-      {
-        "name": "text",
-        "description": "String to check"
-      },
-      {
-        "name": "prefix",
-        "description": "Prefix to check for"
-      }
-    ]
-  },
-  "LEN": {
-    "name": "LEN",
-    "category": "String",
-    "description": "Returns the length of a string",
-    "minArgs": 1,
-    "maxArgs": 1,
-    "arguments": [
-      {
-        "name": "requires string argument",
-        "description": "String to get length of"
       }
     ]
   },
@@ -608,6 +483,40 @@ CORE: 'Core'
       {
         "name": "third argument",
         "description": "Replacement text"
+      }
+    ]
+  },
+  "CONTAINS": {
+    "name": "CONTAINS",
+    "category": "String",
+    "description": "Checks if a string contains a substring",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "arguments": [
+      {
+        "name": "text",
+        "description": "String to search in"
+      },
+      {
+        "name": "second argument",
+        "description": "Substring to search for"
+      }
+    ]
+  },
+  "STARTS_WITH": {
+    "name": "STARTS_WITH",
+    "category": "String",
+    "description": "Checks if a string starts with a substring",
+    "minArgs": 2,
+    "maxArgs": 2,
+    "arguments": [
+      {
+        "name": "text",
+        "description": "String to check"
+      },
+      {
+        "name": "prefix",
+        "description": "Prefix to check for"
       }
     ]
   },
@@ -719,48 +628,6 @@ CORE: 'Core'
       {
         "name": "date",
         "description": "Date to extract second from"
-      }
-    ]
-  },
-  "DATE_ADD": {
-    "name": "DATE_ADD",
-    "category": "Date",
-    "description": "Adds a specified amount of time to a date",
-    "minArgs": 3,
-    "maxArgs": 3,
-    "arguments": [
-      {
-        "name": "date",
-        "description": "Base date"
-      },
-      {
-        "name": "amount",
-        "description": "Amount to add"
-      },
-      {
-        "name": "unit",
-        "description": "Time unit (day, month, year, hour, minute, second)"
-      }
-    ]
-  },
-  "DATE_DIFF": {
-    "name": "DATE_DIFF",
-    "category": "Date",
-    "description": "Calculates the difference between two dates",
-    "minArgs": 3,
-    "maxArgs": 3,
-    "arguments": [
-      {
-        "name": "date1",
-        "description": "First date"
-      },
-      {
-        "name": "date2",
-        "description": "Second date"
-      },
-      {
-        "name": "unit",
-        "description": "Time unit (day, month, year, hour, minute, second)"
       }
     ]
   },
@@ -1251,4 +1118,4 @@ CORE: 'Core'
 }
 ```
 
-*Documentation generated on 2025-06-22T21:53:46.295Z*
+*Documentation generated on 2025-06-27T07:39:53.215Z*

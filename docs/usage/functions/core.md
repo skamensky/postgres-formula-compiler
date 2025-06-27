@@ -69,61 +69,46 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (18 found)</summary>
+<summary><strong>Usage Examples</strong> (13 found)</summary>
 
-- **examples/table/submission/approval_status.formula** (1 reference)
-  - [Line 1](/examples/table/submission/approval_status.formula#L1): `IF(status = "approved", "✅ APPROVED on " & STRING(MONTH(updated_at)) & "/" & STRING(DAY(updated_at)), IF(status = "rejected", "❌ REJECTED", IF(DATEDIF(created_at, TODAY(), "days") > 30, "⚠️ OVERDUE", "📋 IN PROGRESS")))`
+- **examples/table/customer/budget_analysis.formula** (1 reference)
+  - [Line 1](/examples/table/customer/budget_analysis.formula#L1): `first_name & " " & last_name & " | Budget Range: $" & STRING(ROUND(budget_max - budget_min, 0)) & " | Flexibility: " & STRING(ROUND((budget_max - budget_min) / budget_min * 100, 0)) & "% | Avg Target: $" & STRING(ROUND((budget_min + budget_max) / 2, 0))`
 
-- **examples/table/submission/business_summary.formula** (1 reference)
-  - [Line 1](/examples/table/submission/business_summary.formula#L1): `merchant_rel.business_name & " - $" & STRING(ROUND(amount, 2)) & " - Commission: " & STRING_AGG(rep_links_submission, STRING(commission_percentage) & "%", ", ")`
+- **examples/table/customer/contact_card.formula** (1 reference)
+  - [Line 1](/examples/table/customer/contact_card.formula#L1): `first_name & " " & last_name & " | " & email & " | " & phone & " | Budget: $" & STRING(ROUND(budget_min/1000, 0)) & "K-$" & STRING(ROUND(budget_max/1000, 0)) & "K | " & STRING(preferred_bedrooms) & "BR | " & UPPER(status) & " | " & assigned_rep_id_rel.name`
 
-- **examples/table/submission/commission_breakdown.formula** (1 reference)
-  - [Line 1](/examples/table/submission/commission_breakdown.formula#L1): `STRING_AGG_DISTINCT(rep_links_submission, STRING(commission_percentage) & "%", " | ")`
+- **examples/table/customer/lead_score.formula** (1 reference)
+  - [Line 1](/examples/table/customer/lead_score.formula#L1): `STRING(ROUND(`
 
-- **examples/table/submission/compliance_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/compliance_check.formula#L1): `IF(AND(amount <= 250000, DATEDIF(created_at, TODAY(), "days") <= 60), "✅ COMPLIANT", "⚠️ REVIEW NEEDED") & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
+- **examples/table/customer/multi_level_reps.formula** (1 reference)
+  - [Line 1](/examples/table/customer/multi_level_reps.formula#L1): `first_name & " " & last_name & " | Reps: " & STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_opportunity_id, rep_id_rel.name, ", ") & " | Opportunities: " & STRING(COUNT_AGG(opportunitys_customer_id, id))`
 
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
+- **examples/table/listing/features_highlight.formula** (1 reference)
+  - [Line 1](/examples/table/listing/features_highlight.formula#L1): `address & " | Built: " & STRING(year_built) & " | Lot: " & STRING(lot_size) & " acres | Features: Premium amenities available | " & IF(listing_price > 800000, "🌟 LUXURY FEATURES", IF(listing_price > 500000, "✨ NICE FEATURES", "🏠 BASIC"))`
 
-- **examples/table/submission/document_summary.formula** (1 reference)
-  - [Line 1](/examples/table/submission/document_summary.formula#L1): `"Status: " & UPPER(status) & " | Amount: $" & STRING(ROUND(amount, 0)) & " | Merchant: " & merchant_rel.business_name`
+- **examples/table/listing/luxury_indicator.formula** (1 reference)
+  - [Line 1](/examples/table/listing/luxury_indicator.formula#L1): `IF(listing_price > 800000, "💎 LUXURY", IF(listing_price > 500000, "⭐ PREMIUM", IF(listing_price > 300000, "🏠 STANDARD", "💰 AFFORDABLE"))) & " | " & STRING(bedrooms) & "BR " & STRING(bathrooms) & "BA | " & STRING(ROUND(square_feet/1000, 1)) & "K sqft"`
 
-- **examples/table/submission/funding_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/funding_analysis.formula#L1): `IF(amount > 500000, "JUMBO: $" & STRING(ROUND(amount/1000, 0)) & "K", IF(amount > 100000, "LARGE: $" & STRING(ROUND(amount/1000, 0)) & "K", "STANDARD: $" & STRING(amount))) & " - " & merchant_rel.industry`
+- **examples/table/listing/market_analysis.formula** (1 reference)
+  - [Line 1](/examples/table/listing/market_analysis.formula#L1): `address & " | Market Position: " & IF(days_on_market < 30, "🔥 HOT", IF(days_on_market < 60, "📈 NORMAL", IF(days_on_market < 90, "📊 SLOW", "❄️ STALE"))) & " | " & STRING(days_on_market) & " days | Price/sqft: $" & STRING(ROUND(listing_price/square_feet, 0)) & " | " & IF(ROUND(listing_price/square_feet, 0) > 200, "💰 PREMIUM", IF(ROUND(listing_price/square_feet, 0) > 150, "📊 MARKET", "💵 VALUE"))`
 
-- **examples/table/submission/merchant_profile.formula** (1 reference)
-  - [Line 1](/examples/table/submission/merchant_profile.formula#L1): `UPPER(LEFT(merchant_rel.business_name, 3)) & "-" & STRING(merchant_rel.id) & " | " & SUBSTITUTE(merchant_rel.city, " ", "_") & " | Industry: " & merchant_rel.industry`
+- **examples/table/listing/market_summary.formula** (1 reference)
+  - [Line 1](/examples/table/listing/market_summary.formula#L1): `address & " | $" & STRING(ROUND(listing_price/1000, 0)) & "K | " & STRING(bedrooms) & "bed/" & STRING(bathrooms) & "bath | " & STRING(ROUND(listing_price/square_feet, 0)) & "/sqft | " & STRING(days_on_market) & " days | " & UPPER(status)`
 
-- **examples/table/submission/multi_level_demo.formula** (1 reference)
-  - [Line 1](/examples/table/submission/multi_level_demo.formula#L1): `"Submission " & STRING(amount) & " with " & STRING(COUNT_AGG(rep_links_submission, commission_percentage)) & " rep commissions"`
+- **examples/table/opportunity/commission_projection.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/commission_projection.formula#L1): `IF(stage = "closed", "✅ PAID: $" & STRING(ROUND(commission_total, 0)), "📊 PROJECTED: $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price) * 0.06 * (probability / 100), 0))) & " | Reps: " & STRING(COUNT_AGG(rep_links_opportunity_id, rep_id))`
 
-- **examples/table/submission/null_safety_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/null_safety_check.formula#L1): `IF(ISNULL(merchant_rel.business_name), "NO MERCHANT", merchant_rel.business_name) & " | Amount: " & IF(ISNULL(amount), "N/A", STRING(amount)) & " | Reps: " & STRING(IF(ISNULL(COUNT_AGG(rep_links_submission, id)), 0, COUNT_AGG(rep_links_submission, id)))`
+- **examples/table/opportunity/deal_summary.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/deal_summary.formula#L1): `customer_id_rel.first_name & " " & customer_id_rel.last_name & " → " & listing_id_rel.address & " | " & UPPER(stage) & " | $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price)/1000, 0)) & "K | " & STRING(probability) & "% | " & NULLVALUE(financing_type, "TBD")`
 
-- **examples/table/submission/quarterly_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/quarterly_report.formula#L1): `"Q" & STRING(CEILING(MONTH(created_at) / 3)) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name & " | $" & STRING(amount)`
+- **examples/table/rep/commission_summary.formula** (1 reference)
+  - [Line 1](/examples/table/rep/commission_summary.formula#L1): `name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), 50000 * commission_percentage / 100, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))`
 
-- **examples/table/submission/README.md** (1 reference)
-  - [Line 60](/examples/table/submission/README.md#L60): `- **Conversion**: STRING (for type casting)`
+- **examples/table/rep/performance_dashboard.formula** (1 reference)
+  - [Line 1](/examples/table/rep/performance_dashboard.formula#L1): `name & " (" & region & ") | Goal: $" & STRING(ROUND(sales_goal/1000, 0)) & "K | Active Listings: " & STRING(COUNT_AGG(listings_listing_agent_id, id)) & " | Opportunities: " & STRING(COUNT_AGG(rep_links_rep_id, id)) & " | Rate: " & STRING(commission_rate * 100) & "%"`
 
-- **examples/table/submission/risk_assessment.formula** (1 reference)
-  - [Line 1](/examples/table/submission/risk_assessment.formula#L1): `IF(amount > 100000, "HIGH RISK", IF(amount > 50000, "MEDIUM RISK", "LOW RISK")) & " | " & merchant_rel.business_name & " | Reps: " & STRING(COUNT_AGG(rep_links_submission, rep))`
-
-- **examples/table/submission/seasonal_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/seasonal_analysis.formula#L1): `IF(AND(MONTH(created_at) >= 3, MONTH(created_at) <= 5), "🌸 SPRING", IF(AND(MONTH(created_at) >= 6, MONTH(created_at) <= 8), "☀️ SUMMER", IF(AND(MONTH(created_at) >= 9, MONTH(created_at) <= 11), "🍂 FALL", "❄️ WINTER"))) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name`
-
-- **examples/table/submission/status_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/status_report.formula#L1): `IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " & UPPER(status))) & " | Days since creation: " & STRING(ROUND(DATEDIF(created_at, TODAY(), "days"),0))`
-
-- **examples/table/submission/text_processing.formula** (1 reference)
-  - [Line 1](/examples/table/submission/text_processing.formula#L1): `UPPER(LEFT(TRIM(merchant_rel.business_name), 10)) & "..." & " (" & STRING(LEN(merchant_rel.business_name)) & " chars) | " & IF(CONTAINS(merchant_rel.business_name, "LLC"), "CORPORATION", "OTHER")`
-
-- **examples/table/submission/timeline_tracker.formula** (1 reference)
-  - [Line 1](/examples/table/submission/timeline_tracker.formula#L1): `"Created: " & STRING(MONTH(created_at)) & "/" & STRING(DAY(created_at)) & "/" & STRING(YEAR(created_at)) & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
-
-- **examples/table/submission/weekend_detector.formula** (1 reference)
-  - [Line 1](/examples/table/submission/weekend_detector.formula#L1): `IF(OR(WEEKDAY(created_at) = 1, WEEKDAY(created_at) = 7), "📅 WEEKEND SUBMISSION", "🏢 WEEKDAY SUBMISSION") & " | " & STRING(WEEKDAY(created_at)) & "/7"`
+- **examples/table/rep/team_structure.formula** (1 reference)
+  - [Line 1](/examples/table/rep/team_structure.formula#L1): `name & " | " & NULLVALUE(manager_id_rel.name, "🏆 MANAGER") & " | Team: " & region & " | Hired: " & STRING(YEAR(hire_date)) & " | " & IF(active, "✅ ACTIVE", "❌ INACTIVE")`
 </details>
 
 ---
@@ -217,37 +202,47 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (10 found)</summary>
+<summary><strong>Usage Examples</strong> (22 found)</summary>
 
-- **examples/table/submission/approval_status.formula** (1 reference)
-  - [Line 1](/examples/table/submission/approval_status.formula#L1): `IF(status = "approved", "✅ APPROVED on " & STRING(MONTH(updated_at)) & "/" & STRING(DAY(updated_at)), IF(status = "rejected", "❌ REJECTED", IF(DATEDIF(created_at, TODAY(), "days") > 30, "⚠️ OVERDUE", "📋 IN PROGRESS")))`
+- **examples/table/customer/lead_score.formula** (14 references)
+  - [Line 2](/examples/table/customer/lead_score.formula#L2): `IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +`
+  - [Line 3](/examples/table/customer/lead_score.formula#L3): `IF(lead_source = "Referral", 20, IF(lead_source = "Website", 15, IF(lead_source = "Past Client", 25, 10))) +`
+  - [Line 4](/examples/table/customer/lead_score.formula#L4): `IF(budget_max > budget_min * 1.5, 15, 10) +`
+  - [Line 5](/examples/table/customer/lead_score.formula#L5): `IF(ISNULL(assigned_rep_id_rel.name), 0, 10) +`
+  - [Line 7](/examples/table/customer/lead_score.formula#L7): `, 0)) & "/100 | " & IF(ROUND(`
+  - [Line 8](/examples/table/customer/lead_score.formula#L8): `IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +`
+  - [Line 9](/examples/table/customer/lead_score.formula#L9): `IF(lead_source = "Referral", 20, IF(lead_source = "Website", 15, IF(lead_source = "Past Client", 25, 10))) +`
+  - [Line 10](/examples/table/customer/lead_score.formula#L10): `IF(budget_max > budget_min * 1.5, 15, 10) +`
+  - [Line 11](/examples/table/customer/lead_score.formula#L11): `IF(ISNULL(assigned_rep_id_rel.name), 0, 10) +`
+  - [Line 13](/examples/table/customer/lead_score.formula#L13): `, 0) > 70, "🔥 HOT", IF(ROUND(`
+  - [Line 14](/examples/table/customer/lead_score.formula#L14): `IF(status = "active", 40, IF(status = "prospect", 25, IF(status = "lead", 15, 0))) +`
+  - [Line 15](/examples/table/customer/lead_score.formula#L15): `IF(lead_source = "Referral", 20, IF(lead_source = "Website", 15, IF(lead_source = "Past Client", 25, 10))) +`
+  - [Line 16](/examples/table/customer/lead_score.formula#L16): `IF(budget_max > budget_min * 1.5, 15, 10) +`
+  - [Line 17](/examples/table/customer/lead_score.formula#L17): `IF(ISNULL(assigned_rep_id_rel.name), 0, 10) +`
 
-- **examples/table/submission/compliance_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/compliance_check.formula#L1): `IF(AND(amount <= 250000, DATEDIF(created_at, TODAY(), "days") <= 60), "✅ COMPLIANT", "⚠️ REVIEW NEEDED") & " | Age: " & STRING(DATEDIF(created_at, TODAY(), "days")) & " days"`
+- **examples/table/listing/agent_listing_summary.formula** (1 reference)
+  - [Line 1](/examples/table/listing/agent_listing_summary.formula#L1): `address & " - Listed by " & listing_agent_id_rel.name & " (" & listing_agent_id_rel.region & ") | " & IF(status = "active", "🟢 ACTIVE", IF(status = "pending", "🟡 PENDING", IF(status = "sold", "🔴 SOLD", "⚪ " & UPPER(status))))`
 
-- **examples/table/submission/funding_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/funding_analysis.formula#L1): `IF(amount > 500000, "JUMBO: $" & STRING(ROUND(amount/1000, 0)) & "K", IF(amount > 100000, "LARGE: $" & STRING(ROUND(amount/1000, 0)) & "K", "STANDARD: $" & STRING(amount))) & " - " & merchant_rel.industry`
+- **examples/table/listing/features_highlight.formula** (1 reference)
+  - [Line 1](/examples/table/listing/features_highlight.formula#L1): `address & " | Built: " & STRING(year_built) & " | Lot: " & STRING(lot_size) & " acres | Features: Premium amenities available | " & IF(listing_price > 800000, "🌟 LUXURY FEATURES", IF(listing_price > 500000, "✨ NICE FEATURES", "🏠 BASIC"))`
 
-- **examples/table/submission/null_safety_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/null_safety_check.formula#L1): `IF(ISNULL(merchant_rel.business_name), "NO MERCHANT", merchant_rel.business_name) & " | Amount: " & IF(ISNULL(amount), "N/A", STRING(amount)) & " | Reps: " & STRING(IF(ISNULL(COUNT_AGG(rep_links_submission, id)), 0, COUNT_AGG(rep_links_submission, id)))`
+- **examples/table/listing/luxury_indicator.formula** (1 reference)
+  - [Line 1](/examples/table/listing/luxury_indicator.formula#L1): `IF(listing_price > 800000, "💎 LUXURY", IF(listing_price > 500000, "⭐ PREMIUM", IF(listing_price > 300000, "🏠 STANDARD", "💰 AFFORDABLE"))) & " | " & STRING(bedrooms) & "BR " & STRING(bathrooms) & "BA | " & STRING(ROUND(square_feet/1000, 1)) & "K sqft"`
 
-- **examples/table/submission/rep_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/rep_analysis.formula#L1): `IF(AND_AGG(rep_links_submission, commission_percentage > 0), "All reps have commission", "Some reps without commission") & " | High performers: " & STRING_AGG(rep_links_submission, IF(commission_percentage > 5, rep_rel.name, ""), ", ")`
+- **examples/table/listing/market_analysis.formula** (1 reference)
+  - [Line 1](/examples/table/listing/market_analysis.formula#L1): `address & " | Market Position: " & IF(days_on_market < 30, "🔥 HOT", IF(days_on_market < 60, "📈 NORMAL", IF(days_on_market < 90, "📊 SLOW", "❄️ STALE"))) & " | " & STRING(days_on_market) & " days | Price/sqft: $" & STRING(ROUND(listing_price/square_feet, 0)) & " | " & IF(ROUND(listing_price/square_feet, 0) > 200, "💰 PREMIUM", IF(ROUND(listing_price/square_feet, 0) > 150, "📊 MARKET", "💵 VALUE"))`
 
-- **examples/table/submission/risk_assessment.formula** (1 reference)
-  - [Line 1](/examples/table/submission/risk_assessment.formula#L1): `IF(amount > 100000, "HIGH RISK", IF(amount > 50000, "MEDIUM RISK", "LOW RISK")) & " | " & merchant_rel.business_name & " | Reps: " & STRING(COUNT_AGG(rep_links_submission, rep))`
+- **examples/table/opportunity/commission_projection.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/commission_projection.formula#L1): `IF(stage = "closed", "✅ PAID: $" & STRING(ROUND(commission_total, 0)), "📊 PROJECTED: $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price) * 0.06 * (probability / 100), 0))) & " | Reps: " & STRING(COUNT_AGG(rep_links_opportunity_id, rep_id))`
 
-- **examples/table/submission/seasonal_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/seasonal_analysis.formula#L1): `IF(AND(MONTH(created_at) >= 3, MONTH(created_at) <= 5), "🌸 SPRING", IF(AND(MONTH(created_at) >= 6, MONTH(created_at) <= 8), "☀️ SUMMER", IF(AND(MONTH(created_at) >= 9, MONTH(created_at) <= 11), "🍂 FALL", "❄️ WINTER"))) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name`
+- **examples/table/opportunity/pipeline_status.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/pipeline_status.formula#L1): `IF(stage = "closed", "🎉 CLOSED", IF(stage = "under_contract", "📋 CONTRACT", IF(stage = "negotiating", "💬 NEGOTIATE", IF(stage = "showing", "👁️ SHOWING", IF(stage = "contingent", "⏳ CONTINGENT", "🔍 " & UPPER(stage)))))) & " | " & customer_id_rel.first_name & " " & customer_id_rel.last_name & " | " & listing_id_rel.address`
 
-- **examples/table/submission/status_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/status_report.formula#L1): `IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " & UPPER(status))) & " | Days since creation: " & STRING(ROUND(DATEDIF(created_at, TODAY(), "days"),0))`
+- **examples/table/rep/commission_summary.formula** (1 reference)
+  - [Line 1](/examples/table/rep/commission_summary.formula#L1): `name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), 50000 * commission_percentage / 100, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))`
 
-- **examples/table/submission/text_processing.formula** (1 reference)
-  - [Line 1](/examples/table/submission/text_processing.formula#L1): `UPPER(LEFT(TRIM(merchant_rel.business_name), 10)) & "..." & " (" & STRING(LEN(merchant_rel.business_name)) & " chars) | " & IF(CONTAINS(merchant_rel.business_name, "LLC"), "CORPORATION", "OTHER")`
-
-- **examples/table/submission/weekend_detector.formula** (1 reference)
-  - [Line 1](/examples/table/submission/weekend_detector.formula#L1): `IF(OR(WEEKDAY(created_at) = 1, WEEKDAY(created_at) = 7), "📅 WEEKEND SUBMISSION", "🏢 WEEKDAY SUBMISSION") & " | " & STRING(WEEKDAY(created_at)) & "/7"`
+- **examples/table/rep/team_structure.formula** (1 reference)
+  - [Line 1](/examples/table/rep/team_structure.formula#L1): `name & " | " & NULLVALUE(manager_id_rel.name, "🏆 MANAGER") & " | Team: " & region & " | Hired: " & STRING(YEAR(hire_date)) & " | " & IF(active, "✅ ACTIVE", "❌ INACTIVE")`
 </details>
 
 ---
@@ -275,4 +270,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:53:46.266Z*
+*Documentation generated on 2025-06-27T07:39:53.171Z*

@@ -73,14 +73,12 @@ This document describes all the data types used in the formula language.
 
 
 <details>
-<summary><strong>Functions that use this type</strong> (16 functions)</summary>
+<summary><strong>Functions that use this type</strong> (14 functions)</summary>
 
 - [`ADDDAYS()`](./functions/date.md#adddays) - Adds days to a date
 - [`ADDMONTHS()`](./functions/date.md#addmonths) - Adds months to a date
 - [`DATE()`](./functions/core.md#date) - Creates a date from a string literal
 - [`DATEDIF()`](./functions/date.md#datedif) - Returns the difference between two dates in specified units
-- [`DATE_ADD()`](./functions/date.md#date_add) - Adds a specified amount of time to a date
-- [`DATE_DIFF()`](./functions/date.md#date_diff) - Calculates the difference between two dates
 - [`DAY()`](./functions/date.md#day) - Extracts the day from a date (1-31)
 - [`FORMAT_DATE()`](./functions/date.md#format_date) - Formats a date as a string
 - [`HOUR()`](./functions/date.md#hour) - Extracts the hour from a date (0-23)
@@ -172,28 +170,24 @@ No functions currently use this type.
 
 
 <details>
-<summary><strong>Functions that use this type</strong> (42 functions)</summary>
+<summary><strong>Functions that use this type</strong> (37 functions)</summary>
 
 - [`ABS()`](./functions/math.md#abs) - Returns the absolute value of a number
 - [`ADDDAYS()`](./functions/date.md#adddays) - Adds days to a date
 - [`ADDMONTHS()`](./functions/date.md#addmonths) - Adds months to a date
 - [`AVG()`](./functions/aggregate.md#avg) - Calculates the average of numeric values
 - [`AVG_AGG()`](./functions/aggregate.md#avg_agg) - Calculates the average of numeric values
-- [`CEIL()`](./functions/math.md#ceil) - Rounds a number up to the nearest integer
 - [`CEILING()`](./functions/math.md#ceiling) - Rounds a number up to the nearest integer
 - [`COS()`](./functions/math.md#cos) - Returns the cosine of an angle in radians
 - [`COUNT()`](./functions/aggregate.md#count) - Counts the number of non-null values
 - [`COUNT_AGG()`](./functions/aggregate.md#count_agg) - Counts the number of non-null values
 - [`DATEDIF()`](./functions/date.md#datedif) - Returns the difference between two dates in specified units
-- [`DATE_ADD()`](./functions/date.md#date_add) - Adds a specified amount of time to a date
-- [`DATE_DIFF()`](./functions/date.md#date_diff) - Calculates the difference between two dates
 - [`DAY()`](./functions/date.md#day) - Extracts the day from a date (1-31)
 - [`EXP()`](./functions/math.md#exp) - Returns e raised to the power of a number
 - [`FLOOR()`](./functions/math.md#floor) - Rounds a number down to the nearest integer
 - [`HOUR()`](./functions/date.md#hour) - Extracts the hour from a date (0-23)
 - [`LEFT()`](./functions/string.md#left) - Returns the leftmost characters from a string
 - [`LEN()`](./functions/string.md#len) - Returns the length of a string
-- [`LENGTH()`](./functions/string.md#length) - Returns the length of a string
 - [`LOG()`](./functions/math.md#log) - Returns the natural logarithm of a number
 - [`LOG10()`](./functions/math.md#log10) - Returns the base-10 logarithm of a number
 - [`MAX()`](./functions/math.md#max) - Returns the maximum of two numbers
@@ -210,7 +204,6 @@ No functions currently use this type.
 - [`SIGN()`](./functions/math.md#sign) - Returns the sign of a number (-1, 0, or 1)
 - [`SIN()`](./functions/math.md#sin) - Returns the sine of an angle in radians
 - [`SQRT()`](./functions/math.md#sqrt) - Returns the square root of a number
-- [`SUBSTR()`](./functions/string.md#substr) - Extracts a substring from a string
 - [`SUM()`](./functions/aggregate.md#sum) - Sums numeric values
 - [`SUM_AGG()`](./functions/aggregate.md#sum_agg) - Sums numeric values
 - [`TAN()`](./functions/math.md#tan) - Returns the tangent of an angle in radians
@@ -247,26 +240,22 @@ No functions currently use this type.
 
 
 <details>
-<summary><strong>Functions that use this type</strong> (20 functions)</summary>
+<summary><strong>Functions that use this type</strong> (16 functions)</summary>
 
-- [`CONCAT()`](./functions/string.md#concat) - Concatenates two or more strings
 - [`CONTAINS()`](./functions/string.md#contains) - Checks if a string contains a substring
 - [`ENDS_WITH()`](./functions/string.md#ends_with) - Checks if a string ends with a substring
 - [`FORMAT_DATE()`](./functions/date.md#format_date) - Formats a date as a string
 - [`LEFT()`](./functions/string.md#left) - Returns the leftmost characters from a string
 - [`LEN()`](./functions/string.md#len) - Returns the length of a string
-- [`LENGTH()`](./functions/string.md#length) - Returns the length of a string
 - [`LOWER()`](./functions/string.md#lower) - Converts a string to lowercase
 - [`ME()`](./functions/core.md#me) - Returns the current user identifier
 - [`MID()`](./functions/string.md#mid) - Returns characters from the middle of a string
-- [`REPLACE()`](./functions/string.md#replace) - Replaces occurrences of a substring with another string
 - [`RIGHT()`](./functions/string.md#right) - Returns the rightmost characters from a string
 - [`STARTS_WITH()`](./functions/string.md#starts_with) - Checks if a string starts with a substring
 - [`STRING()`](./functions/core.md#string) - Converts a value to a string
 - [`STRING_AGG()`](./functions/aggregate.md#string_agg) - Concatenates string values with a separator
 - [`STRING_AGG_DISTINCT()`](./functions/aggregate.md#string_agg_distinct) - Concatenates unique string values with a separator
 - [`SUBSTITUTE()`](./functions/string.md#substitute) - Replaces occurrences of a substring with another string
-- [`SUBSTR()`](./functions/string.md#substr) - Extracts a substring from a string
 - [`TRIM()`](./functions/string.md#trim) - Removes whitespace from both ends of a string
 - [`UPPER()`](./functions/string.md#upper) - Converts a string to uppercase
 </details>
@@ -352,4 +341,4 @@ The formula language supports automatic type conversion in many contexts:
 - `STRING(expression)` - converts any value to string
 - Date parsing through `DATE(string)` function
 
-*Documentation generated on 2025-06-22T21:53:46.181Z*
+*Documentation generated on 2025-06-27T07:39:53.062Z*

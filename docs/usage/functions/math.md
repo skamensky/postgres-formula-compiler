@@ -28,31 +28,42 @@
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (8 found)</summary>
+<summary><strong>Usage Examples</strong> (13 found)</summary>
 
-- **examples/table/submission/advanced_math.formula** (1 reference)
-  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
+- **examples/table/customer/budget_analysis.formula** (1 reference)
+  - [Line 1](/examples/table/customer/budget_analysis.formula#L1): `first_name & " " & last_name & " | Budget Range: $" & STRING(ROUND(budget_max - budget_min, 0)) & " | Flexibility: " & STRING(ROUND((budget_max - budget_min) / budget_min * 100, 0)) & "% | Avg Target: $" & STRING(ROUND((budget_min + budget_max) / 2, 0))`
 
-- **examples/table/submission/business_summary.formula** (1 reference)
-  - [Line 1](/examples/table/submission/business_summary.formula#L1): `merchant_rel.business_name & " - $" & STRING(ROUND(amount, 2)) & " - Commission: " & STRING_AGG(rep_links_submission, STRING(commission_percentage) & "%", ", ")`
+- **examples/table/customer/contact_card.formula** (1 reference)
+  - [Line 1](/examples/table/customer/contact_card.formula#L1): `first_name & " " & last_name & " | " & email & " | " & phone & " | Budget: $" & STRING(ROUND(budget_min/1000, 0)) & "K-$" & STRING(ROUND(budget_max/1000, 0)) & "K | " & STRING(preferred_bedrooms) & "BR | " & UPPER(status) & " | " & assigned_rep_id_rel.name`
 
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
+- **examples/table/customer/lead_score.formula** (3 references)
+  - [Line 1](/examples/table/customer/lead_score.formula#L1): `STRING(ROUND(`
+  - [Line 7](/examples/table/customer/lead_score.formula#L7): `, 0)) & "/100 | " & IF(ROUND(`
+  - [Line 13](/examples/table/customer/lead_score.formula#L13): `, 0) > 70, "🔥 HOT", IF(ROUND(`
 
-- **examples/table/submission/document_summary.formula** (1 reference)
-  - [Line 1](/examples/table/submission/document_summary.formula#L1): `"Status: " & UPPER(status) & " | Amount: $" & STRING(ROUND(amount, 0)) & " | Merchant: " & merchant_rel.business_name`
+- **examples/table/listing/luxury_indicator.formula** (1 reference)
+  - [Line 1](/examples/table/listing/luxury_indicator.formula#L1): `IF(listing_price > 800000, "💎 LUXURY", IF(listing_price > 500000, "⭐ PREMIUM", IF(listing_price > 300000, "🏠 STANDARD", "💰 AFFORDABLE"))) & " | " & STRING(bedrooms) & "BR " & STRING(bathrooms) & "BA | " & STRING(ROUND(square_feet/1000, 1)) & "K sqft"`
 
-- **examples/table/submission/financial_metrics.formula** (1 reference)
-  - [Line 1](/examples/table/submission/financial_metrics.formula#L1): `ROUND(amount * SUM_AGG(rep_links_submission, commission_percentage) / 100, 2)`
+- **examples/table/listing/market_analysis.formula** (1 reference)
+  - [Line 1](/examples/table/listing/market_analysis.formula#L1): `address & " | Market Position: " & IF(days_on_market < 30, "🔥 HOT", IF(days_on_market < 60, "📈 NORMAL", IF(days_on_market < 90, "📊 SLOW", "❄️ STALE"))) & " | " & STRING(days_on_market) & " days | Price/sqft: $" & STRING(ROUND(listing_price/square_feet, 0)) & " | " & IF(ROUND(listing_price/square_feet, 0) > 200, "💰 PREMIUM", IF(ROUND(listing_price/square_feet, 0) > 150, "📊 MARKET", "💵 VALUE"))`
 
-- **examples/table/submission/funding_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/funding_analysis.formula#L1): `IF(amount > 500000, "JUMBO: $" & STRING(ROUND(amount/1000, 0)) & "K", IF(amount > 100000, "LARGE: $" & STRING(ROUND(amount/1000, 0)) & "K", "STANDARD: $" & STRING(amount))) & " - " & merchant_rel.industry`
+- **examples/table/listing/market_summary.formula** (1 reference)
+  - [Line 1](/examples/table/listing/market_summary.formula#L1): `address & " | $" & STRING(ROUND(listing_price/1000, 0)) & "K | " & STRING(bedrooms) & "bed/" & STRING(bathrooms) & "bath | " & STRING(ROUND(listing_price/square_feet, 0)) & "/sqft | " & STRING(days_on_market) & " days | " & UPPER(status)`
 
-- **examples/table/submission/performance_score.formula** (1 reference)
-  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
+- **examples/table/listing/price_per_sqft.formula** (1 reference)
+  - [Line 1](/examples/table/listing/price_per_sqft.formula#L1): `ROUND(listing_price / square_feet, 2)`
 
-- **examples/table/submission/status_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/status_report.formula#L1): `IF(status = "approved", "✅ APPROVED", IF(status = "pending", "⏳ PENDING", "❌ " & UPPER(status))) & " | Days since creation: " & STRING(ROUND(DATEDIF(created_at, TODAY(), "days"),0))`
+- **examples/table/opportunity/commission_projection.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/commission_projection.formula#L1): `IF(stage = "closed", "✅ PAID: $" & STRING(ROUND(commission_total, 0)), "📊 PROJECTED: $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price) * 0.06 * (probability / 100), 0))) & " | Reps: " & STRING(COUNT_AGG(rep_links_opportunity_id, rep_id))`
+
+- **examples/table/opportunity/deal_summary.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/deal_summary.formula#L1): `customer_id_rel.first_name & " " & customer_id_rel.last_name & " → " & listing_id_rel.address & " | " & UPPER(stage) & " | $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price)/1000, 0)) & "K | " & STRING(probability) & "% | " & NULLVALUE(financing_type, "TBD")`
+
+- **examples/table/rep/commission_summary.formula** (1 reference)
+  - [Line 1](/examples/table/rep/commission_summary.formula#L1): `name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), 50000 * commission_percentage / 100, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))`
+
+- **examples/table/rep/performance_dashboard.formula** (1 reference)
+  - [Line 1](/examples/table/rep/performance_dashboard.formula#L1): `name & " (" & region & ") | Goal: $" & STRING(ROUND(sales_goal/1000, 0)) & "K | Active Listings: " & STRING(COUNT_AGG(listings_listing_agent_id, id)) & " | Opportunities: " & STRING(COUNT_AGG(rep_links_rep_id, id)) & " | Rate: " & STRING(commission_rate * 100) & "%"`
 </details>
 
 ---
@@ -80,31 +91,6 @@
   - [Line 160](/tests/math-functions.test.js#L160): `() => evaluateFormula('ROUND(MIN("a", "b"), ABS("c"))', testContext),`
   - [Line 189](/tests/math-functions.test.js#L189): `() => evaluateFormula('ABS()', testContext),`
   - [Line 198](/tests/math-functions.test.js#L198): `() => evaluateFormula('ABS("hello")', testContext),`
-</details>
-
-<details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
-
-- **examples/table/submission/advanced_math.formula** (1 reference)
-  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
-</details>
-
----
-
-## CEIL
-
-**Signature:** `CEIL(number)`  
-**Returns:** [number](../types.md#number)  
-**Description:** Rounds a number up to the nearest integer
-
-**Arguments:**
-- `number` ([number](../types.md#number)): Number to round up
-
-
-<details>
-<summary><strong>Test References</strong> (0 found)</summary>
-
-No test references found for this function.
 </details>
 
 <details>
@@ -136,16 +122,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (3 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/advanced_math.formula** (1 reference)
-  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
-
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
-
-- **examples/table/submission/quarterly_report.formula** (1 reference)
-  - [Line 1](/examples/table/submission/quarterly_report.formula#L1): `"Q" & STRING(CEILING(MONTH(created_at) / 3)) & " " & STRING(YEAR(created_at)) & " | " & merchant_rel.business_name & " | $" & STRING(amount)`
+No usage examples found for this function.
 </details>
 
 ---
@@ -170,10 +149,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/advanced_math.formula** (1 reference)
-  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
+No usage examples found for this function.
 </details>
 
 ---
@@ -418,10 +396,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/performance_score.formula** (1 reference)
-  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
+No usage examples found for this function.
 </details>
 
 ---
@@ -449,10 +426,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/performance_score.formula** (1 reference)
-  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
+No usage examples found for this function.
 </details>
 
 ---
@@ -509,4 +485,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:53:46.213Z*
+*Documentation generated on 2025-06-27T07:39:53.106Z*

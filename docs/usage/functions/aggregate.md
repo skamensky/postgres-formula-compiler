@@ -167,13 +167,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/business_summary.formula** (1 reference)
-  - [Line 1](/examples/table/submission/business_summary.formula#L1): `merchant_rel.business_name & " - $" & STRING(ROUND(amount, 2)) & " - Commission: " & STRING_AGG(rep_links_submission, STRING(commission_percentage) & "%", ", ")`
-
-- **examples/table/submission/rep_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/rep_analysis.formula#L1): `IF(AND_AGG(rep_links_submission, commission_percentage > 0), "All reps have commission", "Some reps without commission") & " | High performers: " & STRING_AGG(rep_links_submission, IF(commission_percentage > 5, rep_rel.name, ""), ", ")`
+No usage examples found for this function.
 </details>
 
 ---
@@ -200,11 +196,11 @@ No usage examples found for this function.
 <details>
 <summary><strong>Usage Examples</strong> (2 found)</summary>
 
-- **examples/table/merchant/all_reps_on_a_merchant.formula** (1 reference)
-  - [Line 1](/examples/table/merchant/all_reps_on_a_merchant.formula#L1): `STRING_AGG_DISTINCT(submissions_merchant.rep_links_submission, rep_rel.name, ",")`
+- **examples/table/customer/multi_level_reps.formula** (1 reference)
+  - [Line 1](/examples/table/customer/multi_level_reps.formula#L1): `first_name & " " & last_name & " | Reps: " & STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_opportunity_id, rep_id_rel.name, ", ") & " | Opportunities: " & STRING(COUNT_AGG(opportunitys_customer_id, id))`
 
-- **examples/table/submission/commission_breakdown.formula** (1 reference)
-  - [Line 1](/examples/table/submission/commission_breakdown.formula#L1): `STRING_AGG_DISTINCT(rep_links_submission, STRING(commission_percentage) & "%", " | ")`
+- **examples/table/customer/rep_network.formula** (1 reference)
+  - [Line 1](/examples/table/customer/rep_network.formula#L1): `first_name & " " & last_name & " → " & STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_opportunity_id, rep_id_rel.name, " & ")`
 </details>
 
 ---
@@ -242,8 +238,8 @@ No usage examples found for this function.
 <details>
 <summary><strong>Usage Examples</strong> (1 found)</summary>
 
-- **examples/table/submission/financial_metrics.formula** (1 reference)
-  - [Line 1](/examples/table/submission/financial_metrics.formula#L1): `ROUND(amount * SUM_AGG(rep_links_submission, commission_percentage) / 100, 2)`
+- **examples/table/rep/commission_summary.formula** (1 reference)
+  - [Line 1](/examples/table/rep/commission_summary.formula#L1): `name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), 50000 * commission_percentage / 100, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))`
 </details>
 
 ---
@@ -275,19 +271,24 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (4 found)</summary>
+<summary><strong>Usage Examples</strong> (7 found)</summary>
 
-- **examples/table/submission/comprehensive_dashboard.formula** (1 reference)
-  - [Line 1](/examples/table/submission/comprehensive_dashboard.formula#L1): `merchant_rel.business_name & " | $" & STRING(ROUND(amount, 0)) & " | " & STRING(COUNT_AGG(rep_links_submission, rep)) & " reps | " & STRING(DATEDIF(created_at, TODAY(), "days")) & "d old | " & UPPER(status) & " | Q" & STRING(CEILING(MONTH(created_at) / 3)) & "/" & STRING(YEAR(created_at))`
+- **examples/table/customer/lead_score.formula** (3 references)
+  - [Line 6](/examples/table/customer/lead_score.formula#L6): `COUNT_AGG(opportunitys_customer_id, id) * 5`
+  - [Line 12](/examples/table/customer/lead_score.formula#L12): `COUNT_AGG(opportunitys_customer_id, id) * 5`
+  - [Line 18](/examples/table/customer/lead_score.formula#L18): `COUNT_AGG(opportunitys_customer_id, id) * 5`
 
-- **examples/table/submission/multi_level_demo.formula** (1 reference)
-  - [Line 1](/examples/table/submission/multi_level_demo.formula#L1): `"Submission " & STRING(amount) & " with " & STRING(COUNT_AGG(rep_links_submission, commission_percentage)) & " rep commissions"`
+- **examples/table/customer/multi_level_reps.formula** (1 reference)
+  - [Line 1](/examples/table/customer/multi_level_reps.formula#L1): `first_name & " " & last_name & " | Reps: " & STRING_AGG_DISTINCT(opportunitys_customer_id.rep_links_opportunity_id, rep_id_rel.name, ", ") & " | Opportunities: " & STRING(COUNT_AGG(opportunitys_customer_id, id))`
 
-- **examples/table/submission/null_safety_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/null_safety_check.formula#L1): `IF(ISNULL(merchant_rel.business_name), "NO MERCHANT", merchant_rel.business_name) & " | Amount: " & IF(ISNULL(amount), "N/A", STRING(amount)) & " | Reps: " & STRING(IF(ISNULL(COUNT_AGG(rep_links_submission, id)), 0, COUNT_AGG(rep_links_submission, id)))`
+- **examples/table/opportunity/commission_projection.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/commission_projection.formula#L1): `IF(stage = "closed", "✅ PAID: $" & STRING(ROUND(commission_total, 0)), "📊 PROJECTED: $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price) * 0.06 * (probability / 100), 0))) & " | Reps: " & STRING(COUNT_AGG(rep_links_opportunity_id, rep_id))`
 
-- **examples/table/submission/risk_assessment.formula** (1 reference)
-  - [Line 1](/examples/table/submission/risk_assessment.formula#L1): `IF(amount > 100000, "HIGH RISK", IF(amount > 50000, "MEDIUM RISK", "LOW RISK")) & " | " & merchant_rel.business_name & " | Reps: " & STRING(COUNT_AGG(rep_links_submission, rep))`
+- **examples/table/rep/commission_summary.formula** (1 reference)
+  - [Line 1](/examples/table/rep/commission_summary.formula#L1): `name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), 50000 * commission_percentage / 100, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))`
+
+- **examples/table/rep/performance_dashboard.formula** (1 reference)
+  - [Line 1](/examples/table/rep/performance_dashboard.formula#L1): `name & " (" & region & ") | Goal: $" & STRING(ROUND(sales_goal/1000, 0)) & "K | Active Listings: " & STRING(COUNT_AGG(listings_listing_agent_id, id)) & " | Opportunities: " & STRING(COUNT_AGG(rep_links_rep_id, id)) & " | Rate: " & STRING(commission_rate * 100) & "%"`
 </details>
 
 ---
@@ -311,13 +312,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (2 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/advanced_math.formula** (1 reference)
-  - [Line 1](/examples/table/submission/advanced_math.formula#L1): `ROUND(CEILING(amount / 1000) * FLOOR(AVG_AGG(rep_links_submission, commission_percentage)) + ABS(DATEDIF(created_at, updated_at, "days")) * 0.5, 2)`
-
-- **examples/table/submission/performance_score.formula** (1 reference)
-  - [Line 1](/examples/table/submission/performance_score.formula#L1): `ROUND(MIN(100, MAX(0, (amount / 1000) * 10 + AVG_AGG(rep_links_submission, commission_percentage) - DATEDIF(created_at, TODAY(), "days") * 0.1)), 1)`
+No usage examples found for this function.
 </details>
 
 ---
@@ -341,10 +338,9 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (0 found)</summary>
 
-- **examples/table/submission/rep_analysis.formula** (1 reference)
-  - [Line 1](/examples/table/submission/rep_analysis.formula#L1): `IF(AND_AGG(rep_links_submission, commission_percentage > 0), "All reps have commission", "Some reps without commission") & " | High performers: " & STRING_AGG(rep_links_submission, IF(commission_percentage > 5, rep_rel.name, ""), ", ")`
+No usage examples found for this function.
 </details>
 
 ---
@@ -374,4 +370,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:53:46.295Z*
+*Documentation generated on 2025-06-27T07:39:53.214Z*

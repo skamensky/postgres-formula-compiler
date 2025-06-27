@@ -34,10 +34,15 @@
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (1 found)</summary>
+<summary><strong>Usage Examples</strong> (4 found)</summary>
 
-- **examples/table/submission/null_safety_check.formula** (1 reference)
-  - [Line 1](/examples/table/submission/null_safety_check.formula#L1): `IF(ISNULL(merchant_rel.business_name), "NO MERCHANT", merchant_rel.business_name) & " | Amount: " & IF(ISNULL(amount), "N/A", STRING(amount)) & " | Reps: " & STRING(IF(ISNULL(COUNT_AGG(rep_links_submission, id)), 0, COUNT_AGG(rep_links_submission, id)))`
+- **examples/table/customer/lead_score.formula** (3 references)
+  - [Line 5](/examples/table/customer/lead_score.formula#L5): `IF(ISNULL(assigned_rep_id_rel.name), 0, 10) +`
+  - [Line 11](/examples/table/customer/lead_score.formula#L11): `IF(ISNULL(assigned_rep_id_rel.name), 0, 10) +`
+  - [Line 17](/examples/table/customer/lead_score.formula#L17): `IF(ISNULL(assigned_rep_id_rel.name), 0, 10) +`
+
+- **examples/table/rep/commission_summary.formula** (1 reference)
+  - [Line 1](/examples/table/rep/commission_summary.formula#L1): `name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), 50000 * commission_percentage / 100, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))`
 </details>
 
 ---
@@ -107,9 +112,19 @@ No usage examples found for this function.
 </details>
 
 <details>
-<summary><strong>Usage Examples</strong> (0 found)</summary>
+<summary><strong>Usage Examples</strong> (4 found)</summary>
 
-No usage examples found for this function.
+- **examples/table/opportunity/commission_projection.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/commission_projection.formula#L1): `IF(stage = "closed", "✅ PAID: $" & STRING(ROUND(commission_total, 0)), "📊 PROJECTED: $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price) * 0.06 * (probability / 100), 0))) & " | Reps: " & STRING(COUNT_AGG(rep_links_opportunity_id, rep_id))`
+
+- **examples/table/opportunity/deal_summary.formula** (1 reference)
+  - [Line 1](/examples/table/opportunity/deal_summary.formula#L1): `customer_id_rel.first_name & " " & customer_id_rel.last_name & " → " & listing_id_rel.address & " | " & UPPER(stage) & " | $" & STRING(ROUND(NULLVALUE(offer_amount, listing_id_rel.listing_price)/1000, 0)) & "K | " & STRING(probability) & "% | " & NULLVALUE(financing_type, "TBD")`
+
+- **examples/table/rep/commission_summary.formula** (1 reference)
+  - [Line 1](/examples/table/rep/commission_summary.formula#L1): `name & " | Earned: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, NULLVALUE(commission_amount, 0)), 0)) & " | Pending: $" & STRING(ROUND(SUM_AGG(rep_links_rep_id, IF(ISNULL(commission_amount), 50000 * commission_percentage / 100, 0)), 0)) & " | Deals: " & STRING(COUNT_AGG(rep_links_rep_id, id))`
+
+- **examples/table/rep/team_structure.formula** (1 reference)
+  - [Line 1](/examples/table/rep/team_structure.formula#L1): `name & " | " & NULLVALUE(manager_id_rel.name, "🏆 MANAGER") & " | Team: " & region & " | Hired: " & STRING(YEAR(hire_date)) & " | " & IF(active, "✅ ACTIVE", "❌ INACTIVE")`
 </details>
 
 ---
@@ -137,4 +152,4 @@ No usage examples found for this function.
 </details>
 
 
-*Documentation generated on 2025-06-22T21:53:46.277Z*
+*Documentation generated on 2025-06-27T07:39:53.188Z*
