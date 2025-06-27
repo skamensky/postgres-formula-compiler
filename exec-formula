@@ -205,7 +205,7 @@ function extractTableName(filePath) {
   // Fallback: use directory name if not in expected structure
   const dir = dirname(filePath);
   const dirName = basename(dir);
-  return dirName === '.' ? 'submission' : dirName; // Default to submission
+  return dirName === '.' ? 'base_table' : dirName; // Default to generic table name
 }
 
 // Generate field name from formula file path
@@ -223,7 +223,7 @@ async function main() {
     
     if (formulaPaths.length === 0) {
       console.error('❌ Usage: ./exec-formula [--output format] path/to/formula1.formula [path/to/formula2.formula ...]');
-      console.error('   Example: ./exec-formula examples/table/submission/business_summary.formula examples/table/submission/risk_assessment.formula');
+      console.error('   Example: ./exec-formula examples/table/customer/business_summary.formula examples/table/customer/risk_assessment.formula');
       console.error('   Formats: console (default), json, html, markdown');
       if (process.argv.length > 4) {
         console.error(`   Note: ${process.argv.length - 4} non-formula files were filtered out`);

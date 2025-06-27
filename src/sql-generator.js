@@ -187,7 +187,7 @@ function generateSQL(namedResults, baseTableName) {
   for (const [relationshipKey, aggIntents] of aggregateGroups) {
     const groupAlias = aggregateJoinAliases.get(relationshipKey);
     const consolidatedSubquery = generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTableName, aggregateColumnMappings);
-    fromClause += `\n  LEFT JOIN (\n${consolidatedSubquery}\n  ) ${groupAlias} ON ${groupAlias}.submission = s.id`;
+    fromClause += `\n  LEFT JOIN (\n${consolidatedSubquery}\n  ) ${groupAlias} ON ${groupAlias}.base_record = s.id`;
   }
   
   // Generate SELECT expressions for each field
@@ -326,7 +326,7 @@ function generateMultiLevelAggregateSubquery(aggIntents, joinAliases, baseTableN
   const groupingTable = firstChainStep.targetTable;
   
   // Add the grouping column to the SELECT clause
-  selectExpressions.unshift(`"${groupingTable}"."${groupingColumn}" AS submission`);
+  selectExpressions.unshift(`"${groupingTable}"."${groupingColumn}" AS base_record`);
   
   return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY "${groupingTable}"."${groupingColumn}"`;
 }
@@ -432,7 +432,7 @@ function generateConsolidatedAggregateSubquery(aggIntents, joinAliases, baseTabl
   const joinColumn = joinColumnMatch ? joinColumnMatch[1] : 'id';
   
   // Add the grouping column to the SELECT clause
-  selectExpressions.unshift(`"${baseTableName_sub}"."${joinColumn}" AS submission`);
+  selectExpressions.unshift(`"${baseTableName_sub}"."${joinColumn}" AS base_record`);
   
   return `    SELECT\n      ${selectExpressions.join(',\n      ')}\n    FROM ${subFromClause}\n    GROUP BY "${baseTableName_sub}"."${joinColumn}"`;
 }
