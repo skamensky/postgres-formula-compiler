@@ -44,6 +44,12 @@ RUN printf 'server {\n\
         add_header Content-Type application/javascript;\n\
     }\n\
     \n\
+    location /health {\n\
+        access_log off;\n\
+        add_header Content-Type application/json;\n\
+        return 200 "{\"status\":\"healthy\",\"service\":\"formula-compiler-frontend\"}";\n\
+    }\n\
+    \n\
     gzip on;\n\
     gzip_types text/plain text/css application/javascript application/json;\n\
 }\n' > /etc/nginx/conf.d/default.conf
