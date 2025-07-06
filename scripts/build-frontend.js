@@ -24,8 +24,9 @@ function createDirectories() {
     
     mkdirSync(join(modulesDir, 'compiler'), { recursive: true });
     mkdirSync(join(modulesDir, 'tooling'), { recursive: true });
+    mkdirSync(join(modulesDir, 'shared'), { recursive: true });
     mkdirSync(join(webDir, 'images'), { recursive: true });
-    // Note: shared/ is now source code, not auto-generated
+    // Note: shared/ contains both source files and generated files
 }
 
 /**
@@ -334,7 +335,23 @@ export function buildFrontend() {
     writeFileSync(lspDirectPath, lspContent);
     console.log(`   ${lspSourcePath} → ${lspDirectPath} (with path fixes)`);
     
-    console.log('📄 Shared modules (db-client.js, browser-api.js, seed.sql) are source files');
+    console.log('📄 Copying shared source files...');
+    // Copy existing shared files (browser-api.js, db-client.js, seed.sql)
+    const sharedSourceDir = join(webDir, 'modules', 'shared');
+    const sharedTargetDir = join(modulesDir, 'shared');
+    
+    try {
+        const sharedFiles = readdirSync(sharedSourceDir).filter(file => file !== 'examples.js');
+        for (const file of sharedFiles) {
+            const sourcePath = join(sharedSourceDir, file);
+            const targetPath = join(sharedTargetDir, file);
+            const content = readFileSync(sourcePath);
+            writeFileSync(targetPath, content);
+            console.log(`   ${sourcePath} → ${targetPath}`);
+        }
+    } catch (error) {
+        console.log('   No shared source files found, skipping...');
+    }
     
     // Copy image assets
     copyImageAssets();

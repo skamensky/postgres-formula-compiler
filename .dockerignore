@@ -1,0 +1,49 @@
+# Node.js
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+tests/
+*.test.js
+test-results-summary.md
+
+# Build artifacts
+*.log
+*.pid
+*.seed
+*.gz
+.cache
+
+# Development files
+TODO.md
+README.md
+
+# Playwright artifacts
+tests/playwright/screenshots/
+tests/playwright/debug/
+tests/playwright/server.log
+
+# Generated files that will be recreated during build
+# web/public/modules/ - keep this for shared files
+web/public/favicon.ico
+web/public/images/chameleon-3d.jpg
+
+# Docker files
+Dockerfile
+.dockerignore 
